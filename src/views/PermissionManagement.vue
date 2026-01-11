@@ -103,7 +103,7 @@ function toggleAction(resource: string, action: PermissionAction) {
     })
   } else {
     // 存在此資源的權限，切換操作
-    const permission = formData.value.permissions[permissionIndex]
+    const permission = formData.value.permissions![permissionIndex]!
     const actionIndex = permission.actions.indexOf(action)
 
     if (actionIndex === -1) {
@@ -115,7 +115,7 @@ function toggleAction(resource: string, action: PermissionAction) {
 
       // 如果沒有任何操作了，移除整個權限項目
       if (permission.actions.length === 0) {
-        formData.value.permissions.splice(permissionIndex, 1)
+        formData.value.permissions!.splice(permissionIndex, 1)
       }
     }
   }

@@ -134,7 +134,7 @@ function validateDiscountInput(event: Event) {
 
   // 檢查小數位數
   const parts = value.split('.')
-  if (parts.length === 2 && parts[1].length > 1) {
+  if (parts.length === 2 && parts[1]!.length > 1) {
     // 限制為一位小數
     input.value = parseFloat(value).toFixed(1)
     formData.value.discount = parseFloat(input.value)
