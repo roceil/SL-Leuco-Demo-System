@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leuco Sapphire - 訂票系統</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'PingFang TC', 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        /* 頂部導航欄 */
+        .navbar {
+            background: linear-gradient(135deg, #1976d2 0%, #2196f3 100%);
+            color: white;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .user-info:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* 主要佈局 */
+        .main-layout {
+            display: flex;
+            min-height: calc(100vh - 64px);
+        }
+
+        /* 側邊欄 */
+        .sidebar {
+            width: 260px;
+            background: white;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+            padding: 24px 0;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-item {
+            margin-bottom: 4px;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 24px;
+            color: #616161;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+            font-size: 15px;
+        }
+
+        .sidebar-link:hover {
+            background: #f5f5f5;
+            color: #1976d2;
+        }
+
+        .sidebar-link.active {
+            background: #e3f2fd;
+            color: #1976d2;
+            border-left-color: #1976d2;
+            font-weight: 600;
+        }
+
+        .sidebar-icon {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
+
+        /* 主要內容區 */
+        .content {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #757575;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .breadcrumb a {
+            color: #2196f3;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            color: #212121;
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            color: #757575;
+            font-size: 14px;
+        }
+
+        /* 警告訊息 */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .alert-warning {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            color: #e65100;
+        }
+
+        .alert-error {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+            color: #c62828;
+        }
+
+        /* 表單卡片 */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            color: #212121;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            color: #424242;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .required::after {
+            content: '*';
+            color: #f44336;
+            margin-left: 4px;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        select,
+        textarea {
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            outline: none;
+            font-family: inherit;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: #2196f3;
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+        }
+
+        input:disabled,
+        select:disabled {
+            background: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+        /* 金額顯示 */
+        .amount-display {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .amount-item {
+            flex: 1;
+            padding: 16px;
+            border-radius: 8px;
+            background: #f5f5f5;
+        }
+
+        .amount-label {
+            font-size: 13px;
+            color: #757575;
+            margin-bottom: 8px;
+        }
+
+        .amount-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .amount-value.total {
+            color: #4caf50;
+        }
+
+        .amount-value.discount {
+            color: #ff9800;
+        }
+
+        /* 航程區塊 */
+        .trip-section {
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .trip-section.outbound {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border: 2px solid #2196f3;
+        }
+
+        .trip-section.return {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            border: 2px solid #ff9800;
+        }
+
+        .trip-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .trip-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .trip-section.outbound .trip-title {
+            color: #1976d2;
+        }
+
+        .trip-section.return .trip-title {
+            color: #f57c00;
+        }
+
+        .trip-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .trip-badge.available {
+            background: #4caf50;
+            color: white;
+        }
+
+        .trip-badge.booked {
+            background: #2196f3;
+            color: white;
+        }
+
+        .trip-badge.onboard {
+            background: #ff9800;
+            color: white;
+        }
+
+        /* 票數選擇 */
+        .ticket-selector {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .ticket-info {
+            flex: 1;
+        }
+
+        .ticket-name {
+            font-weight: 600;
+            color: #212121;
+            margin-bottom: 4px;
+        }
+
+        .ticket-price {
+            font-size: 13px;
+            color: #757575;
+        }
+
+        .ticket-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .quantity-btn {
+            width: 36px;
+            height: 36px;
+            border: 2px solid #2196f3;
+            background: white;
+            color: #2196f3;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quantity-btn:hover {
+            background: #2196f3;
+            color: white;
+        }
+
+        .quantity-display {
+            width: 60px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #212121;
+        }
+
+        /* 按鈕 */
+        .button-group {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 32px;
+        }
+
+        .btn {
+            padding: 14px 32px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .btn-primary {
+            background: #2196f3;
+            color: white;
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: #1976d2;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(33, 150, 243, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #757575;
+            border: 2px solid #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            background: #f5f5f5;
+            border-color: #bdbdbd;
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -260px;
+                top: 64px;
+                height: calc(100vh - 64px);
+                transition: left 0.3s ease;
+                z-index: 999;
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .amount-display {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 頂部導航欄 -->
+    <nav class="navbar">
+        <div class="navbar-logo">
+            <span>🚢</span>
+            <span>藍白航運訂票系統</span>
+        </div>
+        <div class="navbar-user">
+            <div class="user-info">
+                <span>👤</span>
+                <span>管理員_測試帳號</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-layout">
+        <!-- 側邊欄 -->
+        <aside class="sidebar">
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="dashboard.html" class="sidebar-link active">
+                        <span class="sidebar-icon">🎫</span>
+                        <span>訂位作業</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="order-search.html" class="sidebar-link">
+                        <span class="sidebar-icon">🔍</span>
+                        <span>訂單查詢</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="report.html" class="sidebar-link">
+                        <span class="sidebar-icon">📊</span>
+                        <span>報表總覽</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="account-settings.html" class="sidebar-link">
+                        <span class="sidebar-icon">⚙️</span>
+                        <span>帳號設定</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="login.html" class="sidebar-link">
+                        <span class="sidebar-icon">🚪</span>
+                        <span>登出</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- 主要內容區 -->
+        <main class="content">
+            <!-- 麵包屑 -->
+            <div class="breadcrumb">
+                <a href="#">首頁</a>
+                <span>→</span>
+                <a href="#">訂位作業</a>
+                <span>→</span>
+                <span>訂票</span>
+            </div>
+
+            <!-- 頁面標題 -->
+            <div class="page-header">
+                <h1 class="page-title">訂票</h1>
+                <p class="page-subtitle">選擇航程並填寫乘客資訊</p>
+            </div>
+
+            <!-- 警告訊息 -->
+            <div class="alert alert-warning">
+                <span>⚠️</span>
+                <span>OCR 套件未安裝，請聯絡管理員啟用身分證自動識別功能</span>
+            </div>
+
+            <!-- 訂票資訊卡片 -->
+            <div class="card">
+                <h2 class="card-title">訂票資訊</h2>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="departure">出發地點</label>
+                        <select id="departure">
+                            <option value="donggang" selected>東港出發</option>
+                            <option value="xiaoliuqiu">小琉球出發</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bookingType">訂票類型</label>
+                        <select id="bookingType">
+                            <option value="distributor" selected>經銷商代訂</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 金額顯示 -->
+                <div class="amount-display">
+                    <div class="amount-item">
+                        <div class="amount-label">票面總金額</div>
+                        <div class="amount-value total">0 元</div>
+                    </div>
+                    <div class="amount-item">
+                        <div class="amount-label">折扣後總金額</div>
+                        <div class="amount-value discount">0 元</div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="distributor">經銷名稱</label>
+                        <input type="text" id="distributor" value="管理員_測試帳號" disabled>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="idNumber" class="required">訂票人身分證字號/護照號碼</label>
+                        <input type="text" id="idNumber" placeholder="請掃描或手動輸入">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="bookerName" class="required">訂票人</label>
+                        <input type="text" id="bookerName" placeholder="請掃描或手動輸入">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bookerPhone" class="required">訂票人聯絡方式</label>
+                        <input type="text" id="bookerPhone" placeholder="行動電話">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 去程 -->
+            <div class="trip-section outbound">
+                <div class="trip-header">
+                    <h3 class="trip-title">去程日期</h3>
+                    <span class="trip-badge available">訂 0</span>
+                    <span class="trip-badge booked">取 0</span>
+                    <span class="trip-badge onboard">登 0</span>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="outboundDate" class="required">去程日期</label>
+                        <input type="date" id="outboundDate">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="outboundTime" class="required">去程船班時間</label>
+                        <select id="outboundTime">
+                            <option value="">請選擇船班時間</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 回程 -->
+            <div class="trip-section return">
+                <div class="trip-header">
+                    <h3 class="trip-title">回程日期</h3>
+                    <span class="trip-badge available">訂 0</span>
+                    <span class="trip-badge booked">取 0</span>
+                    <span class="trip-badge onboard">登 0</span>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="returnDate">回程日期</label>
+                        <input type="date" id="returnDate">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="returnTime">回程船班時間</label>
+                        <select id="returnTime" disabled>
+                            <option value="">請選擇船班時間</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 票種選擇 -->
+            <div class="card">
+                <h2 class="card-title">票種與數量</h2>
+
+                <div class="ticket-selector">
+                    <div class="ticket-info">
+                        <div class="ticket-name">民宿全票來回數量</div>
+                        <div class="ticket-price">票面價格: 450元 / 折扣後價格: 370元</div>
+                    </div>
+                    <div class="ticket-controls">
+                        <button class="quantity-btn" onclick="changeQuantity('full', -1)">−</button>
+                        <div class="quantity-display" id="fullTicket">0</div>
+                        <button class="quantity-btn" onclick="changeQuantity('full', 1)">+</button>
+                    </div>
+                </div>
+
+                <div class="ticket-selector">
+                    <div class="ticket-info">
+                        <div class="ticket-name">民宿半票來回數量</div>
+                        <div class="ticket-price">票面價格: 225元 / 折扣後價格: 200元</div>
+                    </div>
+                    <div class="ticket-controls">
+                        <button class="quantity-btn" onclick="changeQuantity('half', -1)">−</button>
+                        <div class="quantity-display" id="halfTicket">0</div>
+                        <button class="quantity-btn" onclick="changeQuantity('half', 1)">+</button>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-secondary">取消</button>
+                    <button class="btn btn-primary">確認訂票</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let tickets = {
+            full: 0,
+            half: 0
+        };
+
+        const prices = {
+            full: { original: 450, discounted: 370 },
+            half: { original: 225, discounted: 200 }
+        };
+
+        function changeQuantity(type, delta) {
+            tickets[type] = Math.max(0, tickets[type] + delta);
+            document.getElementById(type + 'Ticket').textContent = tickets[type];
+            updateTotal();
+        }
+
+        function updateTotal() {
+            const originalTotal = tickets.full * prices.full.original + tickets.half * prices.half.original;
+            const discountedTotal = tickets.full * prices.full.discounted + tickets.half * prices.half.discounted;
+
+            document.querySelector('.amount-value.total').textContent = originalTotal + ' 元';
+            document.querySelector('.amount-value.discount').textContent = discountedTotal + ' 元';
+        }
+    </script>
+</body>
+</html>

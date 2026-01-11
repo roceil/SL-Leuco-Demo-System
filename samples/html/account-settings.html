@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>重設密碼 - Leuco Sapphire</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'PingFang TC', 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        /* 頂部導航欄 */
+        .navbar {
+            background: linear-gradient(135deg, #1976d2 0%, #2196f3 100%);
+            color: white;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .user-info:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* 主要佈局 */
+        .main-layout {
+            display: flex;
+            min-height: calc(100vh - 64px);
+        }
+
+        /* 側邊欄 */
+        .sidebar {
+            width: 260px;
+            background: white;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+            padding: 24px 0;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-item {
+            margin-bottom: 4px;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 24px;
+            color: #616161;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+            font-size: 15px;
+        }
+
+        .sidebar-link:hover {
+            background: #f5f5f5;
+            color: #1976d2;
+        }
+
+        .sidebar-link.active {
+            background: #e3f2fd;
+            color: #1976d2;
+            border-left-color: #1976d2;
+            font-weight: 600;
+        }
+
+        .sidebar-icon {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
+
+        /* 主要內容區 */
+        .content {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #757575;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .breadcrumb a {
+            color: #2196f3;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            color: #212121;
+            margin-bottom: 8px;
+        }
+
+        /* 卡片 */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin-bottom: 24px;
+            max-width: 600px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            color: #212121;
+            font-weight: 600;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        /* 表單 */
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            color: #424242;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .required::after {
+            content: '*';
+            color: #f44336;
+            margin-left: 4px;
+        }
+
+        .password-input-wrapper {
+            position: relative;
+        }
+
+        input[type="password"],
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 48px 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            outline: none;
+            font-family: inherit;
+        }
+
+        input:focus {
+            border-color: #2196f3;
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+        }
+
+        input.error {
+            border-color: #f44336;
+        }
+
+        input.error:focus {
+            box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1);
+        }
+
+        input.success {
+            border-color: #4caf50;
+        }
+
+        input.success:focus {
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 20px;
+            user-select: none;
+        }
+
+        .error-message {
+            color: #f44336;
+            font-size: 13px;
+            margin-top: 6px;
+            display: none;
+        }
+
+        .success-message {
+            color: #4caf50;
+            font-size: 13px;
+            margin-top: 6px;
+            display: none;
+        }
+
+        .hint-message {
+            color: #757575;
+            font-size: 13px;
+            margin-top: 6px;
+        }
+
+        /* 密碼強度指示器 */
+        .password-strength {
+            margin-top: 12px;
+            display: none;
+        }
+
+        .strength-label {
+            font-size: 13px;
+            color: #757575;
+            margin-bottom: 6px;
+        }
+
+        .strength-bar {
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .strength-fill {
+            height: 100%;
+            width: 0%;
+            transition: all 0.3s ease;
+            border-radius: 3px;
+        }
+
+        .strength-fill.weak {
+            width: 33%;
+            background: #f44336;
+        }
+
+        .strength-fill.medium {
+            width: 66%;
+            background: #ff9800;
+        }
+
+        .strength-fill.strong {
+            width: 100%;
+            background: #4caf50;
+        }
+
+        /* 密碼要求清單 */
+        .password-requirements {
+            background: #f9f9f9;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+
+        .requirement-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #424242;
+            margin-bottom: 8px;
+        }
+
+        .requirement-list {
+            list-style: none;
+        }
+
+        .requirement-item {
+            font-size: 13px;
+            color: #757575;
+            padding: 4px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .requirement-item.valid {
+            color: #4caf50;
+        }
+
+        .requirement-item::before {
+            content: '○';
+            color: #bdbdbd;
+        }
+
+        .requirement-item.valid::before {
+            content: '✓';
+            color: #4caf50;
+        }
+
+        /* 按鈕 */
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+        }
+
+        .btn {
+            padding: 14px 32px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .btn-primary {
+            background: #4caf50;
+            color: white;
+            border: 2px solid #4caf50;
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: #388e3c;
+            border-color: #388e3c;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn-primary:disabled {
+            background: #e0e0e0;
+            border-color: #e0e0e0;
+            color: #9e9e9e;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #f44336;
+            border: 2px solid #f44336;
+        }
+
+        .btn-secondary:hover {
+            background: #f44336;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -260px;
+                top: 64px;
+                height: calc(100vh - 64px);
+                transition: left 0.3s ease;
+                z-index: 999;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .card {
+                padding: 24px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 頂部導航欄 -->
+    <nav class="navbar">
+        <div class="navbar-logo">
+            <span>🚢</span>
+            <span>藍白航運訂票系統</span>
+        </div>
+        <div class="navbar-user">
+            <div class="user-info">
+                <span>👤</span>
+                <span>管理員_測試帳號</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-layout">
+        <!-- 側邊欄 -->
+        <aside class="sidebar">
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="dashboard.html" class="sidebar-link">
+                        <span class="sidebar-icon">🎫</span>
+                        <span>訂位作業</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="order-search.html" class="sidebar-link">
+                        <span class="sidebar-icon">🔍</span>
+                        <span>訂單查詢</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="report.html" class="sidebar-link">
+                        <span class="sidebar-icon">📊</span>
+                        <span>報表總覽</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="account-settings.html" class="sidebar-link active">
+                        <span class="sidebar-icon">⚙️</span>
+                        <span>帳號設定</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="login.html" class="sidebar-link">
+                        <span class="sidebar-icon">🚪</span>
+                        <span>登出</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- 主要內容區 -->
+        <main class="content">
+            <!-- 麵包屑 -->
+            <div class="breadcrumb">
+                <a href="#">首頁</a>
+                <span>→</span>
+                <a href="#">帳號設定</a>
+                <span>→</span>
+                <span>重設密碼</span>
+            </div>
+
+            <!-- 頁面標題 -->
+            <div class="page-header">
+                <h1 class="page-title">重設密碼</h1>
+            </div>
+
+            <!-- 重設密碼表單 -->
+            <div class="card">
+                <h2 class="card-title">重設密碼</h2>
+
+                <form id="passwordForm">
+                    <!-- 舊密碼 -->
+                    <div class="form-group">
+                        <label for="oldPassword" class="required">舊密碼</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="oldPassword" name="oldPassword" required>
+                            <span class="toggle-password" onclick="togglePassword('oldPassword')">👁️</span>
+                        </div>
+                        <div class="error-message" id="oldPasswordError">請輸入舊密碼</div>
+                    </div>
+
+                    <!-- 新密碼 -->
+                    <div class="form-group">
+                        <label for="newPassword" class="required">新密碼</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="newPassword" name="newPassword" required>
+                            <span class="toggle-password" onclick="togglePassword('newPassword')">👁️</span>
+                        </div>
+                        <div class="error-message" id="newPasswordError">請輸入新密碼</div>
+
+                        <!-- 密碼強度指示器 -->
+                        <div class="password-strength" id="passwordStrength">
+                            <div class="strength-label">密碼強度: <span id="strengthText">弱</span></div>
+                            <div class="strength-bar">
+                                <div class="strength-fill" id="strengthFill"></div>
+                            </div>
+                        </div>
+
+                        <!-- 密碼要求 -->
+                        <div class="password-requirements">
+                            <div class="requirement-title">密碼必須符合以下條件：</div>
+                            <ul class="requirement-list">
+                                <li class="requirement-item" id="req-length">至少 8 個字元</li>
+                                <li class="requirement-item" id="req-lowercase">包含小寫英文字母</li>
+                                <li class="requirement-item" id="req-uppercase">包含大寫英文字母</li>
+                                <li class="requirement-item" id="req-number">包含數字</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- 確認新密碼 -->
+                    <div class="form-group">
+                        <label for="confirmPassword" class="required">再次輸入新密碼</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="confirmPassword" name="confirmPassword" required>
+                            <span class="toggle-password" onclick="togglePassword('confirmPassword')">👁️</span>
+                        </div>
+                        <div class="error-message" id="confirmPasswordError">密碼不一致</div>
+                        <div class="success-message" id="confirmPasswordSuccess">密碼一致 ✓</div>
+                    </div>
+
+                    <!-- 按鈕群組 -->
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary" id="submitBtn" disabled>重設密碼</button>
+                        <button type="button" class="btn btn-secondary" onclick="window.location.href='dashboard.html'">取消</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const oldPasswordInput = document.getElementById('oldPassword');
+        const newPasswordInput = document.getElementById('newPassword');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // 切換密碼可見性
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        // 檢查密碼強度
+        function checkPasswordStrength(password) {
+            const strengthIndicator = document.getElementById('passwordStrength');
+            const strengthFill = document.getElementById('strengthFill');
+            const strengthText = document.getElementById('strengthText');
+
+            if (password.length > 0) {
+                strengthIndicator.style.display = 'block';
+            } else {
+                strengthIndicator.style.display = 'none';
+                return;
+            }
+
+            let strength = 0;
+
+            // 檢查長度
+            if (password.length >= 8) strength++;
+            if (password.length >= 12) strength++;
+
+            // 檢查字元類型
+            if (/[a-z]/.test(password)) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^a-zA-Z0-9]/.test(password)) strength++;
+
+            // 更新強度顯示
+            strengthFill.className = 'strength-fill';
+            if (strength <= 2) {
+                strengthFill.classList.add('weak');
+                strengthText.textContent = '弱';
+            } else if (strength <= 4) {
+                strengthFill.classList.add('medium');
+                strengthText.textContent = '中';
+            } else {
+                strengthFill.classList.add('strong');
+                strengthText.textContent = '強';
+            }
+
+            // 更新密碼要求檢查
+            updateRequirements(password);
+        }
+
+        // 更新密碼要求檢查
+        function updateRequirements(password) {
+            const requirements = {
+                'req-length': password.length >= 8,
+                'req-lowercase': /[a-z]/.test(password),
+                'req-uppercase': /[A-Z]/.test(password),
+                'req-number': /[0-9]/.test(password)
+            };
+
+            Object.keys(requirements).forEach(reqId => {
+                const element = document.getElementById(reqId);
+                if (requirements[reqId]) {
+                    element.classList.add('valid');
+                } else {
+                    element.classList.remove('valid');
+                }
+            });
+
+            return Object.values(requirements).every(val => val === true);
+        }
+
+        // 檢查密碼一致性
+        function checkPasswordMatch() {
+            const newPassword = newPasswordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            const errorMsg = document.getElementById('confirmPasswordError');
+            const successMsg = document.getElementById('confirmPasswordSuccess');
+
+            if (confirmPassword === '') {
+                confirmPasswordInput.classList.remove('error', 'success');
+                errorMsg.style.display = 'none';
+                successMsg.style.display = 'none';
+                return false;
+            }
+
+            if (newPassword === confirmPassword) {
+                confirmPasswordInput.classList.remove('error');
+                confirmPasswordInput.classList.add('success');
+                errorMsg.style.display = 'none';
+                successMsg.style.display = 'block';
+                return true;
+            } else {
+                confirmPasswordInput.classList.remove('success');
+                confirmPasswordInput.classList.add('error');
+                errorMsg.style.display = 'block';
+                successMsg.style.display = 'none';
+                return false;
+            }
+        }
+
+        // 驗證表單
+        function validateForm() {
+            const oldPassword = oldPasswordInput.value;
+            const newPassword = newPasswordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+
+            const hasOldPassword = oldPassword.length > 0;
+            const isNewPasswordValid = updateRequirements(newPassword);
+            const isPasswordMatch = checkPasswordMatch();
+
+            submitBtn.disabled = !(hasOldPassword && isNewPasswordValid && isPasswordMatch);
+        }
+
+        // 事件監聽
+        newPasswordInput.addEventListener('input', function() {
+            checkPasswordStrength(this.value);
+            validateForm();
+        });
+
+        confirmPasswordInput.addEventListener('input', function() {
+            checkPasswordMatch();
+            validateForm();
+        });
+
+        oldPasswordInput.addEventListener('input', validateForm);
+
+        // 表單提交
+        document.getElementById('passwordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const oldPassword = oldPasswordInput.value;
+            const newPassword = newPasswordInput.value;
+
+            // 模擬 API 請求
+            console.log('重設密碼:', { oldPassword, newPassword });
+
+            // 顯示成功訊息
+            alert('密碼重設成功！');
+            window.location.href = 'login.html';
+        });
+    </script>
+</body>
+</html>

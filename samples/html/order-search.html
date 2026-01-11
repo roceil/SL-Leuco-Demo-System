@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>訂單查詢 - Leuco Sapphire</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'PingFang TC', 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        /* 頂部導航欄 */
+        .navbar {
+            background: linear-gradient(135deg, #1976d2 0%, #2196f3 100%);
+            color: white;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .search-icon {
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+
+        .search-icon:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .user-info:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* 主要佈局 */
+        .main-layout {
+            display: flex;
+            min-height: calc(100vh - 64px);
+        }
+
+        /* 側邊欄 */
+        .sidebar {
+            width: 260px;
+            background: white;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+            padding: 24px 0;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-item {
+            margin-bottom: 4px;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 24px;
+            color: #616161;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+            font-size: 15px;
+        }
+
+        .sidebar-link:hover {
+            background: #f5f5f5;
+            color: #1976d2;
+        }
+
+        .sidebar-link.active {
+            background: #e3f2fd;
+            color: #1976d2;
+            border-left-color: #1976d2;
+            font-weight: 600;
+        }
+
+        .sidebar-icon {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
+
+        /* 主要內容區 */
+        .content {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #757575;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .breadcrumb a {
+            color: #2196f3;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            color: #212121;
+            margin-bottom: 8px;
+        }
+
+        /* 卡片 */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            color: #212121;
+            font-weight: 600;
+        }
+
+        /* 快速篩選按鈕 */
+        .quick-filters {
+            display: flex;
+            gap: 12px;
+        }
+
+        .quick-filter-btn {
+            padding: 10px 20px;
+            background: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .quick-filter-btn:hover {
+            background: #1976d2;
+            transform: translateY(-1px);
+        }
+
+        /* 表單區域 */
+        .form-section {
+            margin-bottom: 24px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            color: #424242;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        input[type="date"],
+        input[type="text"],
+        select {
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            outline: none;
+            font-family: inherit;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #2196f3;
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+        }
+
+        /* 搜尋欄位選擇器 */
+        .search-fields {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .radio-group {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .radio-group input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+            cursor: pointer;
+            accent-color: #2196f3;
+        }
+
+        .radio-group label {
+            margin: 0;
+            cursor: pointer;
+            font-size: 14px;
+            color: #616161;
+        }
+
+        /* 搜尋按鈕 */
+        .search-button {
+            padding: 12px 32px;
+            background: white;
+            color: #4caf50;
+            border: 2px solid #4caf50;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-button:hover {
+            background: #4caf50;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        /* 狀態篩選 */
+        .status-filters {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            color: #424242;
+            margin-right: 8px;
+        }
+
+        .status-btn {
+            padding: 8px 20px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .status-btn.active,
+        .status-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-btn.status-none {
+            border-color: #4caf50;
+            color: #4caf50;
+        }
+
+        .status-btn.status-none.active {
+            background: #4caf50;
+            color: white;
+        }
+
+        .status-btn.status-unpicked {
+            border-color: #2196f3;
+            color: #2196f3;
+        }
+
+        .status-btn.status-unpicked.active {
+            background: #2196f3;
+            color: white;
+        }
+
+        .status-btn.status-picked {
+            border-color: #ff9800;
+            color: #ff9800;
+        }
+
+        .status-btn.status-picked.active {
+            background: #ff9800;
+            color: white;
+        }
+
+        .status-btn.status-boarded {
+            border-color: #9c27b0;
+            color: #9c27b0;
+        }
+
+        .status-btn.status-boarded.active {
+            background: #9c27b0;
+            color: white;
+        }
+
+        /* 表格控制 */
+        .table-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .entries-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #616161;
+        }
+
+        .entries-control select {
+            padding: 6px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+        }
+
+        .table-search {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #616161;
+        }
+
+        .table-search input {
+            padding: 6px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            width: 200px;
+        }
+
+        /* 資料表格 */
+        .data-table-wrapper {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            margin-bottom: 16px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        .data-table thead {
+            background: #f5f5f5;
+        }
+
+        .data-table th {
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #424242;
+            font-size: 14px;
+            border-bottom: 2px solid #e0e0e0;
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 16px;
+            color: #616161;
+            font-size: 14px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .data-table tbody tr:hover {
+            background: #f9f9f9;
+        }
+
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* 空狀態 */
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: #9e9e9e;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .empty-state-text {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .empty-state-hint {
+            font-size: 14px;
+            color: #bdbdbd;
+        }
+
+        /* 分頁 */
+        .pagination-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .pagination-info {
+            color: #616161;
+            font-size: 14px;
+        }
+
+        .pagination {
+            display: flex;
+            gap: 8px;
+        }
+
+        .pagination-btn {
+            padding: 8px 16px;
+            border: 1px solid #e0e0e0;
+            background: white;
+            color: #616161;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: #f5f5f5;
+            border-color: #2196f3;
+            color: #2196f3;
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-btn.active {
+            background: #2196f3;
+            color: white;
+            border-color: #2196f3;
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -260px;
+                top: 64px;
+                height: calc(100vh - 64px);
+                transition: left 0.3s ease;
+                z-index: 999;
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .search-fields {
+                grid-template-columns: 1fr;
+            }
+
+            .status-filters {
+                flex-wrap: wrap;
+            }
+
+            .table-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .data-table-wrapper {
+                font-size: 12px;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 12px 8px;
+            }
+        }
+
+        /* 工具提示 */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #424242;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- 頂部導航欄 -->
+    <nav class="navbar">
+        <div class="navbar-logo">
+            <span>🚢</span>
+            <span>藍白航運訂票系統</span>
+        </div>
+        <div class="navbar-user">
+            <div class="search-icon">🔍</div>
+            <div class="user-info">
+                <span>👤</span>
+                <span>管理員_測試帳號</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-layout">
+        <!-- 側邊欄 -->
+        <aside class="sidebar">
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="dashboard.html" class="sidebar-link">
+                        <span class="sidebar-icon">🎫</span>
+                        <span>訂位作業</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="order-search.html" class="sidebar-link active">
+                        <span class="sidebar-icon">🔍</span>
+                        <span>訂單查詢</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="report.html" class="sidebar-link">
+                        <span class="sidebar-icon">📊</span>
+                        <span>報表總覽</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="account-settings.html" class="sidebar-link">
+                        <span class="sidebar-icon">⚙️</span>
+                        <span>帳號設定</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="login.html" class="sidebar-link">
+                        <span class="sidebar-icon">🚪</span>
+                        <span>登出</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- 主要內容區 -->
+        <main class="content">
+            <!-- 麵包屑 -->
+            <div class="breadcrumb">
+                <a href="#">首頁</a>
+                <span>→</span>
+                <a href="#">訂位作業</a>
+                <span>→</span>
+                <span>訂單查詢</span>
+            </div>
+
+            <!-- 頁面標題 -->
+            <div class="page-header">
+                <h1 class="page-title">訂單查詢</h1>
+            </div>
+
+            <!-- 查詢卡片 -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">訂單列表</h2>
+                    <div class="quick-filters">
+                        <button class="quick-filter-btn" onclick="setToday()">
+                            <span>📅</span>
+                            <span>今日</span>
+                        </button>
+                        <button class="quick-filter-btn" onclick="setThisMonth()">
+                            <span>📆</span>
+                            <span>本月</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 日期範圍 -->
+                <div class="form-section">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="dateFrom">查詢船班時間包含從</label>
+                            <input type="date" id="dateFrom" value="2026-01-10">
+                        </div>
+                        <div class="form-group">
+                            <label for="dateTo">到</label>
+                            <input type="date" id="dateTo" value="2026-01-10">
+                        </div>
+                    </div>
+
+                    <!-- 搜尋關鍵字 -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="searchKeyword">搜尋關鍵字</label>
+                            <input type="text" id="searchKeyword" placeholder="訂票人身分證字號">
+                        </div>
+                    </div>
+
+                    <!-- 搜尋欄位選擇 -->
+                    <div class="form-section">
+                        <label>搜尋欄位</label>
+                        <div class="search-fields">
+                            <div class="radio-group">
+                                <input type="radio" id="field1" name="searchField" value="id" checked>
+                                <label for="field1">訂票人身分證字號</label>
+                            </div>
+                            <div class="radio-group">
+                                <input type="radio" id="field2" name="searchField" value="name">
+                                <label for="field2">訂票人姓名</label>
+                            </div>
+                            <div class="radio-group">
+                                <input type="radio" id="field3" name="searchField" value="phone">
+                                <label for="field3">訂票人電話</label>
+                            </div>
+                            <div class="radio-group">
+                                <input type="radio" id="field4" name="searchField" value="orderNo">
+                                <label for="field4">訂單編號</label>
+                            </div>
+                            <div class="radio-group">
+                                <input type="radio" id="field5" name="searchField" value="distributor">
+                                <label for="field5">經銷商名稱</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="search-button" onclick="performSearch()">
+                        <span>🔍</span>
+                        <span>搜尋</span>
+                    </button>
+                </div>
+
+                <!-- 狀態篩選 -->
+                <div class="status-filters">
+                    <span class="filter-label">篩選</span>
+                    <button class="status-btn status-none active" onclick="filterStatus('none')">無</button>
+                    <button class="status-btn status-unpicked" onclick="filterStatus('unpicked')">未取</button>
+                    <button class="status-btn status-picked" onclick="filterStatus('picked')">已取</button>
+                    <button class="status-btn status-boarded" onclick="filterStatus('boarded')">已登船</button>
+                </div>
+
+                <!-- 表格控制 -->
+                <div class="table-controls">
+                    <div class="entries-control">
+                        <span>一次顯示</span>
+                        <select id="entriesPerPage" onchange="changeEntriesPerPage()">
+                            <option value="30" selected>30</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span>筆紀錄</span>
+                    </div>
+                    <div class="table-search">
+                        <label for="tableSearch">搜尋表格:</label>
+                        <input type="text" id="tableSearch" onkeyup="searchTable()" placeholder="快速搜尋...">
+                    </div>
+                </div>
+
+                <!-- 資料表格 -->
+                <div class="data-table-wrapper">
+                    <table class="data-table" id="orderTable">
+                        <thead>
+                            <tr>
+                                <th>船班時間</th>
+                                <th>訂單編號</th>
+                                <th>訂票單位</th>
+                                <th>訂票人資料</th>
+                                <th>訂票</th>
+                                <th>取票</th>
+                                <th>訂單狀態</th>
+                                <th>登船狀態</th>
+                                <th>船票列表</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orderTableBody">
+                            <tr>
+                                <td colspan="9" class="empty-state">
+                                    <div class="empty-state-icon">📋</div>
+                                    <div class="empty-state-text">沒有資料</div>
+                                    <div class="empty-state-hint">請調整搜尋條件或日期範圍</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分頁 -->
+                <div class="pagination-wrapper">
+                    <div class="pagination-info">
+                        第 <span id="currentStart">0</span> 至 <span id="currentEnd">0</span> 筆紀錄（共 <span id="totalRecords">0</span> 筆）
+                    </div>
+                    <div class="pagination">
+                        <button class="pagination-btn" onclick="goToPage('first')" disabled>第一頁</button>
+                        <button class="pagination-btn" onclick="goToPage('prev')" disabled>上一頁</button>
+                        <button class="pagination-btn" onclick="goToPage('next')" disabled>下一頁</button>
+                        <button class="pagination-btn" onclick="goToPage('last')" disabled>最後一頁</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 模擬訂單資料
+        let allOrders = [];
+        let filteredOrders = [];
+        let currentPage = 1;
+        let entriesPerPage = 30;
+        let currentStatusFilter = 'none';
+
+        // 設定今日日期
+        function setToday() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('dateFrom').value = today;
+            document.getElementById('dateTo').value = today;
+        }
+
+        // 設定本月日期
+        function setThisMonth() {
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+            document.getElementById('dateFrom').value = firstDay.toISOString().split('T')[0];
+            document.getElementById('dateTo').value = lastDay.toISOString().split('T')[0];
+        }
+
+        // 執行搜尋
+        function performSearch() {
+            const dateFrom = document.getElementById('dateFrom').value;
+            const dateTo = document.getElementById('dateTo').value;
+            const keyword = document.getElementById('searchKeyword').value;
+            const searchField = document.querySelector('input[name="searchField"]:checked').value;
+
+            // 這裡應該發送 API 請求
+            console.log('搜尋條件:', {
+                dateFrom,
+                dateTo,
+                keyword,
+                searchField,
+                statusFilter: currentStatusFilter
+            });
+
+            // 模擬搜尋結果
+            if (keyword) {
+                // 產生一些示例資料
+                allOrders = generateSampleOrders(5);
+                filteredOrders = allOrders;
+                renderTable();
+            } else {
+                alert('請輸入搜尋關鍵字');
+            }
+        }
+
+        // 產生示例訂單資料
+        function generateSampleOrders(count) {
+            const orders = [];
+            const statuses = ['未取', '已取', '已登船'];
+            const distributors = ['管理員', '東港旅遊', '小琉球假期'];
+
+            for (let i = 0; i < count; i++) {
+                orders.push({
+                    shipTime: `2026-01-${10 + i} 08:30`,
+                    orderNo: `LS${202601}${String(i + 1).padStart(4, '0')}`,
+                    distributor: distributors[i % distributors.length],
+                    bookerInfo: `王小明 / A123456789 / 0912345678`,
+                    bookTime: new Date().toISOString().split('T')[0],
+                    pickTime: i % 2 === 0 ? new Date().toISOString().split('T')[0] : '-',
+                    orderStatus: statuses[i % statuses.length],
+                    boardStatus: i % 3 === 2 ? '已登船' : '未登船',
+                    tickets: '全票x2, 半票x1'
+                });
+            }
+            return orders;
+        }
+
+        // 狀態篩選
+        function filterStatus(status) {
+            currentStatusFilter = status;
+
+            // 更新按鈕狀態
+            document.querySelectorAll('.status-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // 如果有資料，執行篩選
+            if (allOrders.length > 0) {
+                if (status === 'none') {
+                    filteredOrders = allOrders;
+                } else {
+                    const statusMap = {
+                        'unpicked': '未取',
+                        'picked': '已取',
+                        'boarded': '已登船'
+                    };
+                    filteredOrders = allOrders.filter(order =>
+                        order.orderStatus === statusMap[status] ||
+                        order.boardStatus === statusMap[status]
+                    );
+                }
+                currentPage = 1;
+                renderTable();
+            }
+        }
+
+        // 改變每頁顯示筆數
+        function changeEntriesPerPage() {
+            entriesPerPage = parseInt(document.getElementById('entriesPerPage').value);
+            currentPage = 1;
+            renderTable();
+        }
+
+        // 表格搜尋
+        function searchTable() {
+            const searchText = document.getElementById('tableSearch').value.toLowerCase();
+
+            if (searchText === '') {
+                filteredOrders = allOrders;
+            } else {
+                filteredOrders = allOrders.filter(order =>
+                    Object.values(order).some(value =>
+                        String(value).toLowerCase().includes(searchText)
+                    )
+                );
+            }
+
+            currentPage = 1;
+            renderTable();
+        }
+
+        // 渲染表格
+        function renderTable() {
+            const tbody = document.getElementById('orderTableBody');
+            const start = (currentPage - 1) * entriesPerPage;
+            const end = start + entriesPerPage;
+            const pageOrders = filteredOrders.slice(start, end);
+
+            if (pageOrders.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="empty-state">
+                            <div class="empty-state-icon">📋</div>
+                            <div class="empty-state-text">沒有資料</div>
+                            <div class="empty-state-hint">請調整搜尋條件或日期範圍</div>
+                        </td>
+                    </tr>
+                `;
+            } else {
+                tbody.innerHTML = pageOrders.map(order => `
+                    <tr>
+                        <td>${order.shipTime}</td>
+                        <td><strong>${order.orderNo}</strong></td>
+                        <td>${order.distributor}</td>
+                        <td>${order.bookerInfo}</td>
+                        <td>${order.bookTime}</td>
+                        <td>${order.pickTime}</td>
+                        <td>
+                            <span style="padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;
+                                ${order.orderStatus === '未取' ? 'background: #e3f2fd; color: #1976d2;' : ''}
+                                ${order.orderStatus === '已取' ? 'background: #fff3e0; color: #f57c00;' : ''}
+                                ${order.orderStatus === '已登船' ? 'background: #f3e5f5; color: #7b1fa2;' : ''}">
+                                ${order.orderStatus}
+                            </span>
+                        </td>
+                        <td>
+                            <span style="padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;
+                                ${order.boardStatus === '已登船' ? 'background: #e8f5e9; color: #2e7d32;' : 'background: #fafafa; color: #9e9e9e;'}">
+                                ${order.boardStatus}
+                            </span>
+                        </td>
+                        <td>${order.tickets}</td>
+                    </tr>
+                `).join('');
+            }
+
+            updatePagination();
+        }
+
+        // 更新分頁資訊
+        function updatePagination() {
+            const totalRecords = filteredOrders.length;
+            const start = totalRecords === 0 ? 0 : (currentPage - 1) * entriesPerPage + 1;
+            const end = Math.min(currentPage * entriesPerPage, totalRecords);
+
+            document.getElementById('currentStart').textContent = start;
+            document.getElementById('currentEnd').textContent = end;
+            document.getElementById('totalRecords').textContent = totalRecords;
+
+            // 更新分頁按鈕狀態
+            const totalPages = Math.ceil(totalRecords / entriesPerPage);
+            const buttons = document.querySelectorAll('.pagination-btn');
+
+            buttons[0].disabled = currentPage === 1; // 第一頁
+            buttons[1].disabled = currentPage === 1; // 上一頁
+            buttons[2].disabled = currentPage === totalPages || totalPages === 0; // 下一頁
+            buttons[3].disabled = currentPage === totalPages || totalPages === 0; // 最後一頁
+        }
+
+        // 分頁導航
+        function goToPage(action) {
+            const totalPages = Math.ceil(filteredOrders.length / entriesPerPage);
+
+            switch (action) {
+                case 'first':
+                    currentPage = 1;
+                    break;
+                case 'prev':
+                    if (currentPage > 1) currentPage--;
+                    break;
+                case 'next':
+                    if (currentPage < totalPages) currentPage++;
+                    break;
+                case 'last':
+                    currentPage = totalPages;
+                    break;
+            }
+
+            renderTable();
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 設定預設日期為今日
+            setToday();
+        });
+    </script>
+</body>
+</html>
