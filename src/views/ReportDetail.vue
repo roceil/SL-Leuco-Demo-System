@@ -1,38 +1,27 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import Navbar from '../components/Navbar.vue'
-import Sidebar from '../components/Sidebar.vue'
-import { useSidebar } from '../composables/useSidebar'
-import { useOrders } from '../composables/useOrders'
+import { useSidebar } from '@/composables/useSidebar'
+import { useTheme } from '@/composables/useTheme'
+import { useOrders } from '@/composables/useOrders'
+import type { SavedOrder } from '@/constants/mockOrders'
+import Navbar from '@/components/Navbar.vue'
+import Sidebar from '@/components/Sidebar.vue'
+import PageContainer from '@/components/ui/PageContainer.vue'
+import BaseCard from '@/components/ui/BaseCard.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import {
+  DocumentTextIcon,
+  ArrowDownTrayIcon,
+  ArrowLeftIcon,
+  ClipboardDocumentListIcon
+} from '@heroicons/vue/24/outline'
 
 const { isCollapsed } = useSidebar()
+const { theme } = useTheme()
 const route = useRoute()
 const router = useRouter()
 const { allOrders: storedOrders } = useOrders()
-
-interface SavedOrder {
-  orderNumber: string
-  departure: string
-  bookingType: string
-  distributor: string
-  bookerName: string
-  bookerPhone: string
-  outboundDate: string
-  outboundTime: string
-  returnDate: string
-  returnTime: string
-  tickets: {
-    full: number
-    half: number
-  }
-  pricing: {
-    originalTotal: number
-    discountedTotal: number
-  }
-  status: string
-  createdAt: string
-}
 
 const monthKey = ref('')
 const orders = ref<SavedOrder[]>([])
@@ -104,103 +93,239 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <Navbar />
-    <Sidebar active-route="report" />
+  <div class="min-h-screen flex flex-col">
+    <Navbar username="管理員" />
 
-    <!-- 主要內容區 -->
-    <main :class="['p-8 min-h-[calc(100vh-4rem)] transition-all duration-300', isCollapsed ? 'ml-20' : 'ml-64']">
-      <!-- 麵包屑 -->
-      <div class="flex items-center gap-2 text-gray-600 text-sm mb-6">
-        <a
-          href="#"
-          class="text-blue-600 hover:underline"
-        >首頁</a>
-        <span>→</span>
-        <button
-          @click="goBack"
-          class="text-blue-600 hover:underline"
-        >報表總覽</button>
-        <span>→</span>
-        <span>{{ monthKey }} 明細</span>
-      </div>
+    <div class="flex flex-1">
+      <Sidebar :active-route="$route.path.slice(1)" />
 
-      <!-- 頁面標題 -->
-      <div class="mb-8 flex justify-between items-start">
-        <div>
-          <h1 class="text-3xl font-bold text-gray-800 mb-2">{{ monthKey }} 帳單明細</h1>
-          <p class="text-gray-600">共 {{ totalOrders }} 筆訂單，總金額 NT$ {{ totalAmount.toLocaleString() }}</p>
-        </div>
-        <div class="flex gap-3">
-          <button
-            @click="downloadDetails"
-            class="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors shadow-lg"
-          >
-            下載 CSV
-          </button>
-          <button
-            @click="goBack"
-            class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
-          >
-            返回列表
-          </button>
-        </div>
-      </div>
-
-      <!-- 明細列表 -->
-      <div class="bg-white rounded-xl p-8 shadow-md">
-        <div class="overflow-x-auto">
-          <table class="w-full">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="p-4 text-left font-semibold text-gray-700 text-sm border-b-2 border-gray-200">訂單編號</th>
-                <th class="p-4 text-left font-semibold text-gray-700 text-sm border-b-2 border-gray-200">訂票人</th>
-                <th class="p-4 text-left font-semibold text-gray-700 text-sm border-b-2 border-gray-200">聯絡電話</th>
-                <th class="p-4 text-left font-semibold text-gray-700 text-sm border-b-2 border-gray-200">出發地</th>
-                <th class="p-4 text-left font-semibold text-gray-700 text-sm border-b-2 border-gray-200">訂票方式</th>
-                <th class="p-4 text-left font-semibold text-gray-700 text-sm border-b-2 border-gray-200">經銷商</th>
-                <th class="p-4 text-left font-semibold text-gray-700 text-sm border-b-2 border-gray-200">出發日期</th>
-                <th class="p-4 text-left font-semibold text-gray-700 text-sm border-b-2 border-gray-200">出發時間</th>
-                <th class="p-4 text-left font-semibold text-gray-700 text-sm border-b-2 border-gray-200">回程日期</th>
-                <th class="p-4 text-left font-semibold text-gray-700 text-sm border-b-2 border-gray-200">回程時間</th>
-                <th class="p-4 text-center font-semibold text-gray-700 text-sm border-b-2 border-gray-200">全票</th>
-                <th class="p-4 text-center font-semibold text-gray-700 text-sm border-b-2 border-gray-200">半票</th>
-                <th class="p-4 text-right font-semibold text-gray-700 text-sm border-b-2 border-gray-200">金額</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="order in orders"
-                :key="order.orderNumber"
-                class="hover:bg-gray-50 border-b border-gray-100"
-              >
-                <td class="p-4 text-gray-800 font-mono text-xs">{{ order.orderNumber }}</td>
-                <td class="p-4 text-gray-800">{{ order.bookerName }}</td>
-                <td class="p-4 text-gray-800">{{ order.bookerPhone }}</td>
-                <td class="p-4 text-gray-800">{{ order.departure }}</td>
-                <td class="p-4 text-gray-800">{{ order.bookingType }}</td>
-                <td class="p-4 text-gray-800">{{ order.distributor || '-' }}</td>
-                <td class="p-4 text-gray-800">{{ order.outboundDate }}</td>
-                <td class="p-4 text-gray-800">{{ order.outboundTime }}</td>
-                <td class="p-4 text-gray-800">{{ order.returnDate || '-' }}</td>
-                <td class="p-4 text-gray-800">{{ order.returnTime || '-' }}</td>
-                <td class="p-4 text-center text-gray-800">{{ order.tickets.full }}</td>
-                <td class="p-4 text-center text-gray-800">{{ order.tickets.half }}</td>
-                <td class="p-4 text-right text-gray-800 font-semibold">NT$ {{
-                  order.pricing.discountedTotal.toLocaleString() }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div
-          v-if="orders.length === 0"
-          class="text-center py-12 text-gray-500"
+      <main
+        :class="[
+          'flex-1 transition-all duration-300',
+          isCollapsed ? 'ml-20' : 'ml-64'
+        ]"
+      >
+        <PageContainer
+          :title="`${monthKey} 帳單明細`"
+          :subtitle="`共 ${totalOrders} 筆訂單，總金額 NT$ ${totalAmount.toLocaleString()}`"
+          :icon="DocumentTextIcon"
+          max-width="full"
         >
-          <div class="text-6xl mb-4">📋</div>
-          <div class="text-lg mb-2">此月份無訂單資料</div>
-        </div>
-      </div>
-    </main>
+          <template #actions>
+            <div class="flex gap-3">
+              <BaseButton
+                variant="primary"
+                :icon="ArrowDownTrayIcon"
+                @click="downloadDetails"
+              >
+                下載 CSV
+              </BaseButton>
+              <BaseButton
+                variant="secondary"
+                :icon="ArrowLeftIcon"
+                @click="goBack"
+              >
+                返回列表
+              </BaseButton>
+            </div>
+          </template>
+
+          <!-- 明細列表 -->
+          <BaseCard padding="none">
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead
+                  :class="theme === 'dark' ? 'bg-secondary-800' : 'bg-neutral-50'"
+                >
+                  <tr>
+                    <th
+                      class="p-4 text-left font-semibold text-sm"
+                      :class="theme === 'dark' ? 'text-neutral-300 border-b-2 border-secondary-700' : 'text-neutral-700 border-b-2 border-neutral-200'"
+                    >
+                      訂單編號
+                    </th>
+                    <th
+                      class="p-4 text-left font-semibold text-sm"
+                      :class="theme === 'dark' ? 'text-neutral-300 border-b-2 border-secondary-700' : 'text-neutral-700 border-b-2 border-neutral-200'"
+                    >
+                      訂票人
+                    </th>
+                    <th
+                      class="p-4 text-left font-semibold text-sm"
+                      :class="theme === 'dark' ? 'text-neutral-300 border-b-2 border-secondary-700' : 'text-neutral-700 border-b-2 border-neutral-200'"
+                    >
+                      聯絡電話
+                    </th>
+                    <th
+                      class="p-4 text-left font-semibold text-sm"
+                      :class="theme === 'dark' ? 'text-neutral-300 border-b-2 border-secondary-700' : 'text-neutral-700 border-b-2 border-neutral-200'"
+                    >
+                      出發地
+                    </th>
+                    <th
+                      class="p-4 text-left font-semibold text-sm"
+                      :class="theme === 'dark' ? 'text-neutral-300 border-b-2 border-secondary-700' : 'text-neutral-700 border-b-2 border-neutral-200'"
+                    >
+                      訂票方式
+                    </th>
+                    <th
+                      class="p-4 text-left font-semibold text-sm"
+                      :class="theme === 'dark' ? 'text-neutral-300 border-b-2 border-secondary-700' : 'text-neutral-700 border-b-2 border-neutral-200'"
+                    >
+                      經銷商
+                    </th>
+                    <th
+                      class="p-4 text-left font-semibold text-sm"
+                      :class="theme === 'dark' ? 'text-neutral-300 border-b-2 border-secondary-700' : 'text-neutral-700 border-b-2 border-neutral-200'"
+                    >
+                      出發日期
+                    </th>
+                    <th
+                      class="p-4 text-left font-semibold text-sm"
+                      :class="theme === 'dark' ? 'text-neutral-300 border-b-2 border-secondary-700' : 'text-neutral-700 border-b-2 border-neutral-200'"
+                    >
+                      出發時間
+                    </th>
+                    <th
+                      class="p-4 text-left font-semibold text-sm"
+                      :class="theme === 'dark' ? 'text-neutral-300 border-b-2 border-secondary-700' : 'text-neutral-700 border-b-2 border-neutral-200'"
+                    >
+                      回程日期
+                    </th>
+                    <th
+                      class="p-4 text-left font-semibold text-sm"
+                      :class="theme === 'dark' ? 'text-neutral-300 border-b-2 border-secondary-700' : 'text-neutral-700 border-b-2 border-neutral-200'"
+                    >
+                      回程時間
+                    </th>
+                    <th
+                      class="p-4 text-center font-semibold text-sm"
+                      :class="theme === 'dark' ? 'text-neutral-300 border-b-2 border-secondary-700' : 'text-neutral-700 border-b-2 border-neutral-200'"
+                    >
+                      全票
+                    </th>
+                    <th
+                      class="p-4 text-center font-semibold text-sm"
+                      :class="theme === 'dark' ? 'text-neutral-300 border-b-2 border-secondary-700' : 'text-neutral-700 border-b-2 border-neutral-200'"
+                    >
+                      半票
+                    </th>
+                    <th
+                      class="p-4 text-right font-semibold text-sm"
+                      :class="theme === 'dark' ? 'text-neutral-300 border-b-2 border-secondary-700' : 'text-neutral-700 border-b-2 border-neutral-200'"
+                    >
+                      金額
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="order in orders"
+                    :key="order.orderNumber"
+                    :class="[
+                      'border-b',
+                      theme === 'dark'
+                        ? 'hover:bg-secondary-800 border-secondary-800'
+                        : 'hover:bg-neutral-50 border-neutral-100'
+                    ]"
+                  >
+                    <td
+                      class="p-4 font-mono text-xs"
+                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-800'"
+                    >
+                      {{ order.orderNumber }}
+                    </td>
+                    <td
+                      class="p-4"
+                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-800'"
+                    >
+                      {{ order.bookerName }}
+                    </td>
+                    <td
+                      class="p-4"
+                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-800'"
+                    >
+                      {{ order.bookerPhone }}
+                    </td>
+                    <td
+                      class="p-4"
+                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-800'"
+                    >
+                      {{ order.departure }}
+                    </td>
+                    <td
+                      class="p-4"
+                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-800'"
+                    >
+                      {{ order.bookingType }}
+                    </td>
+                    <td
+                      class="p-4"
+                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-800'"
+                    >
+                      {{ order.distributor || '-' }}
+                    </td>
+                    <td
+                      class="p-4"
+                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-800'"
+                    >
+                      {{ order.outboundDate }}
+                    </td>
+                    <td
+                      class="p-4"
+                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-800'"
+                    >
+                      {{ order.outboundTime }}
+                    </td>
+                    <td
+                      class="p-4"
+                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-800'"
+                    >
+                      {{ order.returnDate || '-' }}
+                    </td>
+                    <td
+                      class="p-4"
+                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-800'"
+                    >
+                      {{ order.returnTime || '-' }}
+                    </td>
+                    <td
+                      class="p-4 text-center"
+                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-800'"
+                    >
+                      {{ order.tickets.full }}
+                    </td>
+                    <td
+                      class="p-4 text-center"
+                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-800'"
+                    >
+                      {{ order.tickets.half }}
+                    </td>
+                    <td
+                      class="p-4 text-right font-semibold"
+                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-800'"
+                    >
+                      NT$ {{ order.pricing.discountedTotal.toLocaleString() }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div
+              v-if="orders.length === 0"
+              class="text-center py-12"
+              :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'"
+            >
+              <ClipboardDocumentListIcon
+                class="w-24 h-24 mx-auto mb-4 opacity-30"
+                :class="theme === 'dark' ? 'text-neutral-600' : 'text-neutral-300'"
+              />
+              <div class="text-lg mb-2">此月份無訂單資料</div>
+            </div>
+          </BaseCard>
+        </PageContainer>
+      </main>
+    </div>
   </div>
 </template>

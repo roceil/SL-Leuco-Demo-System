@@ -1,13 +1,28 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import Navbar from '../components/Navbar.vue'
-import Sidebar from '../components/Sidebar.vue'
-import { useSidebar } from '../composables/useSidebar'
-import { useOrders } from '../composables/useOrders'
+import Navbar from '@/components/Navbar.vue'
+import Sidebar from '@/components/Sidebar.vue'
+import PageContainer from '@/components/ui/PageContainer.vue'
+import BaseCard from '@/components/ui/BaseCard.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
+import { useSidebar } from '@/composables/useSidebar'
+import { useTheme } from '@/composables/useTheme'
+import { useOrders } from '@/composables/useOrders'
+import { BookingType } from '@/constants/mockOrders'
+import {
+  TicketIcon,
+  MinusIcon,
+  PlusIcon,
+  CheckIcon,
+  XMarkIcon,
+  ExclamationTriangleIcon
+} from '@heroicons/vue/24/outline'
 
 const router = useRouter()
 const { isCollapsed } = useSidebar()
+const { theme } = useTheme()
 const { addOrder } = useOrders()
 
 const fullTicket = ref(0)
@@ -21,6 +36,12 @@ const outboundDate = ref('')
 const outboundTime = ref('')
 const returnDate = ref('')
 const returnTime = ref('')
+
+// 錯誤訊息
+const errors = ref({
+  bookerName: '',
+  bookerPhone: ''
+})
 
 // 船班時間選項
 const timeSlots = [
@@ -101,10 +122,18 @@ const generateOrderNumber = (): string => {
 
 // 表單驗證
 const validateForm = (): string | null => {
+  // 重置錯誤
+  errors.value = {
+    bookerName: '',
+    bookerPhone: ''
+  }
+
   if (!bookerName.value.trim()) {
+    errors.value.bookerName = '請輸入訂票人姓名'
     return '請輸入訂票人姓名'
   }
   if (!bookerPhone.value.trim()) {
+    errors.value.bookerPhone = '請輸入訂票人聯絡方式'
     return '請輸入訂票人聯絡方式'
   }
   if (!outboundDate.value) {
@@ -134,7 +163,10 @@ const handleSubmit = () => {
   const order = {
     orderNumber,
     departure: departure.value === 'donggang' ? '東港' : '小琉球',
-    bookingType: '經銷商代訂',
+    bookingType: BookingType.COUNTER_PROXY,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company' as const,
     distributor: distributor.value,
     bookerName: bookerName.value,
     bookerPhone: bookerPhone.value,
@@ -159,12 +191,12 @@ const handleSubmit = () => {
 
   // 顯示成功訊息並詢問是否跳轉
   const goToOrderSearch = confirm(
-    `✅ 訂票成功！\n\n` +
-    `📋 訂單編號：${orderNumber}\n` +
-    `👤 訂票人：${bookerName.value}\n` +
-    `📅 去程日期：${outboundDate.value} ${outboundTime.value}\n` +
-    `🎫 票種：全票 x${fullTicket.value}、半票 x${halfTicket.value}\n` +
-    `💰 折扣後總金額：${discountedTotal()} 元\n\n` +
+    `訂票成功！\n\n` +
+    `訂單編號：${orderNumber}\n` +
+    `訂票人：${bookerName.value}\n` +
+    `去程日期：${outboundDate.value} ${outboundTime.value}\n` +
+    `票種：全票 x${fullTicket.value}、半票 x${halfTicket.value}\n` +
+    `折扣後總金額：${discountedTotal()} 元\n\n` +
     `是否前往訂單查詢頁面查看詳細資訊？`
   )
 
@@ -200,334 +232,477 @@ const handleCancel = () => {
     returnDate.value = formatDate(returnDay)
     outboundTime.value = ''
     returnTime.value = ''
+    errors.value = {
+      bookerName: '',
+      bookerPhone: ''
+    }
   }
 }
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <Navbar />
-    <Sidebar active-route="dashboard" />
+  <div class="min-h-screen flex flex-col">
+    <Navbar username="管理員" />
 
-    <!-- 主要內容區 -->
-    <main :class="['p-8 min-h-[calc(100vh-4rem)] transition-all duration-300', isCollapsed ? 'ml-20' : 'ml-64']">
-      <!-- 麵包屑 -->
-      <div class="flex items-center gap-2 text-gray-600 text-sm mb-6">
-        <a
-          href="#"
-          class="text-blue-600 hover:underline"
-        >首頁</a>
-        <span>→</span>
-        <a
-          href="#"
-          class="text-blue-600 hover:underline"
-        >訂位作業</a>
-        <span>→</span>
-        <span>訂票</span>
-      </div>
+    <div class="flex flex-1">
+      <Sidebar :active-route="$route.path.slice(1)" />
 
-      <!-- 頁面標題 -->
-      <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">訂票</h1>
-        <p class="text-gray-600">選擇航程並填寫乘客資訊</p>
-      </div>
-
-      <!-- 警告訊息 -->
-      <div
-        v-show="false"
-        class="flex items-start gap-3 p-4 rounded-lg mb-6 bg-orange-50 border-l-4 border-orange-500"
+      <main
+        :class="[
+          'flex-1 transition-all duration-300',
+          isCollapsed ? 'ml-20' : 'ml-64'
+        ]"
       >
-        <span class="text-xl">⚠️</span>
-        <span class="text-orange-800 text-sm">OCR 套件未安裝，請聯絡管理員啟用身分證自動識別功能</span>
-      </div>
-
-      <!-- 訂票資訊卡片 -->
-      <div class="bg-white rounded-xl p-8 shadow-md mb-6">
-        <h2 class="text-xl font-semibold text-gray-800 mb-6 pb-4 border-b-2 border-gray-200">訂票資訊</h2>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div class="space-y-2">
-            <label
-              for="departure"
-              class="block text-gray-700 text-sm font-medium"
-            >出發地點</label>
-            <select
-              id="departure"
-              v-model="departure"
-              class="w-full p-3 border-2 border-gray-300 rounded-lg text-base transition-all outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-            >
-              <option value="donggang">東港出發</option>
-              <option value="xiaoliuqiu">小琉球出發</option>
-            </select>
+        <PageContainer
+          title="訂票作業"
+          subtitle="選擇航程並填寫乘客資訊"
+          :icon="TicketIcon"
+          max-width="2xl"
+        >
+          <!-- 警告訊息 -->
+          <div
+            v-show="false"
+            class="flex items-start gap-3 p-4 rounded-lg mb-6 border-l-4"
+            :class="
+              theme === 'dark'
+                ? 'bg-amber-950 border-amber-500 text-amber-200'
+                : 'bg-amber-50 border-amber-500 text-amber-800'
+            "
+          >
+            <ExclamationTriangleIcon class="w-5 h-5 flex-shrink-0 mt-0.5" />
+            <span class="text-sm">OCR 套件未安裝，請聯絡管理員啟用身分證自動識別功能</span>
           </div>
 
-          <div class="space-y-2">
-            <label
-              for="bookingType"
-              class="block text-gray-700 text-sm font-medium"
-            >訂票類型</label>
-            <select
-              id="bookingType"
-              v-model="bookingType"
-              class="w-full p-3 border-2 border-gray-300 rounded-lg text-base transition-all outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-            >
-              <option value="distributor">經銷商代訂</option>
-            </select>
-          </div>
-
-          <div class="space-y-2">
-            <label
-              for="distributor"
-              class="block text-gray-700 text-sm font-medium"
-            >經銷名稱</label>
-            <input
-              type="text"
-              id="distributor"
-              v-model="distributor"
-              disabled
-              class="w-full p-3 border-2 border-gray-300 rounded-lg text-base bg-gray-100 cursor-not-allowed"
-            >
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="space-y-2">
-            <label
-              for="bookerName"
-              class="block text-gray-700 text-sm font-medium"
-            >
-              訂票人<span class="text-red-500 ml-1">*</span>
-            </label>
-            <input
-              type="text"
-              id="bookerName"
-              v-model="bookerName"
-              placeholder="請掃描或手動輸入"
-              class="w-full p-3 border-2 border-gray-300 rounded-lg text-base transition-all outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-            >
-          </div>
-
-          <div class="space-y-2">
-            <label
-              for="bookerPhone"
-              class="block text-gray-700 text-sm font-medium"
-            >
-              訂票人聯絡方式<span class="text-red-500 ml-1">*</span>
-            </label>
-            <input
-              type="text"
-              id="bookerPhone"
-              v-model="bookerPhone"
-              placeholder="行動電話"
-              class="w-full p-3 border-2 border-gray-300 rounded-lg text-base transition-all outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-            >
-          </div>
-        </div>
-      </div>
-
-      <!-- 去回程日期設定 -->
-      <div class="bg-white rounded-xl p-8 shadow-md mb-6">
-        <h2 class="text-xl font-semibold text-gray-800 mb-6 pb-4 border-b-2 border-gray-200">去回程日期設定</h2>
-
-        <div class="flex flex-col md:flex-row gap-6">
-          <!-- 去程 -->
-          <div class="flex-1 rounded-xl p-6 bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-500">
-            <div class="flex items-center gap-3 mb-5 flex-wrap">
-              <h3 class="text-lg font-semibold text-blue-800">去程日期</h3>
-              <span
-                class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-green-500 text-white"
-              >訂 0</span>
-              <span
-                class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500 text-white"
-              >取 0</span>
-              <span
-                class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-orange-500 text-white"
-              >登 0</span>
-            </div>
-
-            <div class="space-y-4">
+          <!-- 訂票資訊 -->
+          <BaseCard title="訂票資訊" padding="lg" class="mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div class="space-y-2">
                 <label
-                  for="outboundDate"
-                  class="block text-gray-700 text-sm font-medium"
+                  for="departure"
+                  class="block text-sm font-medium"
+                  :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
                 >
-                  去程日期<span class="text-red-500 ml-1">*</span>
-                </label>
-                <input
-                  type="date"
-                  id="outboundDate"
-                  v-model="outboundDate"
-                  class="w-full p-3 border-2 border-gray-300 rounded-lg text-base transition-all outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                >
-              </div>
-
-              <div class="space-y-2">
-                <label
-                  for="outboundTime"
-                  class="block text-gray-700 text-sm font-medium"
-                >
-                  去程船班時間<span class="text-red-500 ml-1">*</span>
+                  出發地點
                 </label>
                 <select
-                  id="outboundTime"
-                  v-model="outboundTime"
-                  class="w-full p-3 border-2 border-gray-300 rounded-lg text-base transition-all outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  id="departure"
+                  v-model="departure"
+                  class="w-full px-3 py-2 rounded-lg border transition-all outline-none"
+                  :class="
+                    theme === 'dark'
+                      ? 'bg-secondary-800 border-secondary-700 text-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/50'
+                      : 'bg-white border-neutral-300 text-neutral-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/50'
+                  "
                 >
-                  <option value="">請選擇船班時間</option>
-                  <option
-                    v-for="time in timeSlots"
-                    :key="time"
-                    :value="time"
-                  >
-                    {{ time }}
-                  </option>
+                  <option value="donggang">東港出發</option>
+                  <option value="xiaoliuqiu">小琉球出發</option>
                 </select>
               </div>
-            </div>
-          </div>
 
-          <!-- 回程 -->
-          <div class="flex-1 rounded-xl p-6 bg-gradient-to-br from-orange-50 to-orange-100 border-2 border-orange-500">
-            <div class="flex items-center gap-3 mb-5 flex-wrap">
-              <h3 class="text-lg font-semibold text-orange-800">回程日期</h3>
-              <span
-                class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-green-500 text-white"
-              >訂 0</span>
-              <span
-                class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500 text-white"
-              >取 0</span>
-              <span
-                class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-orange-500 text-white"
-              >登 0</span>
-            </div>
-
-            <div class="space-y-4">
               <div class="space-y-2">
                 <label
-                  for="returnDate"
-                  class="block text-gray-700 text-sm font-medium"
-                >回程日期</label>
-                <input
-                  type="date"
-                  id="returnDate"
-                  v-model="returnDate"
-                  class="w-full p-3 border-2 border-gray-300 rounded-lg text-base transition-all outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  for="bookingType"
+                  class="block text-sm font-medium"
+                  :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
                 >
-              </div>
-
-              <div class="space-y-2">
-                <label
-                  for="returnTime"
-                  class="block text-gray-700 text-sm font-medium"
-                >回程船班時間</label>
+                  訂票類型
+                </label>
                 <select
-                  id="returnTime"
-                  v-model="returnTime"
-                  class="w-full p-3 border-2 border-gray-300 rounded-lg text-base transition-all outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  id="bookingType"
+                  v-model="bookingType"
+                  class="w-full px-3 py-2 rounded-lg border transition-all outline-none"
+                  :class="
+                    theme === 'dark'
+                      ? 'bg-secondary-800 border-secondary-700 text-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/50'
+                      : 'bg-white border-neutral-300 text-neutral-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/50'
+                  "
                 >
-                  <option value="">請選擇船班時間</option>
-                  <option
-                    v-for="time in timeSlots"
-                    :key="time"
-                    :value="time"
-                  >
-                    {{ time }}
-                  </option>
+                  <option value="distributor">經銷商代訂</option>
                 </select>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <!-- 票種數量與價格資訊 -->
-      <div class="flex flex-col lg:flex-row gap-6 mb-6">
-        <!-- 票種選擇 -->
-        <div class="flex-1 bg-white rounded-xl p-8 shadow-md">
-          <h2 class="text-xl font-semibold text-gray-800 mb-6 pb-4 border-b-2 border-gray-200">票種與數量</h2>
-
-          <div class="flex items-center justify-between p-4 border-2 border-gray-300 rounded-lg mb-4">
-            <div class="flex-1">
-              <div class="font-semibold text-gray-800 mb-1">民宿全票來回數量</div>
-              <div class="text-sm text-gray-600">票面價格: 450元 / 折扣後價格: 370元</div>
+              <div class="space-y-2">
+                <label
+                  for="distributor"
+                  class="block text-sm font-medium"
+                  :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                >
+                  經銷名稱
+                </label>
+                <input
+                  type="text"
+                  id="distributor"
+                  v-model="distributor"
+                  disabled
+                  class="w-full px-3 py-2 rounded-lg border cursor-not-allowed"
+                  :class="
+                    theme === 'dark'
+                      ? 'bg-secondary-900 border-secondary-800 text-neutral-400'
+                      : 'bg-neutral-100 border-neutral-300 text-neutral-500'
+                  "
+                >
+              </div>
             </div>
-            <div class="flex items-center gap-3">
-              <button
-                @click="changeQuantity('full', -1)"
-                class="w-10 h-10 border-2 border-blue-600 bg-white text-blue-600 rounded-lg text-xl font-bold cursor-pointer transition-all hover:bg-blue-600 hover:text-white"
-                type="button"
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <BaseInput
+                v-model="bookerName"
+                label="訂票人"
+                placeholder="請掃描或手動輸入"
+                :error="errors.bookerName"
+                required
+              />
+
+              <BaseInput
+                v-model="bookerPhone"
+                type="tel"
+                label="訂票人聯絡方式"
+                placeholder="行動電話"
+                :error="errors.bookerPhone"
+                required
+              />
+            </div>
+          </BaseCard>
+
+          <!-- 去回程日期設定 -->
+          <BaseCard title="去回程日期設定" padding="lg" class="mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- 去程 -->
+              <div
+                class="rounded-lg p-6 border-2"
+                :class="
+                  theme === 'dark'
+                    ? 'bg-primary-950/30 border-primary-600'
+                    : 'bg-primary-50 border-primary-500'
+                "
               >
-                −
-              </button>
-              <div class="w-16 text-center text-lg font-bold text-gray-800">{{ fullTicket }}</div>
-              <button
-                @click="changeQuantity('full', 1)"
-                class="w-10 h-10 border-2 border-blue-600 bg-white text-blue-600 rounded-lg text-xl font-bold cursor-pointer transition-all hover:bg-blue-600 hover:text-white"
-                type="button"
+                <div class="flex items-center gap-3 mb-5 flex-wrap">
+                  <h3
+                    class="text-lg font-semibold"
+                    :class="theme === 'dark' ? 'text-primary-400' : 'text-primary-700'"
+                  >
+                    去程日期
+                  </h3>
+                  <span
+                    class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-green-500 text-white"
+                  >
+                    訂 0
+                  </span>
+                  <span
+                    class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-primary-500 text-white"
+                  >
+                    取 0
+                  </span>
+                  <span
+                    class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500 text-white"
+                  >
+                    登 0
+                  </span>
+                </div>
+
+                <div class="space-y-4">
+                  <div class="space-y-2">
+                    <label
+                      for="outboundDate"
+                      class="block text-sm font-medium"
+                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                    >
+                      去程日期<span class="text-red-500 ml-1">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      id="outboundDate"
+                      v-model="outboundDate"
+                      class="w-full px-3 py-2 rounded-lg border transition-all outline-none"
+                      :class="
+                        theme === 'dark'
+                          ? 'bg-secondary-800 border-secondary-700 text-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/50'
+                          : 'bg-white border-neutral-300 text-neutral-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/50'
+                      "
+                    >
+                  </div>
+
+                  <div class="space-y-2">
+                    <label
+                      for="outboundTime"
+                      class="block text-sm font-medium"
+                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                    >
+                      去程船班時間<span class="text-red-500 ml-1">*</span>
+                    </label>
+                    <select
+                      id="outboundTime"
+                      v-model="outboundTime"
+                      class="w-full px-3 py-2 rounded-lg border transition-all outline-none"
+                      :class="
+                        theme === 'dark'
+                          ? 'bg-secondary-800 border-secondary-700 text-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/50'
+                          : 'bg-white border-neutral-300 text-neutral-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/50'
+                      "
+                    >
+                      <option value="">請選擇船班時間</option>
+                      <option
+                        v-for="time in timeSlots"
+                        :key="time"
+                        :value="time"
+                      >
+                        {{ time }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 回程 -->
+              <div
+                class="rounded-lg p-6 border-2"
+                :class="
+                  theme === 'dark'
+                    ? 'bg-amber-950/30 border-amber-600'
+                    : 'bg-amber-50 border-amber-500'
+                "
               >
-                +
-              </button>
-            </div>
-          </div>
+                <div class="flex items-center gap-3 mb-5 flex-wrap">
+                  <h3
+                    class="text-lg font-semibold"
+                    :class="theme === 'dark' ? 'text-amber-400' : 'text-amber-700'"
+                  >
+                    回程日期
+                  </h3>
+                  <span
+                    class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-green-500 text-white"
+                  >
+                    訂 0
+                  </span>
+                  <span
+                    class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-primary-500 text-white"
+                  >
+                    取 0
+                  </span>
+                  <span
+                    class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500 text-white"
+                  >
+                    登 0
+                  </span>
+                </div>
 
-          <div class="flex items-center justify-between p-4 border-2 border-gray-300 rounded-lg">
-            <div class="flex-1">
-              <div class="font-semibold text-gray-800 mb-1">民宿半票來回數量</div>
-              <div class="text-sm text-gray-600">票面價格: 225元 / 折扣後價格: 200元</div>
+                <div class="space-y-4">
+                  <div class="space-y-2">
+                    <label
+                      for="returnDate"
+                      class="block text-sm font-medium"
+                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                    >
+                      回程日期
+                    </label>
+                    <input
+                      type="date"
+                      id="returnDate"
+                      v-model="returnDate"
+                      class="w-full px-3 py-2 rounded-lg border transition-all outline-none"
+                      :class="
+                        theme === 'dark'
+                          ? 'bg-secondary-800 border-secondary-700 text-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/50'
+                          : 'bg-white border-neutral-300 text-neutral-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/50'
+                      "
+                    >
+                  </div>
+
+                  <div class="space-y-2">
+                    <label
+                      for="returnTime"
+                      class="block text-sm font-medium"
+                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                    >
+                      回程船班時間
+                    </label>
+                    <select
+                      id="returnTime"
+                      v-model="returnTime"
+                      class="w-full px-3 py-2 rounded-lg border transition-all outline-none"
+                      :class="
+                        theme === 'dark'
+                          ? 'bg-secondary-800 border-secondary-700 text-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/50'
+                          : 'bg-white border-neutral-300 text-neutral-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/50'
+                      "
+                    >
+                      <option value="">請選擇船班時間</option>
+                      <option
+                        v-for="time in timeSlots"
+                        :key="time"
+                        :value="time"
+                      >
+                        {{ time }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="flex items-center gap-3">
-              <button
-                @click="changeQuantity('half', -1)"
-                class="w-10 h-10 border-2 border-blue-600 bg-white text-blue-600 rounded-lg text-xl font-bold cursor-pointer transition-all hover:bg-blue-600 hover:text-white"
-                type="button"
+          </BaseCard>
+
+          <!-- 票種數量與價格資訊 -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- 票種選擇 -->
+            <BaseCard title="票種與數量" padding="lg">
+              <div
+                class="flex items-center justify-between p-4 border-2 rounded-lg mb-4"
+                :class="
+                  theme === 'dark' ? 'border-secondary-700' : 'border-neutral-300'
+                "
               >
-                −
-              </button>
-              <div class="w-16 text-center text-lg font-bold text-gray-800">{{ halfTicket }}</div>
-              <button
-                @click="changeQuantity('half', 1)"
-                class="w-10 h-10 border-2 border-blue-600 bg-white text-blue-600 rounded-lg text-xl font-bold cursor-pointer transition-all hover:bg-blue-600 hover:text-white"
-                type="button"
+                <div class="flex-1">
+                  <div
+                    class="font-semibold mb-1"
+                    :class="theme === 'dark' ? 'text-white' : 'text-neutral-800'"
+                  >
+                    民宿全票來回數量
+                  </div>
+                  <div
+                    class="text-sm"
+                    :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
+                  >
+                    票面價格: 450元 / 折扣後價格: 370元
+                  </div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <button
+                    @click="changeQuantity('full', -1)"
+                    class="w-10 h-10 border-2 border-primary-500 text-primary-500 rounded-lg text-xl font-bold cursor-pointer transition-all hover:bg-primary-500 hover:text-white"
+                    type="button"
+                  >
+                    <MinusIcon class="w-5 h-5 mx-auto" />
+                  </button>
+                  <div
+                    class="w-16 text-center text-lg font-bold"
+                    :class="theme === 'dark' ? 'text-white' : 'text-neutral-800'"
+                  >
+                    {{ fullTicket }}
+                  </div>
+                  <button
+                    @click="changeQuantity('full', 1)"
+                    class="w-10 h-10 border-2 border-primary-500 text-primary-500 rounded-lg text-xl font-bold cursor-pointer transition-all hover:bg-primary-500 hover:text-white"
+                    type="button"
+                  >
+                    <PlusIcon class="w-5 h-5 mx-auto" />
+                  </button>
+                </div>
+              </div>
+
+              <div
+                class="flex items-center justify-between p-4 border-2 rounded-lg"
+                :class="
+                  theme === 'dark' ? 'border-secondary-700' : 'border-neutral-300'
+                "
               >
-                +
-              </button>
-            </div>
+                <div class="flex-1">
+                  <div
+                    class="font-semibold mb-1"
+                    :class="theme === 'dark' ? 'text-white' : 'text-neutral-800'"
+                  >
+                    民宿半票來回數量
+                  </div>
+                  <div
+                    class="text-sm"
+                    :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
+                  >
+                    票面價格: 225元 / 折扣後價格: 200元
+                  </div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <button
+                    @click="changeQuantity('half', -1)"
+                    class="w-10 h-10 border-2 border-primary-500 text-primary-500 rounded-lg text-xl font-bold cursor-pointer transition-all hover:bg-primary-500 hover:text-white"
+                    type="button"
+                  >
+                    <MinusIcon class="w-5 h-5 mx-auto" />
+                  </button>
+                  <div
+                    class="w-16 text-center text-lg font-bold"
+                    :class="theme === 'dark' ? 'text-white' : 'text-neutral-800'"
+                  >
+                    {{ halfTicket }}
+                  </div>
+                  <button
+                    @click="changeQuantity('half', 1)"
+                    class="w-10 h-10 border-2 border-primary-500 text-primary-500 rounded-lg text-xl font-bold cursor-pointer transition-all hover:bg-primary-500 hover:text-white"
+                    type="button"
+                  >
+                    <PlusIcon class="w-5 h-5 mx-auto" />
+                  </button>
+                </div>
+              </div>
+            </BaseCard>
+
+            <!-- 價格資訊 -->
+            <BaseCard title="價格資訊" padding="lg">
+              <div
+                class="p-6 rounded-lg border-2 mb-4"
+                :class="
+                  theme === 'dark'
+                    ? 'bg-green-950/30 border-green-600'
+                    : 'bg-green-50 border-green-500'
+                "
+              >
+                <div
+                  class="text-sm font-medium mb-2"
+                  :class="theme === 'dark' ? 'text-green-400' : 'text-green-800'"
+                >
+                  票面總金額
+                </div>
+                <div
+                  class="text-4xl font-bold"
+                  :class="theme === 'dark' ? 'text-green-500' : 'text-green-700'"
+                >
+                  {{ originalTotal() }} 元
+                </div>
+              </div>
+
+              <div
+                class="p-6 rounded-lg border-2"
+                :class="
+                  theme === 'dark'
+                    ? 'bg-amber-950/30 border-amber-600'
+                    : 'bg-amber-50 border-amber-500'
+                "
+              >
+                <div
+                  class="text-sm font-medium mb-2"
+                  :class="theme === 'dark' ? 'text-amber-400' : 'text-amber-800'"
+                >
+                  折扣後總金額
+                </div>
+                <div
+                  class="text-4xl font-bold"
+                  :class="theme === 'dark' ? 'text-amber-500' : 'text-amber-700'"
+                >
+                  {{ discountedTotal() }} 元
+                </div>
+              </div>
+            </BaseCard>
           </div>
-        </div>
 
-        <!-- 價格資訊 -->
-        <div class="flex-1 bg-white rounded-xl p-8 shadow-md">
-          <h2 class="text-xl font-semibold text-gray-800 mb-6 pb-4 border-b-2 border-gray-200">價格資訊</h2>
-
-          <div class="p-6 rounded-lg bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-500 mb-4">
-            <div class="text-sm text-green-800 font-medium mb-2">票面總金額</div>
-            <div class="text-4xl font-bold text-green-700">{{ originalTotal() }} 元</div>
+          <!-- 操作按鈕 -->
+          <div class="flex gap-3 justify-end pt-4">
+            <BaseButton
+              type="button"
+              variant="ghost"
+              :icon="XMarkIcon"
+              @click="handleCancel"
+            >
+              取消
+            </BaseButton>
+            <BaseButton
+              type="button"
+              variant="primary"
+              :icon="CheckIcon"
+              @click="handleSubmit"
+            >
+              確認訂票
+            </BaseButton>
           </div>
-
-          <div class="p-6 rounded-lg bg-gradient-to-br from-orange-50 to-orange-100 border-2 border-orange-500">
-            <div class="text-sm text-orange-800 font-medium mb-2">折扣後總金額</div>
-            <div class="text-4xl font-bold text-orange-700">{{ discountedTotal() }} 元</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 操作按鈕 -->
-      <div class="flex gap-4 justify-end">
-        <button
-          @click="handleCancel"
-          type="button"
-          class="py-3 px-8 bg-white text-gray-700 border-2 border-gray-300 rounded-lg text-base font-semibold cursor-pointer transition-all hover:bg-gray-50 hover:border-gray-400"
-        >
-          取消
-        </button>
-        <button
-          @click="handleSubmit"
-          type="button"
-          class="py-3 px-8 bg-blue-600 text-white rounded-lg text-base font-semibold cursor-pointer transition-all shadow-lg hover:bg-blue-700 hover:-translate-y-0.5 hover:shadow-xl"
-        >
-          確認訂票
-        </button>
-      </div>
-    </main>
+        </PageContainer>
+      </main>
+    </div>
   </div>
 </template>

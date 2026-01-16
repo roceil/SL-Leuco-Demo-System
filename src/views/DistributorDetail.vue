@@ -1,12 +1,36 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import Navbar from '../components/Navbar.vue'
-import Sidebar from '../components/Sidebar.vue'
-import { useSidebar } from '../composables/useSidebar'
-import { distributors, mockOrders, DistributorType, type SavedOrder, type Distributor } from '../constants/mockOrders'
+import { useSidebar } from '@/composables/useSidebar'
+import { useTheme } from '@/composables/useTheme'
+import Navbar from '@/components/Navbar.vue'
+import Sidebar from '@/components/Sidebar.vue'
+import PageContainer from '@/components/ui/PageContainer.vue'
+import BaseCard from '@/components/ui/BaseCard.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import {
+  distributors,
+  mockOrders,
+  DistributorType,
+  type SavedOrder,
+  type Distributor
+} from '@/constants/mockOrders'
+import {
+  BuildingStorefrontIcon,
+  ArrowDownTrayIcon,
+  ArrowLeftIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
+  ChevronUpDownIcon,
+  ClipboardDocumentListIcon,
+  ExclamationCircleIcon,
+  UserIcon,
+  PhoneIcon,
+  HashtagIcon
+} from '@heroicons/vue/24/outline'
 
 const { isCollapsed } = useSidebar()
+const { theme } = useTheme()
 const router = useRouter()
 const route = useRoute()
 
@@ -50,8 +74,8 @@ const filteredOrders = computed(() => {
   // 排序
   if (sortField.value && sortOrder.value) {
     orders = [...orders].sort((a, b) => {
-      let aValue: any
-      let bValue: any
+      let aValue: string | number
+      let bValue: string | number
 
       switch (sortField.value) {
         case 'orderNumber':
@@ -138,12 +162,12 @@ const handleSort = (field: SortField) => {
   }
 }
 
-// 獲取排序圖標
+// 獲取排序圖標組件
 const getSortIcon = (field: SortField) => {
-  if (sortField.value !== field) return '⇅'
-  if (sortOrder.value === 'asc') return '▲'
-  if (sortOrder.value === 'desc') return '▼'
-  return '⇅'
+  if (sortField.value !== field) return ChevronUpDownIcon
+  if (sortOrder.value === 'asc') return ChevronUpIcon
+  if (sortOrder.value === 'desc') return ChevronDownIcon
+  return ChevronUpDownIcon
 }
 
 // 格式化月份顯示
@@ -185,7 +209,6 @@ const downloadCSV = () => {
     ...rows.map(row => row.join(','))
   ].join('\n')
 
-  // cSpell:ignore ufeff
   const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
   const link = document.createElement('a')
   const url = URL.createObjectURL(blob)
@@ -197,265 +220,439 @@ const downloadCSV = () => {
   document.body.removeChild(link)
 }
 
+// 獲取訂票單位類型的樣式
+const getDistributorTypeStyle = (type: DistributorType) => {
+  const styles = {
+    [DistributorType.BNB]: theme.value === 'dark'
+      ? 'bg-primary-900/30 text-primary-400'
+      : 'bg-primary-100 text-primary-700',
+    [DistributorType.TRAVEL_AGENCY]: theme.value === 'dark'
+      ? 'bg-green-900/30 text-green-400'
+      : 'bg-green-100 text-green-700',
+    [DistributorType.BEE]: theme.value === 'dark'
+      ? 'bg-amber-900/30 text-amber-400'
+      : 'bg-amber-100 text-amber-700',
+    [DistributorType.DIRECT]: theme.value === 'dark'
+      ? 'bg-purple-900/30 text-purple-400'
+      : 'bg-purple-100 text-purple-700',
+    [DistributorType.ONLINE]: theme.value === 'dark'
+      ? 'bg-pink-900/30 text-pink-400'
+      : 'bg-pink-100 text-pink-700'
+  }
+  return styles[type] || ''
+}
+
 onMounted(() => {
   loadDistributor()
 })
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <Navbar />
-    <Sidebar active-route="report" />
+  <div class="min-h-screen flex flex-col">
+    <Navbar username="管理員" />
 
-    <!-- 主要內容區 -->
-    <main :class="['p-8 min-h-[calc(100vh-4rem)] transition-all duration-300', isCollapsed ? 'ml-20' : 'ml-64']">
-      <div v-if="distributor">
-        <!-- 麵包屑 -->
-        <div class="flex items-center gap-2 text-gray-600 text-sm mb-6">
-          <a
-            href="#"
-            class="text-blue-600 hover:underline"
-          >首頁</a>
-          <span>→</span>
-          <button
-            @click="goBack"
-            class="text-blue-600 hover:underline"
-          >報表總覽</button>
-          <span>→</span>
-          <span>{{ distributor.name }}</span>
-        </div>
+    <div class="flex flex-1">
+      <Sidebar :active-route="$route.path.slice(1)" />
 
-        <!-- 訂票單位資訊卡片 -->
-        <div class="bg-white rounded-xl p-8 shadow-md mb-6">
-          <div class="flex items-center justify-between mb-6">
-            <div>
-              <h1 class="text-3xl font-bold text-gray-800 mb-3">{{ distributor.name }}</h1>
-              <div class="flex items-center gap-4">
+      <main
+        :class="[
+          'flex-1 transition-all duration-300',
+          isCollapsed ? 'ml-20' : 'ml-64'
+        ]"
+      >
+        <div v-if="distributor">
+          <PageContainer
+            :title="distributor.name"
+            subtitle="訂票單位詳細資訊及訂單明細"
+            :icon="BuildingStorefrontIcon"
+            max-width="full"
+          >
+            <template #actions>
+              <BaseButton
+                variant="secondary"
+                :icon="ArrowLeftIcon"
+                @click="goBack"
+              >
+                返回列表
+              </BaseButton>
+            </template>
+
+            <!-- 訂票單位資訊卡片 -->
+            <BaseCard padding="lg" class="mb-6">
+              <div class="flex items-center justify-between mb-6">
                 <span
-                  class="inline-block px-4 py-2 rounded-full text-sm font-semibold"
-                  :class="{
-                    'bg-blue-100 text-blue-800': distributor.type === DistributorType.BNB,
-                    'bg-green-100 text-green-800': distributor.type === DistributorType.TRAVEL_AGENCY,
-                    'bg-orange-100 text-orange-800': distributor.type === DistributorType.BEE,
-                    'bg-purple-100 text-purple-800': distributor.type === DistributorType.DIRECT,
-                    'bg-pink-100 text-pink-800': distributor.type === DistributorType.ONLINE
-                  }"
+                  :class="[
+                    'inline-block px-4 py-2 rounded-full text-sm font-semibold',
+                    getDistributorTypeStyle(distributor.type)
+                  ]"
                 >
                   {{ distributor.type }}
                 </span>
               </div>
-            </div>
-            <button
-              @click="goBack"
-              class="py-2 px-6 bg-gray-500 text-white rounded-lg text-sm font-semibold cursor-pointer transition-all hover:bg-gray-600"
-            >
-              返回
-            </button>
-          </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="space-y-3">
-              <div class="flex items-center gap-3">
-                <span class="text-gray-600 font-medium">聯絡人：</span>
-                <span class="text-gray-800">{{ distributor.contact }}</span>
-              </div>
-              <div class="flex items-center gap-3">
-                <span class="text-gray-600 font-medium">聯絡電話：</span>
-                <span class="text-gray-800">{{ distributor.phone }}</span>
-              </div>
-            </div>
-            <div class="space-y-3">
-              <div class="flex items-center gap-3">
-                <span class="text-gray-600 font-medium">單位編號：</span>
-                <span class="text-gray-800">{{ distributor.id }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 統計卡片 -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-          <div class="bg-white rounded-xl p-6 shadow-md">
-            <div class="text-gray-600 text-sm mb-2">訂單總數</div>
-            <div class="text-3xl font-bold text-blue-600">{{ stats.totalOrders }}</div>
-          </div>
-          <div class="bg-white rounded-xl p-6 shadow-md">
-            <div class="text-gray-600 text-sm mb-2">全票總數</div>
-            <div class="text-3xl font-bold text-green-600">{{ stats.totalFullTickets }}</div>
-          </div>
-          <div class="bg-white rounded-xl p-6 shadow-md">
-            <div class="text-gray-600 text-sm mb-2">半票總數</div>
-            <div class="text-3xl font-bold text-orange-600">{{ stats.totalHalfTickets }}</div>
-          </div>
-          <div class="bg-white rounded-xl p-6 shadow-md">
-            <div class="text-gray-600 text-sm mb-2">總金額</div>
-            <div class="text-3xl font-bold text-purple-600">NT$ {{ stats.totalAmount.toLocaleString() }}</div>
-          </div>
-        </div>
-
-        <!-- 訂單列表 -->
-        <div class="bg-white rounded-xl p-8 shadow-md">
-          <div class="flex items-center justify-between mb-6 pb-4 border-b-2 border-gray-200">
-            <h2 class="text-xl font-semibold text-gray-800">訂單明細</h2>
-            <div class="flex items-center gap-4">
-              <select
-                v-model="selectedMonth"
-                class="p-2 border-2 border-gray-300 rounded-lg text-sm transition-all outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-              >
-                <option value="all">全部月份</option>
-                <option
-                  v-for="month in availableMonths"
-                  :key="month"
-                  :value="month"
-                >
-                  {{ formatMonth(month) }}
-                </option>
-              </select>
-              <button
-                @click="downloadCSV"
-                class="py-2 px-6 bg-green-600 text-white rounded-lg text-sm font-semibold cursor-pointer transition-all hover:bg-green-700"
-              >
-                下載 CSV
-              </button>
-            </div>
-          </div>
-
-          <div class="overflow-x-auto">
-            <table class="w-full">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="p-4 text-left font-semibold text-gray-700 text-sm border-b-2 border-gray-200">
-                    <button
-                      @click="handleSort('orderNumber')"
-                      class="flex items-center gap-2 hover:text-blue-600 transition-colors"
-                      type="button"
-                    >
-                      <span>訂單編號</span>
-                      <span class="text-xs">{{ getSortIcon('orderNumber') }}</span>
-                    </button>
-                  </th>
-                  <th class="p-4 text-left font-semibold text-gray-700 text-sm border-b-2 border-gray-200">
-                    <button
-                      @click="handleSort('outboundDate')"
-                      class="flex items-center gap-2 hover:text-blue-600 transition-colors"
-                      type="button"
-                    >
-                      <span>出發日期</span>
-                      <span class="text-xs">{{ getSortIcon('outboundDate') }}</span>
-                    </button>
-                  </th>
-                  <th class="p-4 text-left font-semibold text-gray-700 text-sm border-b-2 border-gray-200">
-                    <button
-                      @click="handleSort('bookerName')"
-                      class="flex items-center gap-2 hover:text-blue-600 transition-colors"
-                      type="button"
-                    >
-                      <span>訂票人</span>
-                      <span class="text-xs">{{ getSortIcon('bookerName') }}</span>
-                    </button>
-                  </th>
-                  <th class="p-4 text-left font-semibold text-gray-700 text-sm border-b-2 border-gray-200">聯絡電話</th>
-                  <th class="p-4 text-left font-semibold text-gray-700 text-sm border-b-2 border-gray-200">
-                    <button
-                      @click="handleSort('fullTickets')"
-                      class="flex items-center gap-2 hover:text-blue-600 transition-colors"
-                      type="button"
-                    >
-                      <span>全票</span>
-                      <span class="text-xs">{{ getSortIcon('fullTickets') }}</span>
-                    </button>
-                  </th>
-                  <th class="p-4 text-left font-semibold text-gray-700 text-sm border-b-2 border-gray-200">
-                    <button
-                      @click="handleSort('halfTickets')"
-                      class="flex items-center gap-2 hover:text-blue-600 transition-colors"
-                      type="button"
-                    >
-                      <span>半票</span>
-                      <span class="text-xs">{{ getSortIcon('halfTickets') }}</span>
-                    </button>
-                  </th>
-                  <th class="p-4 text-left font-semibold text-gray-700 text-sm border-b-2 border-gray-200">
-                    <button
-                      @click="handleSort('amount')"
-                      class="flex items-center gap-2 hover:text-blue-600 transition-colors"
-                      type="button"
-                    >
-                      <span>金額</span>
-                      <span class="text-xs">{{ getSortIcon('amount') }}</span>
-                    </button>
-                  </th>
-                  <th class="p-4 text-left font-semibold text-gray-700 text-sm border-b-2 border-gray-200">
-                    <button
-                      @click="handleSort('status')"
-                      class="flex items-center gap-2 hover:text-blue-600 transition-colors"
-                      type="button"
-                    >
-                      <span>狀態</span>
-                      <span class="text-xs">{{ getSortIcon('status') }}</span>
-                    </button>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="order in filteredOrders"
-                  :key="order.orderNumber"
-                  @click="viewOrderDetail(order.orderNumber)"
-                  class="hover:bg-blue-50 cursor-pointer transition-colors"
-                >
-                  <td class="p-4 text-gray-800 border-b border-gray-100 font-semibold">{{ order.orderNumber }}</td>
-                  <td class="p-4 text-gray-800 border-b border-gray-100">{{ order.outboundDate }}</td>
-                  <td class="p-4 text-gray-800 border-b border-gray-100">{{ order.bookerName }}</td>
-                  <td class="p-4 text-gray-800 border-b border-gray-100">{{ order.bookerPhone }}</td>
-                  <td class="p-4 text-gray-800 border-b border-gray-100">{{ order.tickets.full }} 張</td>
-                  <td class="p-4 text-gray-800 border-b border-gray-100">{{ order.tickets.half }} 張</td>
-                  <td class="p-4 text-gray-800 border-b border-gray-100 font-semibold">NT$ {{
-                    order.pricing.discountedTotal.toLocaleString() }}</td>
-                  <td class="p-4 border-b border-gray-100">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                  <div class="flex items-center gap-3">
+                    <UserIcon
+                      class="w-5 h-5"
+                      :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'"
+                    />
                     <span
-                      class="inline-block px-3 py-1 rounded-full text-xs font-semibold"
-                      :class="{
-                        'bg-blue-100 text-blue-800': order.status === '未取票',
-                        'bg-orange-100 text-orange-800': order.status === '已取票',
-                        'bg-green-100 text-green-800': order.status === '已登船',
-                        'bg-red-100 text-red-800': order.status === '已取消'
-                      }"
+                      class="font-medium"
+                      :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
                     >
-                      {{ order.status }}
+                      聯絡人：
                     </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+                    <span
+                      :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'"
+                    >
+                      {{ distributor.contact }}
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <PhoneIcon
+                      class="w-5 h-5"
+                      :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'"
+                    />
+                    <span
+                      class="font-medium"
+                      :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
+                    >
+                      聯絡電話：
+                    </span>
+                    <span
+                      :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'"
+                    >
+                      {{ distributor.phone }}
+                    </span>
+                  </div>
+                </div>
+                <div class="space-y-4">
+                  <div class="flex items-center gap-3">
+                    <HashtagIcon
+                      class="w-5 h-5"
+                      :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'"
+                    />
+                    <span
+                      class="font-medium"
+                      :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
+                    >
+                      單位編號：
+                    </span>
+                    <span
+                      :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'"
+                    >
+                      {{ distributor.id }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </BaseCard>
 
-          <div
-            v-if="filteredOrders.length === 0"
-            class="text-center py-12 text-gray-500"
-          >
-            <div class="text-6xl mb-4">📋</div>
-            <div class="text-lg mb-2">尚無訂單資料</div>
-            <div class="text-sm">此訂票單位在選擇的時間範圍內沒有訂單</div>
-          </div>
+            <!-- 統計卡片 -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+              <BaseCard padding="md">
+                <div
+                  class="text-sm mb-2"
+                  :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
+                >
+                  訂單總數
+                </div>
+                <div class="text-3xl font-bold text-primary-600">
+                  {{ stats.totalOrders }}
+                </div>
+              </BaseCard>
+              <BaseCard padding="md">
+                <div
+                  class="text-sm mb-2"
+                  :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
+                >
+                  全票總數
+                </div>
+                <div class="text-3xl font-bold text-green-600">
+                  {{ stats.totalFullTickets }}
+                </div>
+              </BaseCard>
+              <BaseCard padding="md">
+                <div
+                  class="text-sm mb-2"
+                  :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
+                >
+                  半票總數
+                </div>
+                <div class="text-3xl font-bold text-amber-600">
+                  {{ stats.totalHalfTickets }}
+                </div>
+              </BaseCard>
+              <BaseCard padding="md">
+                <div
+                  class="text-sm mb-2"
+                  :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
+                >
+                  總金額
+                </div>
+                <div class="text-3xl font-bold text-purple-600">
+                  NT$ {{ stats.totalAmount.toLocaleString() }}
+                </div>
+              </BaseCard>
+            </div>
+
+            <!-- 訂單列表 -->
+            <BaseCard title="訂單明細" padding="none">
+              <template #actions>
+                <div class="flex items-center gap-3">
+                  <select
+                    v-model="selectedMonth"
+                    :class="[
+                      'px-4 py-2 rounded-md text-sm border transition-colors',
+                      theme === 'dark'
+                        ? 'bg-secondary-900 border-secondary-800 text-white'
+                        : 'bg-white border-neutral-300 text-neutral-900',
+                      'focus:outline-none focus:ring-2 focus:ring-primary-500'
+                    ]"
+                  >
+                    <option value="all">全部月份</option>
+                    <option
+                      v-for="month in availableMonths"
+                      :key="month"
+                      :value="month"
+                    >
+                      {{ formatMonth(month) }}
+                    </option>
+                  </select>
+                  <BaseButton
+                    variant="primary"
+                    :icon="ArrowDownTrayIcon"
+                    @click="downloadCSV"
+                  >
+                    下載 CSV
+                  </BaseButton>
+                </div>
+              </template>
+
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead
+                    :class="theme === 'dark' ? 'bg-secondary-800' : 'bg-neutral-50'"
+                  >
+                    <tr>
+                      <th
+                        class="p-4 text-left font-semibold text-sm"
+                        :class="theme === 'dark' ? 'text-neutral-300 border-b-2 border-secondary-700' : 'text-neutral-700 border-b-2 border-neutral-200'"
+                      >
+                        <button
+                          @click="handleSort('orderNumber')"
+                          class="flex items-center gap-2 hover:text-primary-600 transition-colors"
+                          type="button"
+                        >
+                          <span>訂單編號</span>
+                          <component :is="getSortIcon('orderNumber')" class="w-4 h-4" />
+                        </button>
+                      </th>
+                      <th
+                        class="p-4 text-left font-semibold text-sm"
+                        :class="theme === 'dark' ? 'text-neutral-300 border-b-2 border-secondary-700' : 'text-neutral-700 border-b-2 border-neutral-200'"
+                      >
+                        <button
+                          @click="handleSort('outboundDate')"
+                          class="flex items-center gap-2 hover:text-primary-600 transition-colors"
+                          type="button"
+                        >
+                          <span>出發日期</span>
+                          <component :is="getSortIcon('outboundDate')" class="w-4 h-4" />
+                        </button>
+                      </th>
+                      <th
+                        class="p-4 text-left font-semibold text-sm"
+                        :class="theme === 'dark' ? 'text-neutral-300 border-b-2 border-secondary-700' : 'text-neutral-700 border-b-2 border-neutral-200'"
+                      >
+                        <button
+                          @click="handleSort('bookerName')"
+                          class="flex items-center gap-2 hover:text-primary-600 transition-colors"
+                          type="button"
+                        >
+                          <span>訂票人</span>
+                          <component :is="getSortIcon('bookerName')" class="w-4 h-4" />
+                        </button>
+                      </th>
+                      <th
+                        class="p-4 text-left font-semibold text-sm"
+                        :class="theme === 'dark' ? 'text-neutral-300 border-b-2 border-secondary-700' : 'text-neutral-700 border-b-2 border-neutral-200'"
+                      >
+                        聯絡電話
+                      </th>
+                      <th
+                        class="p-4 text-left font-semibold text-sm"
+                        :class="theme === 'dark' ? 'text-neutral-300 border-b-2 border-secondary-700' : 'text-neutral-700 border-b-2 border-neutral-200'"
+                      >
+                        <button
+                          @click="handleSort('fullTickets')"
+                          class="flex items-center gap-2 hover:text-primary-600 transition-colors"
+                          type="button"
+                        >
+                          <span>全票</span>
+                          <component :is="getSortIcon('fullTickets')" class="w-4 h-4" />
+                        </button>
+                      </th>
+                      <th
+                        class="p-4 text-left font-semibold text-sm"
+                        :class="theme === 'dark' ? 'text-neutral-300 border-b-2 border-secondary-700' : 'text-neutral-700 border-b-2 border-neutral-200'"
+                      >
+                        <button
+                          @click="handleSort('halfTickets')"
+                          class="flex items-center gap-2 hover:text-primary-600 transition-colors"
+                          type="button"
+                        >
+                          <span>半票</span>
+                          <component :is="getSortIcon('halfTickets')" class="w-4 h-4" />
+                        </button>
+                      </th>
+                      <th
+                        class="p-4 text-left font-semibold text-sm"
+                        :class="theme === 'dark' ? 'text-neutral-300 border-b-2 border-secondary-700' : 'text-neutral-700 border-b-2 border-neutral-200'"
+                      >
+                        <button
+                          @click="handleSort('amount')"
+                          class="flex items-center gap-2 hover:text-primary-600 transition-colors"
+                          type="button"
+                        >
+                          <span>金額</span>
+                          <component :is="getSortIcon('amount')" class="w-4 h-4" />
+                        </button>
+                      </th>
+                      <th
+                        class="p-4 text-left font-semibold text-sm"
+                        :class="theme === 'dark' ? 'text-neutral-300 border-b-2 border-secondary-700' : 'text-neutral-700 border-b-2 border-neutral-200'"
+                      >
+                        <button
+                          @click="handleSort('status')"
+                          class="flex items-center gap-2 hover:text-primary-600 transition-colors"
+                          type="button"
+                        >
+                          <span>狀態</span>
+                          <component :is="getSortIcon('status')" class="w-4 h-4" />
+                        </button>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr
+                      v-for="order in filteredOrders"
+                      :key="order.orderNumber"
+                      @click="viewOrderDetail(order.orderNumber)"
+                      :class="[
+                        'cursor-pointer transition-colors border-b',
+                        theme === 'dark'
+                          ? 'hover:bg-secondary-800 border-secondary-800'
+                          : 'hover:bg-primary-50 border-neutral-100'
+                      ]"
+                    >
+                      <td
+                        class="p-4 font-semibold"
+                        :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-900'"
+                      >
+                        {{ order.orderNumber }}
+                      </td>
+                      <td
+                        class="p-4"
+                        :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-900'"
+                      >
+                        {{ order.outboundDate }}
+                      </td>
+                      <td
+                        class="p-4"
+                        :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-900'"
+                      >
+                        {{ order.bookerName }}
+                      </td>
+                      <td
+                        class="p-4"
+                        :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-900'"
+                      >
+                        {{ order.bookerPhone }}
+                      </td>
+                      <td
+                        class="p-4"
+                        :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-900'"
+                      >
+                        {{ order.tickets.full }} 張
+                      </td>
+                      <td
+                        class="p-4"
+                        :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-900'"
+                      >
+                        {{ order.tickets.half }} 張
+                      </td>
+                      <td
+                        class="p-4 font-semibold"
+                        :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-900'"
+                      >
+                        NT$ {{ order.pricing.discountedTotal.toLocaleString() }}
+                      </td>
+                      <td class="p-4">
+                        <span
+                          class="inline-block px-3 py-1 rounded-full text-xs font-semibold"
+                          :class="{
+                            'bg-blue-100 text-blue-800': order.status === '未取票',
+                            'bg-amber-100 text-amber-800': order.status === '已取票',
+                            'bg-green-100 text-green-800': order.status === '已登船',
+                            'bg-red-100 text-red-800': order.status === '已取消'
+                          }"
+                        >
+                          {{ order.status }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- 空狀態 -->
+              <div
+                v-if="filteredOrders.length === 0"
+                class="text-center py-12"
+                :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'"
+              >
+                <ClipboardDocumentListIcon
+                  class="w-24 h-24 mx-auto mb-4 opacity-30"
+                  :class="theme === 'dark' ? 'text-neutral-600' : 'text-neutral-300'"
+                />
+                <div class="text-lg mb-2">尚無訂單資料</div>
+                <div class="text-sm">此訂票單位在選擇的時間範圍內沒有訂單</div>
+              </div>
+            </BaseCard>
+          </PageContainer>
         </div>
-      </div>
 
-      <!-- 找不到訂票單位 -->
-      <div
-        v-else
-        class="bg-white rounded-xl p-12 shadow-md text-center"
-      >
-        <div class="text-6xl mb-4">❌</div>
-        <div class="text-2xl font-bold text-gray-800 mb-2">找不到訂票單位</div>
-        <div class="text-gray-600 mb-6">請確認訂票單位編號是否正確</div>
-        <button
-          @click="goBack"
-          class="py-3 px-8 bg-blue-600 text-white rounded-lg text-base font-semibold cursor-pointer transition-all shadow-lg hover:bg-blue-700"
+        <!-- 找不到訂票單位 -->
+        <PageContainer
+          v-else
+          title="找不到訂票單位"
+          subtitle="請確認訂票單位編號是否正確"
+          :icon="ExclamationCircleIcon"
+          max-width="lg"
         >
-          返回報表頁面
-        </button>
-      </div>
-    </main>
+          <BaseCard padding="lg" class="text-center">
+            <ExclamationCircleIcon
+              class="w-24 h-24 mx-auto mb-6 opacity-30 text-red-500"
+            />
+            <h2 class="text-2xl font-semibold mb-3">找不到訂票單位</h2>
+            <p
+              class="mb-6"
+              :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
+            >
+              請確認訂票單位編號是否正確
+            </p>
+            <BaseButton
+              variant="primary"
+              :icon="ArrowLeftIcon"
+              @click="goBack"
+            >
+              返回報表頁面
+            </BaseButton>
+          </BaseCard>
+        </PageContainer>
+      </main>
+    </div>
   </div>
 </template>

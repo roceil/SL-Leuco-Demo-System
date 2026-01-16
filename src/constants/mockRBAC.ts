@@ -2,8 +2,7 @@ import type {
   Organization,
   PermissionGroup,
   Role,
-  Account,
-  Permission
+  Account
 } from '@/types/rbac'
 import { PermissionAction } from '@/types/rbac'
 
@@ -149,7 +148,7 @@ export const MOCK_ROLES: Role[] = [
     id: 'role-1',
     name: '系統管理員',
     organizationId: 'org-2',
-    loginRoute: '/dashboard',
+    loginRoute: '/create-order',
     hasBackendAccess: true,
     permissionGroupIds: ['pg-1', 'pg-2', 'pg-3', 'pg-5'],
     createdAt: '2024-01-01T00:00:00Z',
@@ -169,7 +168,7 @@ export const MOCK_ROLES: Role[] = [
     id: 'role-3',
     name: '一般使用者',
     organizationId: 'org-1',
-    loginRoute: '/dashboard',
+    loginRoute: '/create-order',
     hasBackendAccess: false,
     permissionGroupIds: ['pg-4'],
     createdAt: '2024-01-01T00:00:00Z',
@@ -189,7 +188,7 @@ export const MOCK_ROLES: Role[] = [
     id: 'role-5',
     name: '經銷商管理員',
     organizationId: 'org-1',
-    loginRoute: '/dashboard',
+    loginRoute: '/create-order',
     hasBackendAccess: true,
     permissionGroupIds: ['pg-4', 'pg-5'],
     createdAt: '2024-01-01T00:00:00Z',

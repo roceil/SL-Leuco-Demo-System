@@ -10,8 +10,8 @@ const router = createRouter({
       component: Login,
     },
     {
-      path: '/dashboard',
-      name: 'dashboard',
+      path: '/create-order',
+      name: 'create-order',
       component: () => import('../views/Dashboard.vue'),
     },
     {
@@ -63,6 +63,56 @@ const router = createRouter({
       path: '/account-management',
       name: 'account-management',
       component: () => import('../views/AccountManagement.vue'),
+    },
+    {
+      path: '/order-management',
+      name: 'order-management',
+      component: () => import('../views/OrderManagement.vue'),
+    },
+    {
+      path: '/special-ticket-whitelist',
+      name: 'special-ticket-whitelist',
+      component: () => import('../views/SpecialTicketWhitelist.vue'),
+    },
+    {
+      path: '/special-ticket-whitelist/:ticketTypeId',
+      name: 'whitelist-detail',
+      component: () => import('../views/WhitelistDetail.vue'),
+    },
+    {
+      path: '/cash-report',
+      name: 'cash-report',
+      component: () => import('../views/CashReport.vue'),
+    },
+    {
+      path: '/dealer-report',
+      name: 'dealer-report',
+      component: () => import('../views/DealerReport.vue'),
+    },
+    {
+      path: '/transport-analysis',
+      name: 'transport-analysis',
+      component: () => import('../views/TransportAnalysis.vue'),
+    },
+    {
+      path: '/ship-management',
+      name: 'ship-management',
+      component: () => import('../views/ShipManagement.vue'),
+    },
+    {
+      path: '/schedule-management',
+      name: 'schedule-management',
+      component: () => import('../views/ScheduleManagement.vue'),
+    },
+    {
+      path: '/passenger-list',
+      name: 'passenger-list',
+      component: () => import('../views/PassengerList.vue'),
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: () => import('../views/NotFound.vue'),
     },
   ],
 })

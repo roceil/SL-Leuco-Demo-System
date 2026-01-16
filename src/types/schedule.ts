@@ -1,0 +1,61 @@
+/**
+ * 船班管理系統類型定義
+ */
+
+// 船班類型
+export enum ScheduleType {
+  REGULAR = 'regular',    // 每日固定船班
+  FLEXIBLE = 'flexible'   // 機動船班
+}
+
+// 船班狀態
+export enum ScheduleStatus {
+  ACTIVE = 'active',      // 營運中
+  CANCELLED = 'cancelled', // 已取消
+  COMPLETED = 'completed'  // 已完成
+}
+
+// 航線方向
+export enum RouteDirection {
+  TO_ISLAND = 'to_island',     // 東港 → 小琉球
+  FROM_ISLAND = 'from_island'  // 小琉球 → 東港
+}
+
+// 船班
+export interface Schedule {
+  id: string
+  type: ScheduleType // 船班類型
+  shipId: string // 船隻 ID
+  shipName: string // 船隻名稱（冗餘欄位，方便顯示）
+  route: RouteDirection // 航線方向
+  departureTime: string // 出發時間 (HH:mm 格式)
+  date?: string // 日期 (YYYY-MM-DD 格式)，僅機動船班需要
+  isDaily?: boolean // 是否每日重複，僅固定船班為 true
+  currentPassengers: number // 當前乘客數
+  maxCapacity: number // 最大載客量（從船隻繼承）
+  status: ScheduleStatus // 船班狀態
+  createdAt: string
+  updatedAt: string
+  description?: string // 備註
+}
+
+// 船班表單數據（新增/編輯）
+export interface ScheduleFormData {
+  type: ScheduleType
+  shipId: string
+  route: RouteDirection
+  departureTime: string
+  date?: string // 機動船班必填
+  isDaily?: boolean // 固定船班為 true
+  status: ScheduleStatus
+  description?: string
+}
+
+// 船班統計
+export interface ScheduleStatistics {
+  totalSchedules: number
+  regularSchedules: number
+  flexibleSchedules: number
+  activeSchedules: number
+  todaySchedules: number
+}

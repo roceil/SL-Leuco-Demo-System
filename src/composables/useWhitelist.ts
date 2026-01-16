@@ -1,0 +1,153 @@
+import { ref, computed } from 'vue'
+import type { WhitelistEntry } from '@/types/whitelist'
+import { MOCK_WHITELIST } from '@/constants/mockWhitelist'
+
+export function useWhitelist() {
+  const whitelistData = ref<WhitelistEntry[]>([...MOCK_WHITELIST])
+  const loading = ref(false)
+
+  // 根據票種 ID 獲取白名單
+  const getWhitelistByTicketType = (ticketTypeId: string) => {
+    return computed(() => whitelistData.value.filter((entry) => entry.ticketTypeId === ticketTypeId))
+  }
+
+  // 獲取特定白名單項目
+  const getWhitelistById = (id: string) => {
+    return whitelistData.value.find((entry) => entry.id === id)
+  }
+
+  // 新增白名單
+  const addWhitelistEntry = async (entry: Omit<WhitelistEntry, 'id' | 'createdAt' | 'updatedAt'>) => {
+    loading.value = true
+    try {
+      // 模擬 API 延遲
+      await new Promise((resolve) => setTimeout(resolve, 500))
+
+      const newEntry: WhitelistEntry = {
+        ...entry,
+        id: `wl-${Date.now()}`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+
+      whitelistData.value.push(newEntry)
+      return { success: true, data: newEntry }
+    } catch (error) {
+      console.error('新增白名單失敗:', error)
+      return { success: false, error: '新增失敗' }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // 更新白名單
+  const updateWhitelistEntry = async (id: string, updates: Partial<WhitelistEntry>) => {
+    loading.value = true
+    try {
+      // 模擬 API 延遲
+      await new Promise((resolve) => setTimeout(resolve, 500))
+
+      const index = whitelistData.value.findIndex((entry) => entry.id === id)
+      if (index === -1) {
+        return { success: false, error: '找不到該白名單項目' }
+      }
+
+      const existingEntry = whitelistData.value[index]!
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { id: _id, createdAt: _createdAt, ...validUpdates } = updates
+      whitelistData.value[index] = {
+        id: existingEntry.id,
+        ticketTypeId: validUpdates.ticketTypeId ?? existingEntry.ticketTypeId,
+        passengerName: validUpdates.passengerName ?? existingEntry.passengerName,
+        phone: validUpdates.phone ?? existingEntry.phone,
+        idNumber: validUpdates.idNumber ?? existingEntry.idNumber,
+        createdAt: existingEntry.createdAt,
+        updatedAt: new Date().toISOString(),
+        createdBy: validUpdates.createdBy ?? existingEntry.createdBy,
+        remark: validUpdates.remark ?? existingEntry.remark
+      }
+
+      return { success: true, data: whitelistData.value[index] }
+    } catch (error) {
+      console.error('更新白名單失敗:', error)
+      return { success: false, error: '更新失敗' }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // 刪除白名單
+  const deleteWhitelistEntry = async (id: string) => {
+    loading.value = true
+    try {
+      // 模擬 API 延遲
+      await new Promise((resolve) => setTimeout(resolve, 500))
+
+      const index = whitelistData.value.findIndex((entry) => entry.id === id)
+      if (index === -1) {
+        return { success: false, error: '找不到該白名單項目' }
+      }
+
+      whitelistData.value.splice(index, 1)
+      return { success: true }
+    } catch (error) {
+      console.error('刪除白名單失敗:', error)
+      return { success: false, error: '刪除失敗' }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // 批次刪除白名單
+  const batchDeleteWhitelist = async (ids: string[]) => {
+    loading.value = true
+    try {
+      // 模擬 API 延遲
+      await new Promise((resolve) => setTimeout(resolve, 500))
+
+      whitelistData.value = whitelistData.value.filter((entry) => !ids.includes(entry.id))
+      return { success: true }
+    } catch (error) {
+      console.error('批次刪除白名單失敗:', error)
+      return { success: false, error: '批次刪除失敗' }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // 驗證身分證字號格式
+  const validateIdNumber = (idNumber: string): boolean => {
+    const regex = /^[A-Z][12]\d{8}$/
+    if (!regex.test(idNumber)) return false
+
+    // 字母對應數字
+    const letters = 'ABCDEFGHJKLMNPQRSTUVXYWZIO'
+    const letterValue = letters.indexOf(idNumber[0]!) + 10
+
+    // 計算檢查碼
+    const weights = [1, 9, 8, 7, 6, 5, 4, 3, 2, 1, 1]
+    const digits = [Math.floor(letterValue / 10), letterValue % 10, ...idNumber.slice(1).split('').map(Number)]
+
+    const sum = digits.reduce((acc, digit, index) => acc + digit * (weights[index] ?? 0), 0)
+
+    return sum % 10 === 0
+  }
+
+  // 驗證手機號碼格式
+  const validatePhone = (phone: string): boolean => {
+    return /^09\d{8}$/.test(phone)
+  }
+
+  return {
+    whitelistData,
+    loading,
+    getWhitelistByTicketType,
+    getWhitelistById,
+    addWhitelistEntry,
+    updateWhitelistEntry,
+    deleteWhitelistEntry,
+    batchDeleteWhitelist,
+    validateIdNumber,
+    validatePhone
+  }
+}

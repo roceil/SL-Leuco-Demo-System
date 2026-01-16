@@ -1,15 +1,26 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { useRbacStore } from '@/stores/rbac'
 import { useSidebar } from '@/composables/useSidebar'
+import { useTheme } from '@/composables/useTheme'
 import Navbar from '@/components/Navbar.vue'
 import Sidebar from '@/components/Sidebar.vue'
+import PageContainer from '@/components/ui/PageContainer.vue'
+import BaseCard from '@/components/ui/BaseCard.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
 import { RESOURCES } from '@/constants/resources'
-import type { PermissionGroup, Permission } from '@/types/rbac'
+import type { PermissionGroup } from '@/types/rbac'
 import { PermissionAction } from '@/types/rbac'
+import {
+  ShieldCheckIcon,
+  PlusIcon,
+  TrashIcon
+} from '@heroicons/vue/24/outline'
 
 const rbacStore = useRbacStore()
 const { isCollapsed } = useSidebar()
+const { theme } = useTheme()
 
 // 表單資料
 const formData = ref<Partial<PermissionGroup>>({
@@ -139,150 +150,204 @@ const actionLabels = {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <Navbar />
-    <Sidebar active-route="permission-management" />
+  <div class="min-h-screen flex flex-col">
+    <Navbar username="管理員" />
 
-    <!-- 主要內容區 -->
-    <main :class="['p-8 min-h-[calc(100vh-4rem)] transition-all duration-300', isCollapsed ? 'ml-20' : 'ml-64']">
-      <!-- 頁面標題 -->
-      <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-900">權限管理</h1>
-        <p class="text-gray-600 mt-1">管理權限組及其對應的資源操作權限</p>
-      </div>
+    <div class="flex flex-1">
+      <Sidebar :active-route="$route.path.slice(1)" />
 
-      <!-- 內容區 -->
-      <div class="grid grid-cols-12 gap-6">
-      <!-- 左側：權限組列表 -->
-      <div class="col-span-3 bg-white rounded-lg shadow p-4">
-        <!-- 新增權限組按鈕 -->
-        <button
-          @click="createNewPermissionGroup"
-          class="w-full mb-4 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+      <main :class="[
+        'flex-1 transition-all duration-300',
+        isCollapsed ? 'ml-20' : 'ml-64'
+      ]">
+        <PageContainer
+          title="權限管理"
+          subtitle="管理權限組及其對應的資源操作權限"
+          :icon="ShieldCheckIcon"
+          max-width="full"
         >
-          + 新增權限組
-        </button>
+          <!-- 內容區 -->
+          <div class="grid grid-cols-12 gap-6">
+            <!-- 左側：權限組列表 -->
+            <div class="col-span-12 lg:col-span-3">
+              <BaseCard padding="md">
+                <!-- 新增權限組按鈕 -->
+                <BaseButton
+                  variant="primary"
+                  :icon="PlusIcon"
+                  @click="createNewPermissionGroup"
+                  class="w-full mb-4"
+                >
+                  新增權限組
+                </BaseButton>
 
-        <!-- 權限組列表 -->
-        <div>
-          <h5 class="text-sm font-semibold text-gray-700 mb-2">權限組</h5>
-          <div class="space-y-1">
-            <button
-              v-for="group in rbacStore.permissionGroups"
-              :key="group.id"
-              @click="selectPermissionGroup(group.id)"
-              class="w-full text-left px-3 py-2 rounded-md transition-colors"
-              :class="
-                rbacStore.selectedPermissionGroupId === group.id
-                  ? 'bg-blue-100 text-blue-700 font-medium'
-                  : 'hover:bg-gray-100 text-gray-700'
-              "
-            >
-              {{ group.name }}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 右側：權限組編輯器 -->
-      <div class="col-span-9 bg-white rounded-lg shadow p-6">
-        <div v-if="rbacStore.selectedPermissionGroupId || !rbacStore.selectedPermissionGroup">
-          <h2 class="text-xl font-semibold text-gray-900 mb-6">
-            {{ rbacStore.selectedPermissionGroupId ? '編輯權限組' : '新增權限組' }}
-          </h2>
-
-          <div class="space-y-6">
-            <!-- 權限組名稱 -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2"
-                >名稱 <span class="text-red-500">*</span></label
-              >
-              <input
-                v-model="formData.name"
-                type="text"
-                required
-                placeholder="請輸入權限組名稱"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <!-- 權限矩陣 -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-3">權限矩陣</label>
-              <div class="border border-gray-200 rounded-md overflow-hidden">
-                <div class="overflow-x-auto">
-                  <table class="w-full">
-                    <thead class="bg-gray-50">
-                      <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-                          頁面/功能
-                        </th>
-                        <th
-                          v-for="action in allActions"
-                          :key="action"
-                          class="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase"
-                        >
-                          {{ actionLabels[action] }}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200">
-                      <tr
-                        v-for="resource in RESOURCES"
-                        :key="resource.key"
-                        class="hover:bg-gray-50"
-                      >
-                        <td class="px-4 py-3 text-sm text-gray-900">
-                          <div>
-                            <div class="font-medium">{{ resource.label }}</div>
-                            <div v-if="resource.category" class="text-xs text-gray-500">
-                              {{ resource.category }}
-                            </div>
-                          </div>
-                        </td>
-                        <td
-                          v-for="action in allActions"
-                          :key="`${resource.key}-${action}`"
-                          class="px-4 py-3 text-center"
-                        >
-                          <input
-                            type="checkbox"
-                            :checked="hasAction(resource.key, action)"
-                            @change="toggleAction(resource.key, action)"
-                            class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                          />
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+                <!-- 權限組列表 -->
+                <div>
+                  <h5
+                    class="text-sm font-semibold mb-2"
+                    :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                  >
+                    權限組
+                  </h5>
+                  <div class="space-y-1">
+                    <button
+                      v-for="group in rbacStore.permissionGroups"
+                      :key="group.id"
+                      @click="selectPermissionGroup(group.id)"
+                      :class="[
+                        'w-full text-left px-3 py-2 rounded-md transition-colors',
+                        rbacStore.selectedPermissionGroupId === group.id
+                          ? theme === 'dark'
+                            ? 'bg-primary-900/30 text-primary-400 font-medium'
+                            : 'bg-primary-100 text-primary-700 font-medium'
+                          : theme === 'dark'
+                            ? 'hover:bg-secondary-800 text-neutral-300'
+                            : 'hover:bg-neutral-100 text-neutral-700'
+                      ]"
+                    >
+                      {{ group.name }}
+                    </button>
+                  </div>
                 </div>
-              </div>
+              </BaseCard>
             </div>
 
-            <!-- 操作按鈕 -->
-            <div class="flex gap-3 pt-4 border-t border-gray-200">
-              <button
-                v-if="rbacStore.selectedPermissionGroupId"
-                @click="deletePermissionGroup"
-                class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+            <!-- 右側：權限組編輯器 -->
+            <div class="col-span-12 lg:col-span-9">
+              <BaseCard
+                :title="rbacStore.selectedPermissionGroupId ? '編輯權限組' : '新增權限組'"
+                padding="lg"
               >
-                刪除權限組
-              </button>
-              <button
-                @click="savePermissionGroup"
-                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors ml-auto"
-              >
-                {{ rbacStore.selectedPermissionGroupId ? '更新並儲存' : '創建權限組' }}
-              </button>
+                <div v-if="rbacStore.selectedPermissionGroupId || !rbacStore.selectedPermissionGroup">
+                  <div class="space-y-6">
+                    <!-- 權限組名稱 -->
+                    <div>
+                      <label
+                        class="block text-sm font-medium mb-2"
+                        :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                      >
+                        名稱 <span class="text-red-500">*</span>
+                      </label>
+                      <BaseInput
+                        v-model="formData.name"
+                        placeholder="請輸入權限組名稱"
+                      />
+                    </div>
+
+                    <!-- 權限矩陣 -->
+                    <div>
+                      <label
+                        class="block text-sm font-medium mb-3"
+                        :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                      >
+                        權限矩陣
+                      </label>
+                      <div :class="[
+                        'border rounded-md overflow-hidden',
+                        theme === 'dark' ? 'border-secondary-800' : 'border-neutral-200'
+                      ]">
+                        <div class="overflow-x-auto">
+                          <table class="w-full">
+                            <thead :class="theme === 'dark' ? 'bg-secondary-800' : 'bg-neutral-50'">
+                              <tr>
+                                <th
+                                  class="px-4 py-3 text-left text-xs font-medium uppercase"
+                                  :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                                >
+                                  頁面/功能
+                                </th>
+                                <th
+                                  v-for="action in allActions"
+                                  :key="action"
+                                  class="px-4 py-3 text-center text-xs font-medium uppercase"
+                                  :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                                >
+                                  {{ actionLabels[action] }}
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody :class="[
+                              'divide-y',
+                              theme === 'dark' ? 'divide-secondary-800' : 'divide-neutral-200'
+                            ]">
+                              <tr
+                                v-for="resource in RESOURCES"
+                                :key="resource.key"
+                                :class="theme === 'dark'
+                                  ? 'hover:bg-secondary-800'
+                                  : 'hover:bg-neutral-50'
+                                  "
+                              >
+                                <td
+                                  class="px-4 py-3 text-sm"
+                                  :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'"
+                                >
+                                  <div>
+                                    <div class="font-medium">{{ resource.label }}</div>
+                                    <div
+                                      v-if="resource.category"
+                                      class="text-xs"
+                                      :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-500'"
+                                    >
+                                      {{ resource.category }}
+                                    </div>
+                                  </div>
+                                </td>
+                                <td
+                                  v-for="action in allActions"
+                                  :key="`${resource.key}-${action}`"
+                                  class="px-4 py-3 text-center"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    :checked="hasAction(resource.key, action)"
+                                    @change="toggleAction(resource.key, action)"
+                                    class="w-4 h-4 text-primary-600 border-neutral-300 rounded focus:ring-primary-500"
+                                  />
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 操作按鈕 -->
+                    <div :class="[
+                      'flex gap-3 pt-4 border-t',
+                      theme === 'dark' ? 'border-secondary-800' : 'border-neutral-200'
+                    ]">
+                      <BaseButton
+                        v-if="rbacStore.selectedPermissionGroupId"
+                        variant="danger"
+                        :icon="TrashIcon"
+                        @click="deletePermissionGroup"
+                      >
+                        刪除權限組
+                      </BaseButton>
+                      <BaseButton
+                        variant="primary"
+                        @click="savePermissionGroup"
+                        class="ml-auto"
+                      >
+                        {{ rbacStore.selectedPermissionGroupId ? '更新並儲存' : '創建權限組' }}
+                      </BaseButton>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  v-else
+                  class="text-center py-12"
+                  :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'"
+                >
+                  <p>請從左側選擇一個權限組進行編輯，或點擊「新增權限組」創建新權限組</p>
+                </div>
+              </BaseCard>
             </div>
           </div>
-        </div>
-
-        <div v-else class="text-center py-12 text-gray-500">
-          <p>請從左側選擇一個權限組進行編輯，或點擊「新增權限組」創建新權限組</p>
-        </div>
-      </div>
+        </PageContainer>
+      </main>
     </div>
-    </main>
   </div>
 </template>

@@ -2,13 +2,26 @@
 import { ref, computed, watch } from 'vue'
 import { useTicketStore } from '@/stores/ticket'
 import { useSidebar } from '@/composables/useSidebar'
+import { useTheme } from '@/composables/useTheme'
 import Navbar from '@/components/Navbar.vue'
 import Sidebar from '@/components/Sidebar.vue'
+import PageContainer from '@/components/ui/PageContainer.vue'
+import BaseCard from '@/components/ui/BaseCard.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
 import type { TicketType } from '@/types/ticket'
 import { calculateSalePrice } from '@/types/ticket'
+import {
+  TicketIcon,
+  PlusIcon,
+  CheckIcon,
+  TrashIcon,
+  TagIcon
+} from '@heroicons/vue/24/outline'
 
 const ticketStore = useTicketStore()
 const { isCollapsed } = useSidebar()
+const { theme } = useTheme()
 
 // 表單資料
 const formData = ref<Partial<TicketType>>({
@@ -99,7 +112,7 @@ function saveTicket() {
     alert('票種更新成功')
   } else {
     // 創建新票種
-    const newTicket = ticketStore.createTicketType({
+    ticketStore.createTicketType({
       name: formData.value.name!,
       basePrice: formData.value.basePrice || 0,
       discount: formData.value.discount || 0
@@ -143,173 +156,273 @@ function validateDiscountInput(event: Event) {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <Navbar />
-    <Sidebar active-route="ticket-management" />
+  <div class="min-h-screen flex flex-col">
+    <Navbar username="管理員" />
 
-    <!-- 主要內容區 -->
-    <main :class="['p-8 min-h-[calc(100vh-4rem)] transition-all duration-300', isCollapsed ? 'ml-20' : 'ml-64']">
-      <!-- 頁面標題 -->
-      <div class="mb-6 flex justify-between items-center">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-900">票種管理</h1>
-          <p class="text-gray-600 mt-1">管理系統中的票種及其定價</p>
-        </div>
-        <button
-          @click="createNewTicket"
-          class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+    <div class="flex flex-1">
+      <Sidebar :active-route="$route.path.slice(1)" />
+
+      <main
+        :class="[
+          'flex-1 transition-all duration-300',
+          isCollapsed ? 'ml-20' : 'ml-64'
+        ]"
+      >
+        <PageContainer
+          title="票種管理"
+          subtitle="管理系統中的票種及其定價"
+          :icon="TicketIcon"
+          max-width="full"
         >
-          + 新增票種
-        </button>
-      </div>
-
-      <!-- 表單區（當顯示時） -->
-      <div v-if="showForm" class="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 class="text-xl font-semibold text-gray-900 mb-6">
-          {{ isEditMode ? '編輯票種' : '新增票種' }}
-        </h2>
-
-        <div class="grid grid-cols-2 gap-4">
-          <!-- 票種名稱 -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2"
-              >票種名稱 <span class="text-red-500">*</span></label
+          <template #actions>
+            <BaseButton
+              variant="primary"
+              :icon="PlusIcon"
+              @click="createNewTicket"
             >
-            <input
-              v-model="formData.name"
-              type="text"
-              required
-              placeholder="請輸入票種名稱"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+              新增票種
+            </BaseButton>
+          </template>
 
-          <!-- 定價 -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2"
-              >定價 <span class="text-red-500">*</span></label
-            >
-            <input
-              v-model.number="formData.basePrice"
-              type="number"
-              min="0"
-              step="1"
-              required
-              placeholder="請輸入定價"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <!-- 折扣金額 -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2"
-              >折扣金額 <span class="text-gray-500 text-xs">(最多小數點後一位)</span></label
-            >
-            <input
-              v-model.number="formData.discount"
-              type="number"
-              min="0"
-              step="0.1"
-              placeholder="請輸入折扣金額"
-              @input="validateDiscountInput"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <!-- 售價（唯讀） -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">售價</label>
-            <input
-              :value="salePrice"
-              type="number"
-              readonly
-              disabled
-              class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed text-gray-700"
-            />
-          </div>
-        </div>
-
-        <!-- 操作按鈕 -->
-        <div class="flex gap-3 pt-4 border-t border-gray-200 mt-6">
-          <button
-            v-if="isEditMode"
-            @click="deleteTicket(ticketStore.selectedTicketTypeId!)"
-            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+          <!-- 表單區（當顯示時） -->
+          <BaseCard
+            v-if="showForm"
+            :title="isEditMode ? '編輯票種' : '新增票種'"
+            padding="lg"
+            class="mb-6"
           >
-            刪除票種
-          </button>
-          <button
-            @click="cancelEdit"
-            class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
-          >
-            取消
-          </button>
-          <button
-            @click="saveTicket"
-            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors ml-auto"
-          >
-            {{ isEditMode ? '更新並儲存' : '創建票種' }}
-          </button>
-        </div>
-      </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- 票種名稱 -->
+              <div>
+                <label
+                  class="block text-sm font-medium mb-2"
+                  :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                >
+                  票種名稱 <span class="text-red-500">*</span>
+                </label>
+                <BaseInput
+                  v-model="formData.name"
+                  placeholder="請輸入票種名稱"
+                />
+              </div>
 
-      <!-- 票種列表 (grid-cols-3) -->
-      <div class="grid grid-cols-3 gap-6">
-        <div
-          v-for="ticket in ticketStore.ticketTypes"
-          :key="ticket.id"
-          class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer"
-          @click="editTicket(ticket.id)"
-        >
-          <div class="flex justify-between items-start mb-4">
-            <h3 class="text-lg font-semibold text-gray-900">{{ ticket.name }}</h3>
-            <span
-              class="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded"
-            >
-              票種
-            </span>
-          </div>
+              <!-- 定價 -->
+              <div>
+                <label
+                  class="block text-sm font-medium mb-2"
+                  :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                >
+                  定價 <span class="text-red-500">*</span>
+                </label>
+                <BaseInput
+                  v-model.number="formData.basePrice"
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="請輸入定價"
+                />
+              </div>
 
-          <div class="space-y-3">
-            <div class="flex justify-between items-center">
-              <span class="text-sm text-gray-600">定價</span>
-              <span class="text-base font-medium text-gray-900">NT$ {{ ticket.basePrice }}</span>
-            </div>
+              <!-- 折扣金額 -->
+              <div>
+                <label
+                  class="block text-sm font-medium mb-2"
+                  :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                >
+                  折扣金額
+                  <span
+                    class="text-xs ml-1"
+                    :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-500'"
+                  >
+                    (最多小數點後一位)
+                  </span>
+                </label>
+                <BaseInput
+                  v-model.number="formData.discount"
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  placeholder="請輸入折扣金額"
+                  @input="validateDiscountInput"
+                />
+              </div>
 
-            <div class="flex justify-between items-center">
-              <span class="text-sm text-gray-600">折扣金額</span>
-              <span class="text-base font-medium text-orange-600">- NT$ {{ ticket.discount }}</span>
-            </div>
-
-            <div class="pt-3 border-t border-gray-200">
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-medium text-gray-700">售價</span>
-                <span class="text-xl font-bold text-green-600">
-                  NT$ {{ calculateSalePrice(ticket.basePrice, ticket.discount) }}
-                </span>
+              <!-- 售價（唯讀） -->
+              <div>
+                <label
+                  class="block text-sm font-medium mb-2"
+                  :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                >
+                  售價
+                </label>
+                <input
+                  :value="salePrice"
+                  type="number"
+                  readonly
+                  disabled
+                  :class="[
+                    'w-full px-4 py-2.5 rounded-md cursor-not-allowed',
+                    theme === 'dark'
+                      ? 'bg-secondary-900 border-secondary-800 text-neutral-400'
+                      : 'bg-neutral-100 border-neutral-200 text-neutral-600',
+                    'border'
+                  ]"
+                />
               </div>
             </div>
+
+            <!-- 操作按鈕 -->
+            <div
+              :class="[
+                'flex gap-3 pt-6 mt-6 border-t',
+                theme === 'dark' ? 'border-secondary-800' : 'border-neutral-200'
+              ]"
+            >
+              <BaseButton
+                v-if="isEditMode"
+                variant="danger"
+                :icon="TrashIcon"
+                @click="deleteTicket(ticketStore.selectedTicketTypeId!)"
+              >
+                刪除票種
+              </BaseButton>
+              <BaseButton
+                variant="secondary"
+                @click="cancelEdit"
+              >
+                取消
+              </BaseButton>
+              <BaseButton
+                variant="primary"
+                :icon="CheckIcon"
+                @click="saveTicket"
+                class="ml-auto"
+              >
+                {{ isEditMode ? '更新並儲存' : '創建票種' }}
+              </BaseButton>
+            </div>
+          </BaseCard>
+
+          <!-- 票種列表 (grid) -->
+          <div
+            v-if="ticketStore.ticketTypes.length > 0"
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
+            <BaseCard
+              v-for="ticket in ticketStore.ticketTypes"
+              :key="ticket.id"
+              padding="md"
+              :class="[
+                'cursor-pointer transition-all',
+                theme === 'dark'
+                  ? 'hover:border-primary-600'
+                  : 'hover:border-primary-500'
+              ]"
+              @click="editTicket(ticket.id)"
+            >
+              <div class="flex justify-between items-start mb-4">
+                <h3
+                  class="text-lg font-semibold"
+                  :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'"
+                >
+                  {{ ticket.name }}
+                </h3>
+                <span
+                  :class="[
+                    'px-2 py-1 text-xs font-medium rounded flex items-center gap-1',
+                    theme === 'dark'
+                      ? 'bg-primary-900/30 text-primary-400'
+                      : 'bg-primary-100 text-primary-700'
+                  ]"
+                >
+                  <TagIcon class="w-3 h-3" />
+                  票種
+                </span>
+              </div>
+
+              <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                  <span
+                    class="text-sm"
+                    :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
+                  >
+                    定價
+                  </span>
+                  <span
+                    class="text-base font-medium"
+                    :class="theme === 'dark' ? 'text-neutral-200' : 'text-neutral-900'"
+                  >
+                    NT$ {{ ticket.basePrice }}
+                  </span>
+                </div>
+
+                <div class="flex justify-between items-center">
+                  <span
+                    class="text-sm"
+                    :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
+                  >
+                    折扣金額
+                  </span>
+                  <span class="text-base font-medium text-amber-600">
+                    - NT$ {{ ticket.discount }}
+                  </span>
+                </div>
+
+                <div
+                  :class="[
+                    'pt-3 border-t',
+                    theme === 'dark' ? 'border-secondary-800' : 'border-neutral-200'
+                  ]"
+                >
+                  <div class="flex justify-between items-center">
+                    <span
+                      class="text-sm font-medium"
+                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                    >
+                      售價
+                    </span>
+                    <span class="text-xl font-bold text-green-600">
+                      NT$ {{ calculateSalePrice(ticket.basePrice, ticket.discount) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="mt-4 text-xs"
+                :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-500'"
+              >
+                最後更新：{{ new Date(ticket.updatedAt).toLocaleString('zh-TW') }}
+              </div>
+            </BaseCard>
           </div>
 
-          <div class="mt-4 text-xs text-gray-500">
-            最後更新：{{ new Date(ticket.updatedAt).toLocaleString('zh-TW') }}
-          </div>
-        </div>
-      </div>
-
-      <!-- 空狀態 -->
-      <div
-        v-if="ticketStore.ticketTypes.length === 0"
-        class="bg-white rounded-lg shadow p-12 text-center"
-      >
-        <p class="text-gray-500 mb-4">目前還沒有任何票種</p>
-        <button
-          @click="createNewTicket"
-          class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-        >
-          + 新增第一個票種
-        </button>
-      </div>
-    </main>
+          <!-- 空狀態 -->
+          <BaseCard
+            v-if="ticketStore.ticketTypes.length === 0"
+            padding="lg"
+            class="text-center"
+          >
+            <TicketIcon
+              class="w-24 h-24 mx-auto mb-6 opacity-30"
+              :class="theme === 'dark' ? 'text-neutral-600' : 'text-neutral-300'"
+            />
+            <p
+              class="text-lg mb-6"
+              :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'"
+            >
+              目前還沒有任何票種
+            </p>
+            <BaseButton
+              variant="primary"
+              :icon="PlusIcon"
+              @click="createNewTicket"
+            >
+              新增第一個票種
+            </BaseButton>
+          </BaseCard>
+        </PageContainer>
+      </main>
+    </div>
   </div>
 </template>

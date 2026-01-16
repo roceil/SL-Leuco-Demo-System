@@ -1,12 +1,26 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import Navbar from '../components/Navbar.vue'
-import Sidebar from '../components/Sidebar.vue'
-import { useSidebar } from '../composables/useSidebar'
-import { useOrders } from '../composables/useOrders'
+import Navbar from '@/components/Navbar.vue'
+import Sidebar from '@/components/Sidebar.vue'
+import PageContainer from '@/components/ui/PageContainer.vue'
+import BaseCard from '@/components/ui/BaseCard.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
+import { useSidebar } from '@/composables/useSidebar'
+import { useTheme } from '@/composables/useTheme'
+import { useOrders } from '@/composables/useOrders'
+import {
+  MagnifyingGlassIcon,
+  CalendarIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronDoubleLeftIcon,
+  ChevronDoubleRightIcon
+} from '@heroicons/vue/24/outline'
 
 const { isCollapsed } = useSidebar()
+const { theme } = useTheme()
 const router = useRouter()
 const { allOrders: storedOrders } = useOrders()
 
@@ -47,36 +61,12 @@ const setThisMonth = () => {
   dateTo.value = lastDay.toISOString().split('T')[0] as string
 }
 
-interface SavedOrder {
-  orderNumber: string
-  departure: string
-  bookingType: string
-  distributor: string
-  bookerName: string
-  bookerPhone: string
-  outboundDate: string
-  outboundTime: string
-  returnDate: string
-  returnTime: string
-  tickets: {
-    full: number
-    half: number
-  }
-  pricing: {
-    originalTotal: number
-    discountedTotal: number
-  }
-  status: string
-  createdAt: string
-}
-
 // 從 useOrders 讀取訂單並轉換格式
 const loadOrdersFromLocalStorage = (): Order[] => {
   if (!storedOrders.value || storedOrders.value.length === 0) return []
 
   try {
     return storedOrders.value.map((order) => {
-      // 格式化票種資訊
       const ticketParts: string[] = []
       if (order.tickets.full > 0) ticketParts.push(`全票x${order.tickets.full}`)
       if (order.tickets.half > 0) ticketParts.push(`半票x${order.tickets.half}`)
@@ -85,7 +75,7 @@ const loadOrdersFromLocalStorage = (): Order[] => {
       return {
         shipTime: `${order.outboundDate} ${order.outboundTime}`,
         orderNo: order.orderNumber,
-        distributor: order.distributor,
+        distributor: order.distributor || order.orderOwnerName,
         bookerInfo: `${order.bookerName} / ${order.bookerPhone}`,
         bookTime: order.createdAt.split('T')[0] as string,
         orderStatus: order.status,
@@ -99,7 +89,6 @@ const loadOrdersFromLocalStorage = (): Order[] => {
 }
 
 const performSearch = (showAlert = true) => {
-  // 從 localStorage 載入所有訂單
   const allStoredOrders = loadOrdersFromLocalStorage()
 
   if (allStoredOrders.length === 0) {
@@ -111,22 +100,18 @@ const performSearch = (showAlert = true) => {
     return
   }
 
-  // 根據日期範圍篩選
   const filtered = allStoredOrders.filter(order => {
     const shipDate = order.shipTime.split(' ')[0]
     if (!shipDate) return false
     return shipDate >= dateFrom.value && shipDate <= dateTo.value
   })
 
-  // 根據搜尋關鍵字和欄位篩選
   if (searchKeyword.value.trim()) {
     const keyword = searchKeyword.value.toLowerCase()
     allOrders.value = filtered.filter(order => {
       switch (searchField.value) {
         case 'id':
-          return order.bookerInfo.toLowerCase().includes(keyword)
         case 'name':
-          return order.bookerInfo.toLowerCase().includes(keyword)
         case 'phone':
           return order.bookerInfo.toLowerCase().includes(keyword)
         case 'orderNo':
@@ -226,387 +211,388 @@ const goToPage = (action: string) => {
 }
 
 const getStatusClass = (status: string) => {
-  if (status === '未取票') return 'bg-blue-100 text-blue-800'
-  if (status === '已取票') return 'bg-orange-100 text-orange-800'
-  if (status === '已登船') return 'bg-green-100 text-green-800'
-  if (status === '已取消') return 'bg-red-100 text-red-800'
-  return ''
+  const baseClasses = 'px-3 py-1 rounded-full text-xs font-medium'
+  switch (status) {
+    case '未取票':
+      return `${baseClasses} bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400`
+    case '已取票':
+      return `${baseClasses} bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400`
+    case '已登船':
+      return `${baseClasses} bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400`
+    case '已取消':
+      return `${baseClasses} bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400`
+    default:
+      return `${baseClasses} bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300`
+  }
 }
 
 const viewOrderDetail = (orderNo: string) => {
   router.push(`/order-detail/${orderNo}`)
 }
 
-// 從 localStorage 讀取預設搜尋條件
 const loadDefaultSearchSettings = () => {
   const settings = localStorage.getItem('defaultSearchSettings')
   if (settings) {
     try {
       const parsed = JSON.parse(settings)
 
-      // 設定預設日期範圍
       if (parsed.dateRange === 'today') {
         setToday()
       } else if (parsed.dateRange === 'thisMonth') {
         setThisMonth()
       } else {
-        setToday() // 預設為今日
+        setToday()
       }
 
-      // 設定預設搜尋欄位
       searchField.value = parsed.searchField || 'id'
-
-      // 設定預設票卷狀態篩選
       currentStatusFilter.value = parsed.statusFilter || 'none'
-
-      // 設定預設每頁顯示筆數
       entriesPerPage.value = parsed.entriesPerPage || 30
     } catch (error) {
       console.error('讀取預設搜尋條件失敗:', error)
-      setToday() // 發生錯誤時使用預設值
+      setToday()
     }
   } else {
-    setToday() // 沒有儲存的設定時使用預設值
+    setToday()
   }
 }
 
 onMounted(() => {
   loadDefaultSearchSettings()
-  // 頁面載入時自動執行搜尋
   performSearch(false)
 })
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <Navbar />
-    <Sidebar active-route="order-search" />
+  <div class="min-h-screen flex flex-col">
+    <Navbar username="管理員" />
 
-    <!-- 主要內容區 -->
-    <main :class="['p-8 min-h-[calc(100vh-4rem)] transition-all duration-300', isCollapsed ? 'ml-20' : 'ml-64']">
-        <!-- 麵包屑 -->
-        <div class="flex items-center gap-2 text-gray-600 text-sm mb-6">
-          <a href="#" class="text-blue-600 hover:underline">首頁</a>
-          <span>→</span>
-          <a href="#" class="text-blue-600 hover:underline">訂位作業</a>
-          <span>→</span>
-          <span>訂單查詢</span>
-        </div>
+    <div class="flex flex-1">
+      <Sidebar :active-route="$route.path.slice(1)" />
 
-        <!-- 頁面標題 -->
-        <div class="mb-8">
-          <h1 class="text-3xl font-bold text-gray-800">訂單查詢</h1>
-        </div>
-
-        <!-- 查詢卡片 -->
-        <div class="bg-white rounded-xl p-8 shadow-md mb-6">
-          <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
-            <h2 class="text-xl font-semibold text-gray-800">訂單列表</h2>
-            <div class="flex gap-3">
-              <button
+      <main
+        :class="[
+          'flex-1 transition-all duration-300',
+          isCollapsed ? 'ml-20' : 'ml-64'
+        ]"
+      >
+        <PageContainer
+          title="訂單查詢"
+          subtitle="搜尋和查詢訂單資訊"
+          :icon="MagnifyingGlassIcon"
+          max-width="2xl"
+        >
+          <!-- 搜尋條件卡片 -->
+          <BaseCard title="查詢條件" padding="lg" class="mb-6">
+            <!-- 快速選擇日期 -->
+            <div class="flex gap-3 mb-6">
+              <BaseButton
+                variant="outline"
+                :icon="CalendarIcon"
                 @click="setToday"
-                type="button"
-                class="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold cursor-pointer transition-all hover:bg-blue-700"
               >
-                <span>📅</span>
-                <span>今日</span>
-              </button>
-              <button
+                今日
+              </BaseButton>
+              <BaseButton
+                variant="outline"
+                :icon="CalendarIcon"
                 @click="setThisMonth"
-                type="button"
-                class="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold cursor-pointer transition-all hover:bg-blue-700"
               >
-                <span>📆</span>
-                <span>本月</span>
-              </button>
+                本月
+              </BaseButton>
             </div>
-          </div>
 
-          <!-- 日期範圍 -->
-          <div class="space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- 日期範圍 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div class="space-y-2">
-                <label for="dateFrom" class="block text-gray-700 text-sm font-medium">查詢船班時間包含從</label>
+                <label
+                  for="dateFrom"
+                  class="block text-sm font-medium"
+                  :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                >
+                  查詢船班時間包含從
+                </label>
                 <input
                   type="date"
                   id="dateFrom"
                   v-model="dateFrom"
-                  class="w-full p-3 border-2 border-gray-300 rounded-lg text-base transition-all outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  class="w-full px-3 py-2 rounded-lg border transition-all outline-none"
+                  :class="
+                    theme === 'dark'
+                      ? 'bg-secondary-800 border-secondary-700 text-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/50'
+                      : 'bg-white border-neutral-300 text-neutral-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/50'
+                  "
                 >
               </div>
               <div class="space-y-2">
-                <label for="dateTo" class="block text-gray-700 text-sm font-medium">到</label>
+                <label
+                  for="dateTo"
+                  class="block text-sm font-medium"
+                  :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                >
+                  到
+                </label>
                 <input
                   type="date"
                   id="dateTo"
                   v-model="dateTo"
-                  class="w-full p-3 border-2 border-gray-300 rounded-lg text-base transition-all outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  class="w-full px-3 py-2 rounded-lg border transition-all outline-none"
+                  :class="
+                    theme === 'dark'
+                      ? 'bg-secondary-800 border-secondary-700 text-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/50'
+                      : 'bg-white border-neutral-300 text-neutral-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/50'
+                  "
                 >
               </div>
             </div>
 
             <!-- 搜尋欄位選擇 -->
-            <div class="space-y-2">
-              <label class="block text-gray-700 text-sm font-medium">搜尋欄位</label>
+            <div class="space-y-2 mb-6">
+              <label
+                class="block text-sm font-medium"
+                :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+              >
+                搜尋欄位
+              </label>
               <div class="flex flex-wrap gap-3">
                 <button
-                  @click="searchField = 'id'"
-                  type="button"
-                  :class="[
-                    'px-4 py-2 border-2 rounded-lg text-sm font-medium cursor-pointer transition-all',
-                    searchField === 'id'
-                      ? 'bg-blue-600 text-white border-blue-600 shadow-md'
-                      : 'bg-white text-blue-600 border-blue-600 hover:bg-blue-50'
+                  v-for="field in [
+                    { value: 'id', label: '訂票人身分證字號' },
+                    { value: 'name', label: '訂票人姓名' },
+                    { value: 'phone', label: '訂票人電話' },
+                    { value: 'orderNo', label: '訂單編號' },
+                    { value: 'distributor', label: '經銷商名稱' }
                   ]"
-                >
-                  訂票人身分證字號
-                </button>
-                <button
-                  @click="searchField = 'name'"
+                  :key="field.value"
+                  @click="searchField = field.value"
                   type="button"
-                  :class="[
-                    'px-4 py-2 border-2 rounded-lg text-sm font-medium cursor-pointer transition-all',
-                    searchField === 'name'
-                      ? 'bg-blue-600 text-white border-blue-600 shadow-md'
-                      : 'bg-white text-blue-600 border-blue-600 hover:bg-blue-50'
-                  ]"
+                  class="px-4 py-2 border-2 rounded-lg text-sm font-medium cursor-pointer transition-all"
+                  :class="
+                    searchField === field.value
+                      ? 'bg-primary-500 text-white border-primary-500'
+                      : theme === 'dark'
+                        ? 'bg-secondary-800 text-primary-400 border-primary-500 hover:bg-secondary-700'
+                        : 'bg-white text-primary-600 border-primary-500 hover:bg-primary-50'
+                  "
                 >
-                  訂票人姓名
-                </button>
-                <button
-                  @click="searchField = 'phone'"
-                  type="button"
-                  :class="[
-                    'px-4 py-2 border-2 rounded-lg text-sm font-medium cursor-pointer transition-all',
-                    searchField === 'phone'
-                      ? 'bg-blue-600 text-white border-blue-600 shadow-md'
-                      : 'bg-white text-blue-600 border-blue-600 hover:bg-blue-50'
-                  ]"
-                >
-                  訂票人電話
-                </button>
-                <button
-                  @click="searchField = 'orderNo'"
-                  type="button"
-                  :class="[
-                    'px-4 py-2 border-2 rounded-lg text-sm font-medium cursor-pointer transition-all',
-                    searchField === 'orderNo'
-                      ? 'bg-blue-600 text-white border-blue-600 shadow-md'
-                      : 'bg-white text-blue-600 border-blue-600 hover:bg-blue-50'
-                  ]"
-                >
-                  訂單編號
-                </button>
-                <button
-                  @click="searchField = 'distributor'"
-                  type="button"
-                  :class="[
-                    'px-4 py-2 border-2 rounded-lg text-sm font-medium cursor-pointer transition-all',
-                    searchField === 'distributor'
-                      ? 'bg-blue-600 text-white border-blue-600 shadow-md'
-                      : 'bg-white text-blue-600 border-blue-600 hover:bg-blue-50'
-                  ]"
-                >
-                  經銷商名稱
+                  {{ field.label }}
                 </button>
               </div>
             </div>
 
-            <div class="space-y-2">
-              <label for="searchKeyword" class="block text-gray-700 text-sm font-medium">搜尋關鍵字</label>
-              <div class="flex gap-3">
-                <input
-                  type="text"
-                  id="searchKeyword"
+            <!-- 搜尋關鍵字 -->
+            <div class="flex gap-3">
+              <div class="flex-1">
+                <BaseInput
                   v-model="searchKeyword"
-                  @keyup.enter="() => performSearch(true)"
                   placeholder="請輸入搜尋關鍵字"
-                  class="flex-1 p-3 border-2 border-gray-300 rounded-lg text-base transition-all outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                >
-                <button
-                  @click="() => performSearch(true)"
-                  type="button"
-                  class="inline-flex items-center gap-2 px-8 py-3 bg-green-600 text-white border-2 border-green-600 rounded-lg text-base font-semibold cursor-pointer transition-all hover:bg-green-700 hover:border-green-700 whitespace-nowrap"
-                >
-                  <span>🔍</span>
-                  <span>搜尋</span>
-                </button>
+                  :icon="MagnifyingGlassIcon"
+                  @keyup.enter="() => performSearch(true)"
+                />
               </div>
+              <BaseButton
+                variant="primary"
+                :icon="MagnifyingGlassIcon"
+                @click="() => performSearch(true)"
+              >
+                搜尋
+              </BaseButton>
             </div>
-          </div>
+          </BaseCard>
 
-          <!-- 票卷狀態篩選 -->
-          <div class="flex items-center gap-3 mt-6 p-5 bg-gray-50 rounded-lg flex-wrap">
-            <span class="font-semibold text-gray-700 mr-2">票卷狀態篩選</span>
-            <button
-              @click="filterStatus('none')"
-              type="button"
-              :class="['px-5 py-2 border-2 rounded-full text-sm font-medium cursor-pointer transition-all',
-                currentStatusFilter === 'none'
-                  ? 'bg-gray-600 text-white border-gray-600 shadow-md'
-                  : 'bg-white text-gray-600 border-gray-600 hover:shadow-md'
-              ]"
-            >
-              全部
-            </button>
-            <button
-              @click="filterStatus('unpicked')"
-              type="button"
-              :class="['px-5 py-2 border-2 rounded-full text-sm font-medium cursor-pointer transition-all',
-                currentStatusFilter === 'unpicked'
-                  ? 'bg-blue-600 text-white border-blue-600 shadow-md'
-                  : 'bg-white text-blue-600 border-blue-600 hover:shadow-md'
-              ]"
-            >
-              未取票
-            </button>
-            <button
-              @click="filterStatus('picked')"
-              type="button"
-              :class="['px-5 py-2 border-2 rounded-full text-sm font-medium cursor-pointer transition-all',
-                currentStatusFilter === 'picked'
-                  ? 'bg-orange-600 text-white border-orange-600 shadow-md'
-                  : 'bg-white text-orange-600 border-orange-600 hover:shadow-md'
-              ]"
-            >
-              已取票
-            </button>
-            <button
-              @click="filterStatus('boarded')"
-              type="button"
-              :class="['px-5 py-2 border-2 rounded-full text-sm font-medium cursor-pointer transition-all',
-                currentStatusFilter === 'boarded'
-                  ? 'bg-green-600 text-white border-green-600 shadow-md'
-                  : 'bg-white text-green-600 border-green-600 hover:shadow-md'
-              ]"
-            >
-              已登船
-            </button>
-            <button
-              @click="filterStatus('cancelled')"
-              type="button"
-              :class="['px-5 py-2 border-2 rounded-full text-sm font-medium cursor-pointer transition-all',
-                currentStatusFilter === 'cancelled'
-                  ? 'bg-red-600 text-white border-red-600 shadow-md'
-                  : 'bg-white text-red-600 border-red-600 hover:shadow-md'
-              ]"
-            >
-              已取消
-            </button>
-          </div>
+          <!-- 狀態篩選 -->
+          <BaseCard padding="md" class="mb-6">
+            <div class="flex flex-wrap items-center gap-3">
+              <span
+                class="font-medium text-sm"
+                :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+              >
+                票卷狀態篩選
+              </span>
+              <button
+                v-for="status in [
+                  { value: 'none', label: '全部', color: 'neutral' },
+                  { value: 'unpicked', label: '未取票', color: 'amber' },
+                  { value: 'picked', label: '已取票', color: 'blue' },
+                  { value: 'boarded', label: '已登船', color: 'green' },
+                  { value: 'cancelled', label: '已取消', color: 'red' }
+                ]"
+                :key="status.value"
+                @click="filterStatus(status.value)"
+                type="button"
+                class="px-4 py-1.5 border-2 rounded-full text-sm font-medium cursor-pointer transition-all"
+                :class="[
+                  currentStatusFilter === status.value
+                    ? `bg-${status.color}-500 text-white border-${status.color}-500`
+                    : theme === 'dark'
+                      ? `bg-secondary-800 text-${status.color}-400 border-${status.color}-500 hover:bg-secondary-700`
+                      : `bg-white text-${status.color}-600 border-${status.color}-500 hover:bg-${status.color}-50`
+                ]"
+              >
+                {{ status.label }}
+              </button>
+            </div>
+          </BaseCard>
 
           <!-- 表格控制 -->
-          <div class="flex items-center justify-between mt-6 flex-wrap gap-4">
-            <div class="flex items-center gap-2 text-sm text-gray-600">
-              <span>一次顯示</span>
-              <select v-model.number="entriesPerPage" class="p-2 px-3 border-2 border-gray-300 rounded-lg">
+          <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
+            <div class="flex items-center gap-2">
+              <span
+                class="text-sm"
+                :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
+              >
+                一次顯示
+              </span>
+              <select
+                v-model.number="entriesPerPage"
+                class="px-3 py-1.5 rounded-lg border transition-all outline-none"
+                :class="
+                  theme === 'dark'
+                    ? 'bg-secondary-800 border-secondary-700 text-white'
+                    : 'bg-white border-neutral-300 text-neutral-900'
+                "
+              >
                 <option :value="30">30</option>
                 <option :value="50">50</option>
                 <option :value="100">100</option>
               </select>
-              <span>筆紀錄</span>
-            </div>
-            <div class="flex items-center gap-2 text-sm text-gray-600">
-              <label for="tableSearch">搜尋表格:</label>
-              <input
-                type="text"
-                id="tableSearch"
-                v-model="tableSearchText"
-                @input="searchTable"
-                placeholder="快速搜尋..."
-                class="p-2 px-3 border-2 border-gray-300 rounded-lg w-48"
+              <span
+                class="text-sm"
+                :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
               >
+                筆紀錄
+              </span>
+            </div>
+            <div class="flex items-center gap-2">
+              <BaseInput
+                v-model="tableSearchText"
+                placeholder="快速搜尋表格..."
+                :icon="MagnifyingGlassIcon"
+                @input="searchTable"
+              />
             </div>
           </div>
 
-          <!-- 資料表格 -->
-          <div class="overflow-x-auto rounded-lg border-2 border-gray-200 mt-6">
-            <table class="w-full border-collapse bg-white">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="p-4 text-left font-semibold text-gray-700 text-sm border-b-2 border-gray-200 whitespace-nowrap">船班時間</th>
-                  <th class="p-4 text-left font-semibold text-gray-700 text-sm border-b-2 border-gray-200 whitespace-nowrap">訂單編號</th>
-                  <th class="p-4 text-left font-semibold text-gray-700 text-sm border-b-2 border-gray-200 whitespace-nowrap">訂票單位</th>
-                  <th class="p-4 text-left font-semibold text-gray-700 text-sm border-b-2 border-gray-200 whitespace-nowrap">訂票人資料</th>
-                  <th class="p-4 text-left font-semibold text-gray-700 text-sm border-b-2 border-gray-200 whitespace-nowrap">訂票時間</th>
-                  <th class="p-4 text-left font-semibold text-gray-700 text-sm border-b-2 border-gray-200 whitespace-nowrap">票卷狀態</th>
-                  <th class="p-4 text-left font-semibold text-gray-700 text-sm border-b-2 border-gray-200 whitespace-nowrap">船票列表</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-if="paginatedOrders.length === 0">
-                  <td colspan="7" class="py-16 text-center text-gray-500">
-                    <div class="text-6xl opacity-30 mb-4">📋</div>
-                    <div class="text-lg mb-2 font-medium">沒有資料</div>
-                    <div class="text-sm">請調整搜尋條件或日期範圍</div>
-                  </td>
-                </tr>
-                <tr v-for="order in paginatedOrders" :key="order.orderNo" class="hover:bg-gray-50">
-                  <td class="p-4 text-gray-700 text-sm border-b border-gray-100">{{ order.shipTime }}</td>
-                  <td class="p-4 text-sm border-b border-gray-100">
-                    <button
-                      @click="viewOrderDetail(order.orderNo)"
-                      type="button"
-                      class="text-blue-600 hover:text-blue-800 hover:underline font-semibold transition-all cursor-pointer"
-                    >
-                      {{ order.orderNo }}
-                    </button>
-                  </td>
-                  <td class="p-4 text-gray-700 text-sm border-b border-gray-100">{{ order.distributor }}</td>
-                  <td class="p-4 text-gray-700 text-sm border-b border-gray-100">{{ order.bookerInfo }}</td>
-                  <td class="p-4 text-gray-700 text-sm border-b border-gray-100">{{ order.bookTime }}</td>
-                  <td class="p-4 text-sm border-b border-gray-100">
-                    <span :class="['inline-block px-3 py-1 rounded-full text-xs font-semibold', getStatusClass(order.orderStatus)]">
-                      {{ order.orderStatus }}
-                    </span>
-                  </td>
-                  <td class="p-4 text-gray-700 text-sm border-b border-gray-100">{{ order.tickets }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <!-- 訂單列表 -->
+          <BaseCard padding="none">
+            <div class="overflow-x-auto">
+              <table
+                class="w-full"
+                :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+              >
+                <thead
+                  class="text-sm font-medium border-b"
+                  :class="theme === 'dark' ? 'border-secondary-800' : 'border-neutral-200'"
+                >
+                  <tr>
+                    <th class="text-left py-4 px-6">船班時間</th>
+                    <th class="text-left py-4 px-6">訂單編號</th>
+                    <th class="text-left py-4 px-6">訂票單位</th>
+                    <th class="text-left py-4 px-6">訂票人資料</th>
+                    <th class="text-left py-4 px-6">訂票時間</th>
+                    <th class="text-left py-4 px-6">票卷狀態</th>
+                    <th class="text-left py-4 px-6">船票列表</th>
+                  </tr>
+                </thead>
+                <tbody
+                  v-if="paginatedOrders.length > 0"
+                  class="divide-y"
+                  :class="theme === 'dark' ? 'divide-secondary-800' : 'divide-neutral-200'"
+                >
+                  <tr
+                    v-for="order in paginatedOrders"
+                    :key="order.orderNo"
+                    class="hover:bg-opacity-50 transition-colors"
+                    :class="theme === 'dark' ? 'hover:bg-secondary-800' : 'hover:bg-neutral-50'"
+                  >
+                    <td class="py-4 px-6 text-sm">{{ order.shipTime }}</td>
+                    <td class="py-4 px-6">
+                      <button
+                        @click="viewOrderDetail(order.orderNo)"
+                        type="button"
+                        class="text-primary-500 hover:text-primary-600 hover:underline font-medium transition-all"
+                      >
+                        {{ order.orderNo }}
+                      </button>
+                    </td>
+                    <td class="py-4 px-6 text-sm">{{ order.distributor }}</td>
+                    <td class="py-4 px-6 text-sm">{{ order.bookerInfo }}</td>
+                    <td class="py-4 px-6 text-sm">{{ order.bookTime }}</td>
+                    <td class="py-4 px-6">
+                      <span :class="getStatusClass(order.orderStatus)">
+                        {{ order.orderStatus }}
+                      </span>
+                    </td>
+                    <td class="py-4 px-6 text-sm">{{ order.tickets }}</td>
+                  </tr>
+                </tbody>
+                <tbody v-else>
+                  <tr>
+                    <td colspan="7" class="py-12 text-center">
+                      <div
+                        :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-400'"
+                      >
+                        <MagnifyingGlassIcon class="w-12 h-12 mx-auto mb-3 opacity-50" />
+                        <p class="text-lg font-medium">沒有資料</p>
+                        <p class="text-sm mt-1">請調整搜尋條件或日期範圍</p>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </BaseCard>
 
           <!-- 分頁 -->
           <div class="flex items-center justify-between mt-6 flex-wrap gap-4">
-            <div class="text-gray-600 text-sm">
-              第 <span class="font-semibold">{{ paginationInfo.start }}</span> 至 <span class="font-semibold">{{ paginationInfo.end }}</span> 筆紀錄（共 <span class="font-semibold">{{ paginationInfo.total }}</span> 筆）
+            <div
+              class="text-sm"
+              :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
+            >
+              第 <span class="font-semibold">{{ paginationInfo.start }}</span> 至
+              <span class="font-semibold">{{ paginationInfo.end }}</span> 筆紀錄
+              （共 <span class="font-semibold">{{ paginationInfo.total }}</span> 筆）
             </div>
             <div class="flex gap-2">
-              <button
-                @click="goToPage('first')"
+              <BaseButton
+                variant="outline"
+                size="sm"
+                :icon="ChevronDoubleLeftIcon"
                 :disabled="currentPage === 1"
-                type="button"
-                class="px-4 py-2 border-2 border-gray-300 bg-white text-gray-700 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-gray-50 hover:border-blue-500 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:text-gray-700"
+                @click="goToPage('first')"
               >
                 第一頁
-              </button>
-              <button
-                @click="goToPage('prev')"
+              </BaseButton>
+              <BaseButton
+                variant="outline"
+                size="sm"
+                :icon="ChevronLeftIcon"
                 :disabled="currentPage === 1"
-                type="button"
-                class="px-4 py-2 border-2 border-gray-300 bg-white text-gray-700 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-gray-50 hover:border-blue-500 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:text-gray-700"
+                @click="goToPage('prev')"
               >
                 上一頁
-              </button>
-              <button
-                @click="goToPage('next')"
+              </BaseButton>
+              <BaseButton
+                variant="outline"
+                size="sm"
+                :icon="ChevronRightIcon"
                 :disabled="currentPage === totalPages || totalPages === 0"
-                type="button"
-                class="px-4 py-2 border-2 border-gray-300 bg-white text-gray-700 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-gray-50 hover:border-blue-500 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:text-gray-700"
+                @click="goToPage('next')"
               >
                 下一頁
-              </button>
-              <button
-                @click="goToPage('last')"
+              </BaseButton>
+              <BaseButton
+                variant="outline"
+                size="sm"
+                :icon="ChevronDoubleRightIcon"
                 :disabled="currentPage === totalPages || totalPages === 0"
-                type="button"
-                class="px-4 py-2 border-2 border-gray-300 bg-white text-gray-700 rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-gray-50 hover:border-blue-500 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 disabled:hover:text-gray-700"
+                @click="goToPage('last')"
               >
                 最後一頁
-              </button>
+              </BaseButton>
             </div>
           </div>
-        </div>
+        </PageContainer>
       </main>
+    </div>
   </div>
 </template>

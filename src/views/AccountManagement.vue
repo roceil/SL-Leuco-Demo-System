@@ -3,14 +3,29 @@ import { ref, computed } from 'vue'
 import { useRbacStore } from '@/stores/rbac'
 import { useTicketStore } from '@/stores/ticket'
 import { useSidebar } from '@/composables/useSidebar'
+import { useTheme } from '@/composables/useTheme'
 import Navbar from '@/components/Navbar.vue'
 import Sidebar from '@/components/Sidebar.vue'
+import PageContainer from '@/components/ui/PageContainer.vue'
+import BaseCard from '@/components/ui/BaseCard.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
 import type { Account, TicketPriceSetting } from '@/types/rbac'
 import { calculateSalePrice } from '@/types/ticket'
+import {
+  UsersIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
+  PencilIcon,
+  TrashIcon,
+  CheckIcon,
+  XMarkIcon
+} from '@heroicons/vue/24/outline'
 
 const rbacStore = useRbacStore()
 const ticketStore = useTicketStore()
 const { isCollapsed } = useSidebar()
+const { theme } = useTheme()
 
 // 篩選條件
 const searchKeyword = ref('')
@@ -68,12 +83,6 @@ const filteredAccounts = computed(() => {
 function getRoleName(roleId: string): string {
   const role = rbacStore.roles.find((r) => r.id === roleId)
   return role?.name || '未知角色'
-}
-
-// 獲取機構名稱
-function getOrganizationName(orgId: string): string {
-  const org = rbacStore.organizations.find((o) => o.id === orgId)
-  return org?.name || '未知機構'
 }
 
 // 獲取票種名稱
@@ -325,386 +334,643 @@ function removePriceSetting(priceSettingId: string) {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <Navbar />
-    <Sidebar active-route="account-management" />
+  <div class="min-h-screen flex flex-col">
+    <Navbar username="管理員" />
 
-    <!-- 主要內容區 -->
-    <main
-      :class="[
-        'p-8 min-h-[calc(100vh-4rem)] transition-all duration-300',
-        isCollapsed ? 'ml-20' : 'ml-64'
-      ]"
-    >
-      <!-- 頁面標題 -->
-      <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-900">帳號管理</h1>
-        <p class="text-gray-600 mt-1">管理系統帳號及其販售權限</p>
-      </div>
+    <div class="flex flex-1">
+      <Sidebar :active-route="$route.path.slice(1)" />
 
-      <!-- 篩選器和新增按鈕 -->
-      <div class="bg-white rounded-lg shadow p-4 mb-6">
-        <div class="grid grid-cols-4 gap-4">
-          <!-- 關鍵字搜尋 -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">搜尋</label>
-            <input
-              v-model="searchKeyword"
-              type="text"
-              placeholder="帳號、使用者名稱、聯絡人、電話..."
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <!-- 角色篩選 -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">角色</label>
-            <select
-              v-model="filterRole"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">全部</option>
-              <option v-for="role in rbacStore.roles" :key="role.id" :value="role.id">
-                {{ role.name }}
-              </option>
-            </select>
-          </div>
-
-          <!-- 驗證狀態篩選 -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">驗證狀態</label>
-            <select
-              v-model="filterVerified"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">全部</option>
-              <option value="true">已驗證</option>
-              <option value="false">未驗證</option>
-            </select>
-          </div>
-
-          <!-- 新增按鈕 -->
-          <div class="flex items-end">
-            <button
-              @click="createNewAccount"
-              class="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-            >
-              + 新增帳號
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 帳號列表 Table -->
-      <div class="bg-white rounded-lg shadow overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-                  使用者名稱
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-                  聯絡人
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-                  聯絡電話
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-                  角色
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-                  可販售票種
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-                  狀態
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-                  操作
-                </th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200">
-              <tr
-                v-for="account in filteredAccounts"
-                :key="account.id"
-                class="hover:bg-gray-50"
-              >
-                <td class="px-6 py-4 text-sm text-gray-900">{{ account.username }}</td>
-                <td class="px-6 py-4 text-sm text-gray-900">{{ account.contactPerson }}</td>
-                <td class="px-6 py-4 text-sm text-gray-900">{{ account.contactPhone }}</td>
-                <td class="px-6 py-4 text-sm text-gray-900">{{ getRoleName(account.roleId) }}</td>
-                <td class="px-6 py-4 text-sm text-gray-600">
-                  <div class="flex flex-wrap gap-1">
-                    <span
-                      v-for="ticketId in account.availableTicketTypes"
-                      :key="ticketId"
-                      class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded"
-                    >
-                      {{ getTicketTypeName(ticketId) }}
-                    </span>
-                  </div>
-                </td>
-                <td class="px-6 py-4 text-sm">
-                  <span
-                    :class="[
-                      'px-2 py-1 text-xs font-medium rounded',
-                      account.verified
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-yellow-100 text-yellow-700'
-                    ]"
-                  >
-                    {{ account.verified ? '已驗證' : '未驗證' }}
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-sm">
-                  <div class="flex gap-2">
-                    <button
-                      @click="editAccount(account)"
-                      class="text-blue-600 hover:text-blue-800"
-                    >
-                      編輯
-                    </button>
-                    <button
-                      @click="deleteAccount(account.id)"
-                      class="text-red-600 hover:text-red-800"
-                    >
-                      刪除
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- 空狀態 -->
-        <div
-          v-if="filteredAccounts.length === 0"
-          class="text-center py-12 text-gray-500"
-        >
-          <p>沒有找到符合條件的帳號</p>
-        </div>
-      </div>
-
-      <!-- 新增/編輯表單 Modal -->
-      <div
-        v-if="showForm"
-        class="fixed inset-0 bg-gray-900/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-        @click.self="resetForm"
+      <main
+        :class="[
+          'flex-1 transition-all duration-300',
+          isCollapsed ? 'ml-20' : 'ml-64'
+        ]"
       >
-        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-          <div class="p-6">
-            <h2 class="text-xl font-semibold text-gray-900 mb-6">
-              {{ isEditMode ? '編輯帳號' : '新增帳號' }}
-            </h2>
-
-            <div class="space-y-4">
-              <!-- 基本資訊 -->
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2"
-                    >帳號 <span class="text-red-500">*</span></label
-                  >
-                  <input
-                    v-model="formData.name"
-                    type="text"
-                    required
-                    placeholder="請輸入帳號"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2"
-                    >使用者名稱 <span class="text-red-500">*</span></label
-                  >
-                  <input
-                    v-model="formData.username"
-                    type="text"
-                    required
-                    placeholder="請輸入使用者名稱"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2"
-                    >聯絡人 <span class="text-red-500">*</span></label
-                  >
-                  <input
-                    v-model="formData.contactPerson"
-                    type="text"
-                    required
-                    placeholder="請輸入聯絡人姓名"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2"
-                    >聯絡電話 <span class="text-red-500">*</span></label
-                  >
-                  <input
-                    v-model="formData.contactPhone"
-                    type="tel"
-                    required
-                    placeholder="請輸入聯絡電話"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2"
-                    >角色 <span class="text-red-500">*</span></label
-                  >
-                  <select
-                    v-model="formData.roleId"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">請選擇角色</option>
-                    <option v-for="role in rbacStore.roles" :key="role.id" :value="role.id">
-                      {{ role.name }}
-                    </option>
-                  </select>
-                </div>
-
-                <div>
-                  <label class="flex items-center gap-2 h-full items-end pb-2">
-                    <input
-                      v-model="formData.verified"
-                      type="checkbox"
-                      class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <span class="text-sm font-medium text-gray-700">帳號已驗證</span>
-                  </label>
-                </div>
+        <PageContainer
+          title="帳號管理"
+          subtitle="管理系統帳號及其販售權限"
+          :icon="UsersIcon"
+          max-width="2xl"
+        >
+          <!-- 篩選器和新增按鈕 -->
+          <BaseCard padding="md" class="mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <!-- 關鍵字搜尋 -->
+              <div>
+                <label
+                  class="block text-sm font-medium mb-2"
+                  :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                >
+                  搜尋
+                </label>
+                <BaseInput
+                  v-model="searchKeyword"
+                  placeholder="帳號、使用者名稱、聯絡人、電話..."
+                  :icon="MagnifyingGlassIcon"
+                />
               </div>
 
-              <!-- 可販售票種設定 -->
-              <div class="border-t border-gray-200 pt-4">
-                <label class="block text-sm font-medium text-gray-700 mb-3"
-                  >可販售票種及價格設定</label
+              <!-- 角色篩選 -->
+              <div>
+                <label
+                  class="block text-sm font-medium mb-2"
+                  :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
                 >
-                <div class="border border-gray-200 rounded-md p-4">
-                  <div class="space-y-4">
-                    <div
-                      v-for="ticket in ticketStore.ticketTypes"
-                      :key="ticket.id"
-                      class="border border-gray-200 rounded-lg p-4 bg-white"
+                  角色
+                </label>
+                <select
+                  v-model="filterRole"
+                  :class="[
+                    'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500',
+                    theme === 'dark'
+                      ? 'bg-secondary-900 border-secondary-700 text-white'
+                      : 'bg-white border-neutral-300 text-neutral-900'
+                  ]"
+                >
+                  <option value="">全部</option>
+                  <option v-for="role in rbacStore.roles" :key="role.id" :value="role.id">
+                    {{ role.name }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- 驗證狀態篩選 -->
+              <div>
+                <label
+                  class="block text-sm font-medium mb-2"
+                  :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                >
+                  驗證狀態
+                </label>
+                <select
+                  v-model="filterVerified"
+                  :class="[
+                    'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500',
+                    theme === 'dark'
+                      ? 'bg-secondary-900 border-secondary-700 text-white'
+                      : 'bg-white border-neutral-300 text-neutral-900'
+                  ]"
+                >
+                  <option value="">全部</option>
+                  <option value="true">已驗證</option>
+                  <option value="false">未驗證</option>
+                </select>
+              </div>
+
+              <!-- 新增按鈕 -->
+              <div class="flex items-end">
+                <BaseButton
+                  variant="primary"
+                  :icon="PlusIcon"
+                  @click="createNewAccount"
+                  class="w-full"
+                >
+                  新增帳號
+                </BaseButton>
+              </div>
+            </div>
+          </BaseCard>
+
+          <!-- 帳號列表 Table -->
+          <BaseCard padding="none">
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead
+                  :class="
+                    theme === 'dark'
+                      ? 'bg-secondary-800'
+                      : 'bg-neutral-50'
+                  "
+                >
+                  <tr>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium uppercase"
+                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
                     >
-                      <!-- 票種選擇標題 -->
-                      <div class="flex items-center gap-3 mb-3">
-                        <input
-                          :id="`ticket-${ticket.id}`"
-                          type="checkbox"
-                          :checked="isTicketTypeSelected(ticket.id)"
-                          @change="toggleTicketType(ticket.id)"
-                          class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                        />
-                        <label :for="`ticket-${ticket.id}`" class="flex-1 text-sm font-medium text-gray-900">
-                          {{ ticket.name }}
-                          <span class="text-gray-500 font-normal ml-2"
-                            >(預設售價: NT$ {{ calculateSalePrice(ticket.basePrice, ticket.discount) }})</span
+                      使用者名稱
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium uppercase"
+                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                    >
+                      聯絡人
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium uppercase"
+                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                    >
+                      聯絡電話
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium uppercase"
+                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                    >
+                      角色
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium uppercase"
+                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                    >
+                      可販售票種
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium uppercase"
+                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                    >
+                      狀態
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium uppercase"
+                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                    >
+                      操作
+                    </th>
+                  </tr>
+                </thead>
+                <tbody
+                  :class="[
+                    'divide-y',
+                    theme === 'dark' ? 'divide-secondary-800' : 'divide-neutral-200'
+                  ]"
+                >
+                  <tr
+                    v-for="account in filteredAccounts"
+                    :key="account.id"
+                    :class="
+                      theme === 'dark'
+                        ? 'hover:bg-secondary-800'
+                        : 'hover:bg-neutral-50'
+                    "
+                  >
+                    <td
+                      class="px-6 py-4 text-sm"
+                      :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'"
+                    >
+                      {{ account.username }}
+                    </td>
+                    <td
+                      class="px-6 py-4 text-sm"
+                      :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'"
+                    >
+                      {{ account.contactPerson }}
+                    </td>
+                    <td
+                      class="px-6 py-4 text-sm"
+                      :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'"
+                    >
+                      {{ account.contactPhone }}
+                    </td>
+                    <td
+                      class="px-6 py-4 text-sm"
+                      :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'"
+                    >
+                      {{ getRoleName(account.roleId) }}
+                    </td>
+                    <td
+                      class="px-6 py-4 text-sm"
+                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-600'"
+                    >
+                      <div class="flex flex-wrap gap-1">
+                        <span
+                          v-for="ticketId in account.availableTicketTypes"
+                          :key="ticketId"
+                          :class="[
+                            'px-2 py-1 text-xs rounded',
+                            theme === 'dark'
+                              ? 'bg-primary-900/30 text-primary-400'
+                              : 'bg-primary-100 text-primary-700'
+                          ]"
+                        >
+                          {{ getTicketTypeName(ticketId) }}
+                        </span>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm">
+                      <span
+                        :class="[
+                          'px-2 py-1 text-xs font-medium rounded',
+                          account.verified
+                            ? theme === 'dark'
+                              ? 'bg-green-900/30 text-green-400'
+                              : 'bg-green-100 text-green-700'
+                            : theme === 'dark'
+                              ? 'bg-amber-900/30 text-amber-400'
+                              : 'bg-amber-100 text-amber-700'
+                        ]"
+                      >
+                        {{ account.verified ? '已驗證' : '未驗證' }}
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm">
+                      <div class="flex gap-2">
+                        <button
+                          @click="editAccount(account)"
+                          :class="[
+                            'flex items-center gap-1 transition-colors',
+                            theme === 'dark'
+                              ? 'text-primary-400 hover:text-primary-300'
+                              : 'text-primary-600 hover:text-primary-800'
+                          ]"
+                        >
+                          <PencilIcon class="w-4 h-4" />
+                          編輯
+                        </button>
+                        <button
+                          @click="deleteAccount(account.id)"
+                          :class="[
+                            'flex items-center gap-1 transition-colors',
+                            theme === 'dark'
+                              ? 'text-red-400 hover:text-red-300'
+                              : 'text-red-600 hover:text-red-800'
+                          ]"
+                        >
+                          <TrashIcon class="w-4 h-4" />
+                          刪除
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- 空狀態 -->
+            <div
+              v-if="filteredAccounts.length === 0"
+              class="text-center py-12"
+              :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'"
+            >
+              <p>沒有找到符合條件的帳號</p>
+            </div>
+          </BaseCard>
+
+        </PageContainer>
+      </main>
+    </div>
+
+    <!-- 新增/編輯表單 Modal -->
+    <div
+      v-if="showForm"
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      @click.self="resetForm"
+    >
+      <div
+        :class="[
+          'rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col',
+          theme === 'dark' ? 'bg-secondary-900' : 'bg-white'
+        ]"
+      >
+        <!-- Modal Header (Sticky) -->
+        <div
+          :class="[
+            'p-6 border-b flex items-center justify-between sticky top-0 z-10',
+            theme === 'dark'
+              ? 'bg-secondary-900 border-secondary-800'
+              : 'bg-white border-neutral-200'
+          ]"
+        >
+          <h2
+            class="text-xl font-semibold"
+            :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'"
+          >
+            {{ isEditMode ? '編輯帳號' : '新增帳號' }}
+          </h2>
+          <button
+            @click="resetForm"
+            :class="[
+              'p-2 rounded-lg transition-colors',
+              theme === 'dark'
+                ? 'hover:bg-secondary-800 text-neutral-400'
+                : 'hover:bg-neutral-100 text-neutral-600'
+            ]"
+          >
+            <XMarkIcon class="w-5 h-5" />
+          </button>
+        </div>
+
+        <!-- Modal Body (Scrollable) -->
+        <div class="p-6 overflow-y-auto flex-1">
+
+          <div class="space-y-4">
+            <!-- 基本資訊 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label
+                  class="block text-sm font-medium mb-2"
+                  :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                >
+                  帳號 <span class="text-red-500">*</span>
+                </label>
+                <BaseInput
+                  v-model="formData.name"
+                  placeholder="請輸入帳號"
+                />
+              </div>
+
+              <div>
+                <label
+                  class="block text-sm font-medium mb-2"
+                  :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                >
+                  使用者名稱 <span class="text-red-500">*</span>
+                </label>
+                <BaseInput
+                  v-model="formData.username"
+                  placeholder="請輸入使用者名稱"
+                />
+              </div>
+
+              <div>
+                <label
+                  class="block text-sm font-medium mb-2"
+                  :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                >
+                  聯絡人 <span class="text-red-500">*</span>
+                </label>
+                <BaseInput
+                  v-model="formData.contactPerson"
+                  placeholder="請輸入聯絡人姓名"
+                />
+              </div>
+
+              <div>
+                <label
+                  class="block text-sm font-medium mb-2"
+                  :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                >
+                  聯絡電話 <span class="text-red-500">*</span>
+                </label>
+                <BaseInput
+                  v-model="formData.contactPhone"
+                  type="tel"
+                  placeholder="請輸入聯絡電話"
+                />
+              </div>
+
+              <div>
+                <label
+                  class="block text-sm font-medium mb-2"
+                  :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                >
+                  角色 <span class="text-red-500">*</span>
+                </label>
+                <select
+                  v-model="formData.roleId"
+                  :class="[
+                    'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500',
+                    theme === 'dark'
+                      ? 'bg-secondary-900 border-secondary-700 text-white'
+                      : 'bg-white border-neutral-300 text-neutral-900'
+                  ]"
+                >
+                  <option value="">請選擇角色</option>
+                  <option v-for="role in rbacStore.roles" :key="role.id" :value="role.id">
+                    {{ role.name }}
+                  </option>
+                </select>
+              </div>
+
+              <div>
+                <label class="flex items-center gap-2 h-full items-end pb-2">
+                  <input
+                    v-model="formData.verified"
+                    type="checkbox"
+                    class="w-4 h-4 text-primary-600 border-neutral-300 rounded focus:ring-primary-500"
+                  />
+                  <span
+                    class="text-sm font-medium"
+                    :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                  >
+                    帳號已驗證
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <!-- 可販售票種設定 -->
+            <div
+              :class="[
+                'border-t pt-4',
+                theme === 'dark' ? 'border-secondary-800' : 'border-neutral-200'
+              ]"
+            >
+              <label
+                class="block text-sm font-medium mb-3"
+                :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+              >
+                可販售票種及價格設定
+              </label>
+              <div
+                :class="[
+                  'border rounded-md p-4',
+                  theme === 'dark'
+                    ? 'border-secondary-800 bg-secondary-950'
+                    : 'border-neutral-200 bg-neutral-50'
+                ]"
+              >
+                <div class="space-y-4">
+                  <div
+                    v-for="ticket in ticketStore.ticketTypes"
+                    :key="ticket.id"
+                    :class="[
+                      'border rounded-lg p-4',
+                      theme === 'dark'
+                        ? 'border-secondary-800 bg-secondary-900'
+                        : 'border-neutral-200 bg-white'
+                    ]"
+                  >
+                    <!-- 票種選擇標題 -->
+                    <div class="flex items-center gap-3 mb-3">
+                      <input
+                        :id="`ticket-${ticket.id}`"
+                        type="checkbox"
+                        :checked="isTicketTypeSelected(ticket.id)"
+                        @change="toggleTicketType(ticket.id)"
+                        class="w-4 h-4 text-primary-600 border-neutral-300 rounded focus:ring-primary-500"
+                      />
+                      <label
+                        :for="`ticket-${ticket.id}`"
+                        :class="[
+                          'flex-1 text-sm font-medium',
+                          theme === 'dark' ? 'text-white' : 'text-neutral-900'
+                        ]"
+                      >
+                        {{ ticket.name }}
+                        <span
+                          :class="[
+                            'font-normal ml-2',
+                            theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'
+                          ]"
+                        >
+                          (預設售價: NT$ {{ calculateSalePrice(ticket.basePrice, ticket.discount) }})
+                        </span>
+                      </label>
+                    </div>
+
+                    <!-- 價格設定區域（僅在勾選時顯示） -->
+                    <div v-if="isTicketTypeSelected(ticket.id)" class="ml-7 space-y-3">
+                      <!-- 新增價格設定表單 -->
+                      <div
+                        v-if="newPriceSettings[ticket.id]"
+                        :class="[
+                          'border rounded-md p-3',
+                          theme === 'dark'
+                            ? 'bg-primary-900/20 border-primary-800'
+                            : 'bg-primary-50 border-primary-200'
+                        ]"
+                      >
+                        <div
+                          class="text-xs font-medium mb-2"
+                          :class="theme === 'dark' ? 'text-primary-400' : 'text-primary-900'"
+                        >
+                          新增價格設定
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3">
+                          <div class="flex items-center gap-2">
+                            <label
+                              class="text-xs"
+                              :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                            >
+                              價格:
+                            </label>
+                            <input
+                              v-model.number="newPriceSettings[ticket.id]!.price"
+                              type="number"
+                              min="0"
+                              step="1"
+                              :class="[
+                                'w-24 px-2 py-1 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500',
+                                theme === 'dark'
+                                  ? 'bg-secondary-950 border-secondary-700 text-white'
+                                  : 'bg-white border-neutral-300 text-neutral-900'
+                              ]"
+                            />
+                            <span
+                              class="text-xs"
+                              :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
+                            >
+                              元
+                            </span>
+                          </div>
+                          <div class="flex items-center gap-2">
+                            <label
+                              class="text-xs"
+                              :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                            >
+                              啟用日期:
+                            </label>
+                            <input
+                              v-model="newPriceSettings[ticket.id]!.effectiveDate"
+                              type="date"
+                              :class="[
+                                'px-2 py-1 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500',
+                                theme === 'dark'
+                                  ? 'bg-secondary-950 border-secondary-700 text-white'
+                                  : 'bg-white border-neutral-300 text-neutral-900'
+                              ]"
+                            />
+                          </div>
+                          <BaseButton
+                            variant="primary"
+                            size="sm"
+                            @click="addPriceSetting(ticket.id)"
                           >
-                        </label>
+                            新增
+                          </BaseButton>
+                        </div>
                       </div>
 
-                      <!-- 價格設定區域（僅在勾選時顯示） -->
-                      <div v-if="isTicketTypeSelected(ticket.id)" class="ml-7 space-y-3">
-                        <!-- 新增價格設定表單 -->
-                        <div v-if="newPriceSettings[ticket.id]" class="bg-blue-50 border border-blue-200 rounded-md p-3">
-                          <div class="text-xs font-medium text-blue-900 mb-2">新增價格設定</div>
-                          <div class="flex items-center gap-3">
-                            <div class="flex items-center gap-2">
-                              <label class="text-xs text-gray-700">價格:</label>
-                              <input
-                                v-model.number="newPriceSettings[ticket.id]!.price"
-                                type="number"
-                                min="0"
-                                step="1"
-                                class="w-24 px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              />
-                              <span class="text-xs text-gray-600">元</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                              <label class="text-xs text-gray-700">啟用日期:</label>
-                              <input
-                                v-model="newPriceSettings[ticket.id]!.effectiveDate"
-                                type="date"
-                                class="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              />
-                            </div>
-                            <button
-                              @click="addPriceSetting(ticket.id)"
-                              class="px-3 py-1 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                            >
-                              新增
-                            </button>
-                          </div>
-                        </div>
-
-                        <!-- 現有價格設定列表 -->
+                      <!-- 現有價格設定列表 -->
+                      <div
+                        v-if="getTicketPriceSettings(ticket.id).length > 0"
+                        class="space-y-2"
+                      >
                         <div
-                          v-if="getTicketPriceSettings(ticket.id).length > 0"
-                          class="space-y-2"
+                          class="text-xs font-medium"
+                          :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
                         >
-                          <div class="text-xs font-medium text-gray-700">價格歷史記錄</div>
-                          <div class="space-y-1">
-                            <div
-                              v-for="setting in getTicketPriceSettings(ticket.id)"
-                              :key="setting.id"
-                              class="flex items-center justify-between gap-3 p-2 bg-gray-50 rounded-md text-xs"
-                            >
-                              <div class="flex items-center gap-4">
-                                <span class="text-gray-900 font-medium">
-                                  NT$ {{ setting.customPrice }}
-                                </span>
-                                <span class="text-gray-600">
-                                  啟用日期: {{ setting.effectiveDate }}
-                                </span>
-                                <span class="text-gray-400">
-                                  建立於: {{ new Date(setting.createdAt).toLocaleDateString() }}
-                                </span>
-                              </div>
-                              <button
-                                @click="removePriceSetting(setting.id)"
-                                class="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                          價格歷史記錄
+                        </div>
+                        <div class="space-y-1">
+                          <div
+                            v-for="setting in getTicketPriceSettings(ticket.id)"
+                            :key="setting.id"
+                            :class="[
+                              'flex items-center justify-between gap-3 p-2 rounded-md text-xs',
+                              theme === 'dark'
+                                ? 'bg-secondary-950'
+                                : 'bg-neutral-50'
+                            ]"
+                          >
+                            <div class="flex items-center gap-4">
+                              <span
+                                class="font-medium"
+                                :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'"
                               >
-                                刪除
-                              </button>
+                                NT$ {{ setting.customPrice }}
+                              </span>
+                              <span
+                                :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
+                              >
+                                啟用日期: {{ setting.effectiveDate }}
+                              </span>
+                              <span
+                                :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-400'"
+                              >
+                                建立於: {{ new Date(setting.createdAt).toLocaleDateString() }}
+                              </span>
                             </div>
+                            <BaseButton
+                              variant="danger"
+                              size="sm"
+                              @click="removePriceSetting(setting.id)"
+                            >
+                              刪除
+                            </BaseButton>
                           </div>
                         </div>
-                        <div v-else class="text-xs text-gray-500 italic">
-                          尚無價格設定，請新增至少一個價格設定
-                        </div>
+                      </div>
+                      <div
+                        v-else
+                        class="text-xs italic"
+                        :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-500'"
+                      >
+                        尚無價格設定，請新增至少一個價格設定
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-
-            <!-- 操作按鈕 -->
-            <div class="flex gap-3 pt-6 border-t border-gray-200 mt-6">
-              <button
-                @click="resetForm"
-                class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
-              >
-                取消
-              </button>
-              <button
-                @click="saveAccount"
-                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors ml-auto"
-              >
-                {{ isEditMode ? '更新並儲存' : '創建帳號' }}
-              </button>
-            </div>
           </div>
         </div>
+
+        <!-- Modal Footer (Sticky) -->
+        <div
+          :class="[
+            'p-6 border-t flex gap-3 sticky bottom-0 z-10',
+            theme === 'dark'
+              ? 'bg-secondary-900 border-secondary-800'
+              : 'bg-white border-neutral-200'
+          ]"
+        >
+          <BaseButton
+            variant="secondary"
+            @click="resetForm"
+          >
+            取消
+          </BaseButton>
+          <BaseButton
+            variant="primary"
+            :icon="CheckIcon"
+            @click="saveAccount"
+            class="ml-auto"
+          >
+            {{ isEditMode ? '更新並儲存' : '創建帳號' }}
+          </BaseButton>
+        </div>
       </div>
-    </main>
+    </div>
   </div>
 </template>
 

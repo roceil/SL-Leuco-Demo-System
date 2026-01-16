@@ -86,24 +86,85 @@ export const distributors: Distributor[] = [
   }
 ]
 
+// 訂票類型枚舉
+export enum BookingType {
+  COUNTER_DIRECT = '票口現場售票', // 情境1: 票口人員直接售票
+  COUNTER_PROXY = '票口現場代訂', // 情境2: 票口人員代表經銷商訂票
+  DISTRIBUTOR = '經銷商訂票', // 情境3: 經銷商自己訂票
+  RESERVATION = '預約訂票' // 預約訂票
+}
+
+// 特殊票種類型
+export enum SpecialTicketType {
+  RESIDENT = '居民票', // 情境4: 居民票（需鄉公所驗證）
+  WORK = '工作票' // 情境5: 工作票（需白名單驗證）
+}
+
+// 乘客資料（用於特殊票種）
+export interface PassengerInfo {
+  name: string
+  idNumber: string // 身分證字號
+  ticketType: string // 票種類型
+  specialTicketType?: SpecialTicketType // 特殊票種類型
+  verified?: boolean // 是否已驗證
+  verificationSource?: 'township' | 'whitelist' // 驗證來源：鄉公所或白名單
+}
+
+// 票券乘客資訊（用於訂單詳情）
+export interface TicketPassenger {
+  ticketId: string
+  passengerName: string
+  passengerId: string
+}
+
+// 票券狀態（用於訂單詳情）
+export interface TicketStatus {
+  ticketId: string
+  status: '未取票' | '已取票' | '已登船' | '已取消'
+}
+
 // 訂單資料介面
 export interface SavedOrder {
   orderNumber: string
   departure: string
-  bookingType: string
-  distributor: string
+  bookingType: BookingType // 使用枚舉類型
+
+  // 訂票單位資訊
+  orderOwnerId: string // 訂單歸屬單位 ID（航商 ID 或經銷商 ID）
+  orderOwnerName: string // 訂單歸屬單位名稱
+  orderOwnerType: 'shipping_company' | DistributorType // 訂單歸屬單位類型
+
+  // 建立者資訊（情境2: 票口人員代訂時使用）
+  creatorId?: string // 建立者 ID（票口人員 ID）
+  creatorName?: string // 建立者姓名
+
+  // 經銷商資訊（情境2, 3使用）
+  distributor?: string
   distributorId?: string
   distributorType?: DistributorType
+
   bookerName: string
   bookerPhone: string
   outboundDate: string
   outboundTime: string
   returnDate: string
   returnTime: string
+
+  // 一般票種數量
   tickets: {
     full: number
     half: number
   }
+
+  // 乘客清單（用於特殊票種，情境4, 5）
+  passengers?: PassengerInfo[]
+
+  // 票券乘客資訊（用於訂單詳情）
+  ticketPassengers?: TicketPassenger[]
+
+  // 票券狀態（用於訂單詳情）
+  ticketStatuses?: TicketStatus[]
+
   pricing: {
     originalTotal: number
     discountedTotal: number
@@ -119,7 +180,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251201',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '海景民宿',
     distributorId: 'BNB001',
     distributorType: DistributorType.BNB,
@@ -143,7 +207,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251202',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '環島旅行社',
     distributorId: 'TA001',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -167,7 +234,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251203',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '阿明票務',
     distributorId: 'BEE001',
     distributorType: DistributorType.BEE,
@@ -191,7 +261,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251204',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '星空民宿',
     distributorId: 'BNB002',
     distributorType: DistributorType.BNB,
@@ -215,7 +288,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251205',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '悠遊旅行社',
     distributorId: 'TA002',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -241,7 +317,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260101',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '藍白小屋',
     distributorId: 'BNB003',
     distributorType: DistributorType.BNB,
@@ -265,7 +344,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260102',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '快樂假期',
     distributorId: 'TA003',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -289,7 +371,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260103',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '小美代購',
     distributorId: 'BEE002',
     distributorType: DistributorType.BEE,
@@ -313,7 +398,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260104',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '海景民宿',
     distributorId: 'BNB001',
     distributorType: DistributorType.BNB,
@@ -337,7 +425,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260105',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '環島旅行社',
     distributorId: 'TA001',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -361,7 +452,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260106',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '阿華服務站',
     distributorId: 'BEE003',
     distributorType: DistributorType.BEE,
@@ -385,7 +479,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260107',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '星空民宿',
     distributorId: 'BNB002',
     distributorType: DistributorType.BNB,
@@ -409,7 +506,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260108',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '悠遊旅行社',
     distributorId: 'TA002',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -433,7 +533,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260109',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '藍白小屋',
     distributorId: 'BNB003',
     distributorType: DistributorType.BNB,
@@ -457,7 +560,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260110',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '快樂假期',
     distributorId: 'TA003',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -483,7 +589,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251206',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '阿明票務',
     distributorId: 'BEE001',
     distributorType: DistributorType.BEE,
@@ -501,7 +610,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251207',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '海景民宿',
     distributorId: 'BNB001',
     distributorType: DistributorType.BNB,
@@ -519,7 +631,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251208',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '環島旅行社',
     distributorId: 'TA001',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -537,7 +652,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251209',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '星空民宿',
     distributorId: 'BNB002',
     distributorType: DistributorType.BNB,
@@ -555,7 +673,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251210',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '小美代購',
     distributorId: 'BEE002',
     distributorType: DistributorType.BEE,
@@ -573,7 +694,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251211',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '藍白小屋',
     distributorId: 'BNB003',
     distributorType: DistributorType.BNB,
@@ -591,7 +715,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251212',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '悠遊旅行社',
     distributorId: 'TA002',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -609,7 +736,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251213',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '阿華服務站',
     distributorId: 'BEE003',
     distributorType: DistributorType.BEE,
@@ -627,7 +757,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251214',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '快樂假期',
     distributorId: 'TA003',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -645,7 +778,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251215',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '海景民宿',
     distributorId: 'BNB001',
     distributorType: DistributorType.BNB,
@@ -663,7 +799,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251216',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '阿明票務',
     distributorId: 'BEE001',
     distributorType: DistributorType.BEE,
@@ -681,7 +820,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251217',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '星空民宿',
     distributorId: 'BNB002',
     distributorType: DistributorType.BNB,
@@ -699,7 +841,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251218',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '環島旅行社',
     distributorId: 'TA001',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -717,7 +862,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251219',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '小美代購',
     distributorId: 'BEE002',
     distributorType: DistributorType.BEE,
@@ -735,7 +883,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251220',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '藍白小屋',
     distributorId: 'BNB003',
     distributorType: DistributorType.BNB,
@@ -753,7 +904,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251221',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '悠遊旅行社',
     distributorId: 'TA002',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -771,7 +925,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251222',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '阿華服務站',
     distributorId: 'BEE003',
     distributorType: DistributorType.BEE,
@@ -789,7 +946,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251223',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '快樂假期',
     distributorId: 'TA003',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -810,7 +970,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251224',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '海景民宿',
     distributorId: 'BNB001',
     distributorType: DistributorType.BNB,
@@ -828,7 +991,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251225',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '阿明票務',
     distributorId: 'BEE001',
     distributorType: DistributorType.BEE,
@@ -846,7 +1012,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251226',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '星空民宿',
     distributorId: 'BNB002',
     distributorType: DistributorType.BNB,
@@ -864,7 +1033,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251227',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '環島旅行社',
     distributorId: 'TA001',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -882,7 +1054,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251228',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '小美代購',
     distributorId: 'BEE002',
     distributorType: DistributorType.BEE,
@@ -900,7 +1075,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251229',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '藍白小屋',
     distributorId: 'BNB003',
     distributorType: DistributorType.BNB,
@@ -918,7 +1096,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251230',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '悠遊旅行社',
     distributorId: 'TA002',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -936,7 +1117,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251231',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '阿華服務站',
     distributorId: 'BEE003',
     distributorType: DistributorType.BEE,
@@ -954,7 +1138,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251232',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '快樂假期',
     distributorId: 'TA003',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -972,7 +1159,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251233',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '海景民宿',
     distributorId: 'BNB001',
     distributorType: DistributorType.BNB,
@@ -990,7 +1180,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251234',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '阿明票務',
     distributorId: 'BEE001',
     distributorType: DistributorType.BEE,
@@ -1008,7 +1201,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251235',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '星空民宿',
     distributorId: 'BNB002',
     distributorType: DistributorType.BNB,
@@ -1026,7 +1222,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251236',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '環島旅行社',
     distributorId: 'TA001',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -1044,7 +1243,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251237',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '小美代購',
     distributorId: 'BEE002',
     distributorType: DistributorType.BEE,
@@ -1062,7 +1264,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251238',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '藍白小屋',
     distributorId: 'BNB003',
     distributorType: DistributorType.BNB,
@@ -1080,7 +1285,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251239',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '悠遊旅行社',
     distributorId: 'TA002',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -1101,7 +1309,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251240',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '阿華服務站',
     distributorId: 'BEE003',
     distributorType: DistributorType.BEE,
@@ -1119,7 +1330,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251241',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '快樂假期',
     distributorId: 'TA003',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -1137,7 +1351,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251242',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '海景民宿',
     distributorId: 'BNB001',
     distributorType: DistributorType.BNB,
@@ -1155,7 +1372,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251243',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '阿明票務',
     distributorId: 'BEE001',
     distributorType: DistributorType.BEE,
@@ -1173,7 +1393,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251244',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '星空民宿',
     distributorId: 'BNB002',
     distributorType: DistributorType.BNB,
@@ -1191,7 +1414,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251245',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '環島旅行社',
     distributorId: 'TA001',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -1209,7 +1435,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251246',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '小美代購',
     distributorId: 'BEE002',
     distributorType: DistributorType.BEE,
@@ -1227,7 +1456,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251247',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '藍白小屋',
     distributorId: 'BNB003',
     distributorType: DistributorType.BNB,
@@ -1245,7 +1477,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251248',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '悠遊旅行社',
     distributorId: 'TA002',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -1263,7 +1498,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251249',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '阿華服務站',
     distributorId: 'BEE003',
     distributorType: DistributorType.BEE,
@@ -1281,7 +1519,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251250',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '快樂假期',
     distributorId: 'TA003',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -1299,7 +1540,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251251',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '海景民宿',
     distributorId: 'BNB001',
     distributorType: DistributorType.BNB,
@@ -1317,7 +1561,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251252',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '阿明票務',
     distributorId: 'BEE001',
     distributorType: DistributorType.BEE,
@@ -1335,7 +1582,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251253',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '星空民宿',
     distributorId: 'BNB002',
     distributorType: DistributorType.BNB,
@@ -1353,7 +1603,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251254',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '環島旅行社',
     distributorId: 'TA001',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -1371,7 +1624,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD251255',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '小美代購',
     distributorId: 'BEE002',
     distributorType: DistributorType.BEE,
@@ -1391,7 +1647,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260111',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '藍白小屋',
     distributorId: 'BNB003',
     distributorType: DistributorType.BNB,
@@ -1409,7 +1668,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260112',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '悠遊旅行社',
     distributorId: 'TA002',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -1427,7 +1689,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260113',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '阿華服務站',
     distributorId: 'BEE003',
     distributorType: DistributorType.BEE,
@@ -1445,7 +1710,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260114',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '快樂假期',
     distributorId: 'TA003',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -1463,7 +1731,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260115',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '海景民宿',
     distributorId: 'BNB001',
     distributorType: DistributorType.BNB,
@@ -1481,7 +1752,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260116',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '阿明票務',
     distributorId: 'BEE001',
     distributorType: DistributorType.BEE,
@@ -1499,7 +1773,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260117',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '星空民宿',
     distributorId: 'BNB002',
     distributorType: DistributorType.BNB,
@@ -1517,7 +1794,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260118',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '環島旅行社',
     distributorId: 'TA001',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -1535,7 +1815,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260119',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '小美代購',
     distributorId: 'BEE002',
     distributorType: DistributorType.BEE,
@@ -1553,7 +1836,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260120',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '藍白小屋',
     distributorId: 'BNB003',
     distributorType: DistributorType.BNB,
@@ -1571,7 +1857,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260121',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '悠遊旅行社',
     distributorId: 'TA002',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -1589,7 +1878,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260122',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '阿華服務站',
     distributorId: 'BEE003',
     distributorType: DistributorType.BEE,
@@ -1607,7 +1899,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260123',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '快樂假期',
     distributorId: 'TA003',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -1625,7 +1920,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260124',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '海景民宿',
     distributorId: 'BNB001',
     distributorType: DistributorType.BNB,
@@ -1643,7 +1941,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260125',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '阿明票務',
     distributorId: 'BEE001',
     distributorType: DistributorType.BEE,
@@ -1661,7 +1962,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260126',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '星空民宿',
     distributorId: 'BNB002',
     distributorType: DistributorType.BNB,
@@ -1679,7 +1983,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260127',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '環島旅行社',
     distributorId: 'TA001',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -1697,7 +2004,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260128',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '小美代購',
     distributorId: 'BEE002',
     distributorType: DistributorType.BEE,
@@ -1715,7 +2025,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260129',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '藍白小屋',
     distributorId: 'BNB003',
     distributorType: DistributorType.BNB,
@@ -1733,7 +2046,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260130',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '悠遊旅行社',
     distributorId: 'TA002',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -1751,7 +2067,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260131',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '阿華服務站',
     distributorId: 'BEE003',
     distributorType: DistributorType.BEE,
@@ -1769,7 +2088,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260132',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '快樂假期',
     distributorId: 'TA003',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -1787,7 +2109,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260133',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '海景民宿',
     distributorId: 'BNB001',
     distributorType: DistributorType.BNB,
@@ -1805,7 +2130,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260134',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '阿明票務',
     distributorId: 'BEE001',
     distributorType: DistributorType.BEE,
@@ -1823,7 +2151,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260135',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '星空民宿',
     distributorId: 'BNB002',
     distributorType: DistributorType.BNB,
@@ -1841,7 +2172,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260136',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '環島旅行社',
     distributorId: 'TA001',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -1859,7 +2193,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260137',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '小美代購',
     distributorId: 'BEE002',
     distributorType: DistributorType.BEE,
@@ -1877,7 +2214,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260138',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '藍白小屋',
     distributorId: 'BNB003',
     distributorType: DistributorType.BNB,
@@ -1895,7 +2235,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260139',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '悠遊旅行社',
     distributorId: 'TA002',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -1913,7 +2256,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260140',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '阿華服務站',
     distributorId: 'BEE003',
     distributorType: DistributorType.BEE,
@@ -1934,7 +2280,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260141',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '快樂假期',
     distributorId: 'TA003',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -1952,7 +2301,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260142',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '海景民宿',
     distributorId: 'BNB001',
     distributorType: DistributorType.BNB,
@@ -1970,7 +2322,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260143',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '阿明票務',
     distributorId: 'BEE001',
     distributorType: DistributorType.BEE,
@@ -1988,7 +2343,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260144',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '星空民宿',
     distributorId: 'BNB002',
     distributorType: DistributorType.BNB,
@@ -2006,7 +2364,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260145',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '環島旅行社',
     distributorId: 'TA001',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -2024,7 +2385,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260146',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '小美代購',
     distributorId: 'BEE002',
     distributorType: DistributorType.BEE,
@@ -2045,7 +2409,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260147',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '藍白小屋',
     distributorId: 'BNB003',
     distributorType: DistributorType.BNB,
@@ -2063,7 +2430,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260148',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '悠遊旅行社',
     distributorId: 'TA002',
     distributorType: DistributorType.TRAVEL_AGENCY,
@@ -2081,7 +2451,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260149',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '阿華服務站',
     distributorId: 'BEE003',
     distributorType: DistributorType.BEE,
@@ -2099,7 +2472,10 @@ export const mockOrders: SavedOrder[] = [
   {
     orderNumber: 'ORD260150',
     departure: '馬公',
-    bookingType: '預約訂票',
+    bookingType: BookingType.RESERVATION,
+    orderOwnerId: 'SHIPPING001',
+    orderOwnerName: '藍白航運',
+    orderOwnerType: 'shipping_company',
     distributor: '快樂假期',
     distributorId: 'TA003',
     distributorType: DistributorType.TRAVEL_AGENCY,
