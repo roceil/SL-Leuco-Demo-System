@@ -10,6 +10,7 @@ import BaseInput from '@/components/ui/BaseInput.vue'
 import { useSidebar } from '@/composables/useSidebar'
 import { useTheme } from '@/composables/useTheme'
 import { useOrderStore } from '@/stores/order'
+import type { ScheduleSegment } from '@/types/order'
 import {
   MagnifyingGlassIcon,
   CalendarIcon,
@@ -25,7 +26,7 @@ const router = useRouter()
 const orderStore = useOrderStore()
 
 interface Order {
-  shipTime: string
+  shipSegments: ScheduleSegment[]
   orderNo: string
   distributor: string
   bookerInfo: string
@@ -75,17 +76,16 @@ const loadOrdersFromLocalStorage = (): Order[] => {
 
   try {
     return orderStore.orders.map((order) => {
-      // scheduleName 格式：'2026-02-24 台東→綠島 08:00 + ...'，取前10字元為日期
-      const shipTime = order.scheduleName || ''
-
       return {
-        shipTime,
+        shipSegments: order.scheduleSegments || [],
         orderNo: order.orderNumber,
         distributor: order.createdBy || '',
         bookerInfo: `${order.customerName} / ${order.customerPhone}`,
         bookTime: order.createdAt.split('T')[0] as string,
         orderStatus: statusDisplayMap[order.status] || order.status,
-        tickets: order.notes || `${order.passengers.length} 人`
+        tickets: order.ticketBreakdown?.length
+          ? order.ticketBreakdown.map(b => `${b.passengerType} x${b.quantity}`).join('、')
+          : order.notes || `${order.passengers.length} 人`
       }
     })
   } catch (error) {
@@ -107,10 +107,10 @@ const performSearch = (showAlert = true) => {
   }
 
   const filtered = allStoredOrders.filter(order => {
-    // shipTime 格式：'2026-02-24 台東→綠島 08:00'，取前10字元為日期
-    const shipDate = order.shipTime.substring(0, 10)
-    if (!shipDate || shipDate.length < 10) return false
-    return shipDate >= dateFrom.value && shipDate <= dateTo.value
+    // 以第一段航段的日期為基準篩選
+    const firstDate = order.shipSegments[0]?.date
+    if (!firstDate) return false
+    return firstDate >= dateFrom.value && firstDate <= dateTo.value
   })
 
   if (searchKeyword.value.trim()) {
@@ -168,11 +168,14 @@ const searchTable = () => {
   if (searchText === '') {
     filteredOrders.value = allOrders.value
   } else {
-    filteredOrders.value = allOrders.value.filter(order =>
-      Object.values(order).some(value =>
-        String(value).toLowerCase().includes(searchText)
+    filteredOrders.value = allOrders.value.filter(order => {
+      const segmentStr = order.shipSegments.map(s => `${s.date} ${s.time} ${s.route}`).join(' ')
+      const { shipSegments: _, ...rest } = order
+      return (
+        segmentStr.toLowerCase().includes(searchText) ||
+        Object.values(rest).some(value => String(value).toLowerCase().includes(searchText))
       )
-    )
+    })
   }
 
   currentPage.value = 1
@@ -235,6 +238,10 @@ const getStatusClass = (status: string) => {
 
 const viewOrderDetail = (orderNo: string) => {
   router.push(`/order-detail/${orderNo}`)
+}
+
+const formatShipTime = (segments: ScheduleSegment[]): string[] => {
+  return segments.map(s => `${s.date}｜${s.time}｜${s.route}`)
 }
 
 const loadDefaultSearchSettings = () => {
@@ -511,7 +518,9 @@ onMounted(() => {
                     class="hover:bg-opacity-50 transition-colors"
                     :class="theme === 'dark' ? 'hover:bg-secondary-800' : 'hover:bg-neutral-50'"
                   >
-                    <td class="py-4 px-6 text-sm">{{ order.shipTime }}</td>
+                    <td class="py-4 px-6 text-sm">
+                      <div v-for="(line, i) in formatShipTime(order.shipSegments)" :key="i">{{ line }}</div>
+                    </td>
                     <td class="py-4 px-6">
                       <button
                         @click="viewOrderDetail(order.orderNo)"

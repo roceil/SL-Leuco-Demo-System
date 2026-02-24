@@ -51,17 +51,32 @@ export interface InvoiceInfo {
   editedAt?: string // 最後編輯時間（ISO 8601 格式）
 }
 
+// 票種拆解（訂單建立時選擇的票種數量）
+export interface TicketBreakdown {
+  passengerType: string  // e.g., '全票', '半票'
+  ticketTypeId: string   // 對應第一航段的票種 ID
+  quantity: number
+}
+
 // 乘客資訊
 export interface PassengerInfo {
   id: string
   name: string // 姓名
   idNumber?: string // 身份證字號
+  birthday?: string // 生日（ISO 8601，YYYY-MM-DD）
   phone?: string // 電話
   isResident?: boolean // 是否為居民
   ticketTypeId: string // 票種 ID
   seatNumber?: string // 座位號碼
   hasBoarded: boolean // 是否已登船
   boardedAt?: string // 登船時間（ISO 8601 格式）
+}
+
+// 航段資訊
+export interface ScheduleSegment {
+  date: string  // 'YYYY-MM-DD'
+  time: string  // 'HH:MM'
+  route: string // '台東→綠島'
 }
 
 // 訂單
@@ -73,12 +88,13 @@ export interface Order {
   customerPhone: string // 客戶電話
   customerEmail?: string // 客戶 Email
   scheduleId: string // 航班 ID
-  scheduleName: string // 航班名稱（例如：2026-02-23 台東→綠島 08:00）
+  scheduleSegments: ScheduleSegment[] // 航段列表
   passengers: PassengerInfo[] // 乘客列表
   paymentInfo: PaymentInfo // 付款資訊
   invoiceInfo?: InvoiceInfo // 發票資訊
   ticketIssuedBy?: string // 出票人帳號 ID
   ticketIssuedAt?: string // 出票時間（ISO 8601 格式）
+  ticketBreakdown?: TicketBreakdown[] // 票種拆解（訂單建立時選擇的票種數量）
   notes?: string // 備註
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed' // 訂單狀態
   createdAt: string // 建立時間（ISO 8601 格式）

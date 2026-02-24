@@ -254,7 +254,9 @@ const getStatusClass = (status: string) => {
                       </div>
                     </td>
                     <td class="py-4 px-6 text-sm">
-                      {{ order.scheduleName }}
+                      <div v-for="seg in order.scheduleSegments" :key="seg.date + seg.time">
+                        {{ seg.date }}｜{{ seg.time }}｜{{ seg.route }}
+                      </div>
                     </td>
                     <td class="py-4 px-6">
                       <div class="text-sm">

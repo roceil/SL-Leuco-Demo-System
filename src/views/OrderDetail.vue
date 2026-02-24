@@ -13,7 +13,7 @@ import PageContainer from '@/components/ui/PageContainer.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
-import type { InvoiceInfo, PassengerInfo, PaymentMethod } from '@/types/order'
+import type { InvoiceInfo, PaymentMethod } from '@/types/order'
 import { validateIssueTicket } from '@/types/order'
 import {
   DocumentTextIcon,
@@ -22,6 +22,9 @@ import {
   PrinterIcon,
   XCircleIcon,
   PlusIcon,
+  PencilSquareIcon,
+  CheckIcon,
+  XMarkIcon,
   TrashIcon
 } from '@heroicons/vue/24/outline'
 
@@ -50,18 +53,29 @@ const invoiceFormData = ref<InvoiceInfo>({
   type: '二聯式'
 })
 
-// 乘客表單
-const showPassengerForm = ref(false)
-const passengerFormData = ref<Partial<PassengerInfo>>({
-  name: '',
-  idNumber: '',
-  phone: '',
-  isResident: false,
-  ticketTypeId: '',
-  hasBoarded: false
-})
+// 行內編輯乘客狀態
+interface LocalPassenger {
+  id: string          // 空字串表示尚未儲存
+  ticketTypeId: string
+  passengerType: string
+  name: string
+  idNumber: string
+  birthday: string
+}
+
+const localPassengers = ref<LocalPassenger[]>([])
+const isPassengersDirty = ref(false)
+const isEditingPassengers = ref(false)
+
+// 加票 Modal
+const showAddTicketModal = ref(false)
+const addTicketTypeId = ref('')
 
 const currentOrder = computed(() => orderStore.selectedOrder)
+
+const formatShipTime = (segments: import('@/types/order').ScheduleSegment[]): string[] => {
+  return segments.map(s => `${s.date}｜${s.time}｜${s.route}`)
+}
 
 // 載入訂單
 function loadOrder() {
@@ -156,56 +170,176 @@ function saveInvoice() {
 
 // ============ 乘客功能 ============
 
-function openPassengerForm() {
-  passengerFormData.value = {
-    name: '',
-    idNumber: '',
-    phone: '',
-    isResident: false,
-    ticketTypeId: '',
-    hasBoarded: false
-  }
-  showPassengerForm.value = true
+function getPassengerType(ticketTypeId: string): string {
+  const ticket = ticketStore.ticketTypes.find(t => t.id === ticketTypeId)
+  return ticket?.passengerType || ticketTypeId
 }
 
-function savePassenger() {
+function initLocalPassengers() {
   if (!currentOrder.value) return
 
-  if (!passengerFormData.value.name) {
-    alert('請輸入乘客姓名')
-    return
+  const order = currentOrder.value
+
+  if (order.passengers.length > 0) {
+    // 已有乘客資料 → 從現有乘客初始化
+    localPassengers.value = order.passengers.map(p => ({
+      id: p.id,
+      ticketTypeId: p.ticketTypeId,
+      passengerType: getPassengerType(p.ticketTypeId),
+      name: p.name,
+      idNumber: p.idNumber || '',
+      birthday: p.birthday || ''
+    }))
+  } else if (order.ticketBreakdown?.length) {
+    // 尚無乘客，但有票種拆解 → 自動產生空白輸入列
+    const slots: LocalPassenger[] = []
+    for (const breakdown of order.ticketBreakdown) {
+      for (let i = 0; i < breakdown.quantity; i++) {
+        slots.push({
+          id: '',
+          ticketTypeId: breakdown.ticketTypeId,
+          passengerType: breakdown.passengerType,
+          name: '',
+          idNumber: '',
+          birthday: ''
+        })
+      }
+    }
+    localPassengers.value = slots
+  } else {
+    localPassengers.value = []
+  }
+  isPassengersDirty.value = false
+}
+
+function startEditPassengers() {
+  isEditingPassengers.value = true
+}
+
+function cancelEditPassengers() {
+  initLocalPassengers()
+  isEditingPassengers.value = false
+}
+
+async function saveAllPassengers() {
+  if (!currentOrder.value) return
+
+  const userId = authStore.currentUser?.id || 'system'
+
+  for (const slot of localPassengers.value) {
+    if (slot.id) {
+      // 已存在（含加票後立即持久化的乘客）→ 更新姓名 / 身分證 / 生日
+      orderStore.updatePassenger(
+        currentOrder.value.id,
+        slot.id,
+        {
+          name: slot.name,
+          idNumber: slot.idNumber || undefined,
+          birthday: slot.birthday || undefined,
+          ticketTypeId: slot.ticketTypeId,
+          hasBoarded: false
+        },
+        userId
+      )
+    } else if (slot.name.trim()) {
+      // 舊訂單由 ticketBreakdown 產生的空列，有填姓名才新增
+      orderStore.addPassenger(
+        currentOrder.value.id,
+        {
+          name: slot.name,
+          idNumber: slot.idNumber || undefined,
+          birthday: slot.birthday || undefined,
+          ticketTypeId: slot.ticketTypeId,
+          hasBoarded: false
+        },
+        userId
+      )
+    }
   }
 
-  if (!passengerFormData.value.ticketTypeId) {
+  // 重新初始化以反映儲存後狀態
+  initLocalPassengers()
+  isPassengersDirty.value = false
+  isEditingPassengers.value = false
+  alert('乘客資料已儲存')
+}
+
+function openAddTicketModal() {
+  addTicketTypeId.value = ticketStore.ticketTypes[0]?.id || ''
+  showAddTicketModal.value = true
+}
+
+function confirmAddTicket() {
+  if (!addTicketTypeId.value) {
     alert('請選擇票種')
     return
   }
-
-  orderStore.addPassenger(
-    currentOrder.value.id,
-    passengerFormData.value as Omit<PassengerInfo, 'id'>,
-    authStore.currentUser?.id || 'system'
-  )
-
-  alert('乘客已新增')
-  showPassengerForm.value = false
-}
-
-function removePassenger(passengerId: string) {
   if (!currentOrder.value) return
 
-  if (confirm('確定要移除此乘客嗎？')) {
-    orderStore.removePassenger(
-      currentOrder.value.id,
-      passengerId,
-      authStore.currentUser?.id || 'system'
-    )
-  }
+  const ticket = ticketStore.ticketTypes.find(t => t.id === addTicketTypeId.value)
+  if (!ticket) return
+
+  const order = currentOrder.value
+  const userId = authStore.currentUser?.id || 'system'
+
+  // 1. 立即寫入乘客到 db.json
+  orderStore.addPassenger(
+    order.id,
+    { name: '', ticketTypeId: ticket.id, hasBoarded: false },
+    userId
+  )
+
+  // 2. 更新 ticketBreakdown
+  const breakdown = order.ticketBreakdown ?? []
+  const existingEntry = breakdown.find(b => b.ticketTypeId === ticket.id)
+  const updatedBreakdown = existingEntry
+    ? breakdown.map(b => b.ticketTypeId === ticket.id ? { ...b, quantity: b.quantity + 1 } : b)
+    : [...breakdown, { passengerType: ticket.passengerType, ticketTypeId: ticket.id, quantity: 1 }]
+
+  // 3. 更新 paymentInfo（票面價 × 航段數）
+  const ticketPrice = ticket.facePrice * order.scheduleSegments.length
+  const updatedPaymentInfo = payment.updatePaymentInfo(order.paymentInfo, {
+    balance: order.paymentInfo.balance + ticketPrice
+  })
+
+  orderStore.updateOrder(order.id, { ticketBreakdown: updatedBreakdown, paymentInfo: updatedPaymentInfo }, userId)
+
+  // 4. 重新初始化，讓新乘客取得真實 ID
+  initLocalPassengers()
+
+  isEditingPassengers.value = true
+  showAddTicketModal.value = false
 }
 
-function getTicketName(ticketTypeId: string): string {
-  const ticket = ticketStore.ticketTypes.find(t => t.id === ticketTypeId)
-  return ticket?.name || ticketTypeId
+function refundPassenger(slot: LocalPassenger, index: number) {
+  const label = slot.passengerType || '此票'
+  if (!confirm(`確定要退掉這張「${label}」票嗎？此操作無法復原。`)) return
+
+  if (!currentOrder.value) return
+
+  const order = currentOrder.value
+  const userId = authStore.currentUser?.id || 'system'
+
+  // 1. 更新 ticketBreakdown 與 paymentInfo
+  const ticket = ticketStore.ticketTypes.find(t => t.id === slot.ticketTypeId)
+  if (ticket) {
+    const ticketPrice = ticket.facePrice * order.scheduleSegments.length
+    const breakdown = order.ticketBreakdown ?? []
+    const updatedBreakdown = breakdown
+      .map(b => b.ticketTypeId === slot.ticketTypeId ? { ...b, quantity: b.quantity - 1 } : b)
+      .filter(b => b.quantity > 0)
+    const updatedPaymentInfo = payment.updatePaymentInfo(order.paymentInfo, {
+      balance: Math.max(0, order.paymentInfo.balance - ticketPrice)
+    })
+    orderStore.updateOrder(order.id, { ticketBreakdown: updatedBreakdown, paymentInfo: updatedPaymentInfo }, userId)
+  }
+
+  // 2. 移除乘客
+  if (slot.id) {
+    orderStore.removePassenger(order.id, slot.id, userId)
+  }
+
+  localPassengers.value.splice(index, 1)
 }
 
 // ============ 出票功能 ============
@@ -246,6 +380,7 @@ function printReceipt() {
 
 onMounted(() => {
   loadOrder()
+  initLocalPassengers()
 })
 </script>
 
@@ -344,9 +479,9 @@ onMounted(() => {
                   <span class="text-sm" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
                     航班
                   </span>
-                  <p class="font-medium" :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'">
-                    {{ currentOrder.scheduleName }}
-                  </p>
+                  <div class="font-medium" :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'">
+                    <div v-for="(line, i) in formatShipTime(currentOrder.scheduleSegments)" :key="i">{{ line }}</div>
+                  </div>
                 </div>
                 <div v-if="currentOrder.ticketIssuedAt">
                   <span class="text-sm" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
@@ -517,72 +652,127 @@ onMounted(() => {
             <!-- 乘客列表 -->
             <BaseCard title="乘客列表" padding="lg">
               <template #actions>
-                <BaseButton
-                  v-if="!currentOrder.ticketIssuedAt"
-                  variant="primary"
-                  size="sm"
-                  :icon="PlusIcon"
-                  @click="openPassengerForm"
-                >
-                  新增乘客
-                </BaseButton>
+                <!-- 編輯模式 -->
+                <template v-if="isEditingPassengers">
+                  <BaseButton
+                    v-if="!currentOrder.ticketIssuedAt"
+                    variant="secondary"
+                    size="sm"
+                    :icon="PlusIcon"
+                    @click="openAddTicketModal"
+                  >
+                    加票
+                  </BaseButton>
+                  <BaseButton
+                    variant="secondary"
+                    size="sm"
+                    :icon="XMarkIcon"
+                    @click="cancelEditPassengers"
+                  >
+                    取消
+                  </BaseButton>
+                  <BaseButton
+                    variant="primary"
+                    size="sm"
+                    :icon="CheckIcon"
+                    @click="saveAllPassengers"
+                  >
+                    確認
+                  </BaseButton>
+                </template>
+
+                <!-- 非編輯模式 -->
+                <template v-else>
+                  <BaseButton
+                    variant="secondary"
+                    size="sm"
+                    :icon="PencilSquareIcon"
+                    @click="startEditPassengers"
+                  >
+                    編輯
+                  </BaseButton>
+                </template>
               </template>
 
-              <div v-if="currentOrder.passengers.length > 0" class="space-y-3">
+              <!-- 有乘客或票種拆解 -->
+              <div v-if="localPassengers.length > 0" class="space-y-3">
                 <div
-                  v-for="(passenger, index) in currentOrder.passengers"
-                  :key="passenger.id"
-                  :class="[
-                    'p-4 rounded-md',
-                    theme === 'dark' ? 'bg-secondary-800' : 'bg-neutral-50'
-                  ]"
+                  v-for="(slot, index) in localPassengers"
+                  :key="index"
+                  class="p-4 rounded-md flex items-start gap-3"
+                  :class="theme === 'dark' ? 'bg-secondary-800' : 'bg-neutral-50'"
                 >
-                  <div class="flex justify-between items-start">
-                    <div class="flex-1">
-                      <div class="flex items-center gap-2 mb-2">
-                        <h4 class="font-medium" :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'">
-                          {{ index + 1 }}. {{ passenger.name }}
-                        </h4>
-                        <span
-                          v-if="passenger.isResident"
-                          class="px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-700"
-                        >
-                          居民
-                        </span>
-                      </div>
-                      <div class="grid grid-cols-2 gap-2 text-sm">
-                        <div>
-                          <span :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
-                            票種：
-                          </span>
-                          <span :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'">
-                            {{ getTicketName(passenger.ticketTypeId) }}
-                          </span>
-                        </div>
-                        <div v-if="passenger.phone">
-                          <span :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
-                            電話：
-                          </span>
-                          <span :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'">
-                            {{ passenger.phone }}
-                          </span>
-                        </div>
-                      </div>
+                  <!-- 票種 + 三欄輸入 -->
+                  <div class="flex-1 grid grid-cols-4 gap-3">
+                    <!-- 票種標籤（唯讀） -->
+                    <div class="pt-1">
+                      <span class="text-xs" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'">
+                        票種
+                      </span>
+                      <p class="font-medium text-sm mt-1" :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'">
+                        {{ slot.passengerType }}
+                      </p>
                     </div>
-                    <BaseButton
-                      v-if="!currentOrder.ticketIssuedAt"
-                      variant="danger"
-                      size="sm"
-                      :icon="TrashIcon"
-                      @click="removePassenger(passenger.id)"
-                    >
-                      移除
-                    </BaseButton>
+
+                    <!-- 姓名輸入 -->
+                    <div>
+                      <label class="text-xs" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'">
+                        姓名
+                      </label>
+                      <BaseInput
+                        v-model="slot.name"
+                        placeholder="請輸入姓名"
+                        :disabled="!isEditingPassengers || !!currentOrder.ticketIssuedAt"
+                        @input="isPassengersDirty = true"
+                      />
+                    </div>
+
+                    <!-- 身分證字號輸入 -->
+                    <div>
+                      <label class="text-xs" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'">
+                        身分證字號
+                      </label>
+                      <BaseInput
+                        v-model="slot.idNumber"
+                        placeholder="請輸入身分證字號"
+                        :disabled="!isEditingPassengers || !!currentOrder.ticketIssuedAt"
+                        @input="isPassengersDirty = true"
+                      />
+                    </div>
+
+                    <!-- 生日輸入 -->
+                    <div>
+                      <label class="text-xs" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'">
+                        生日
+                      </label>
+                      <BaseInput
+                        v-model="slot.birthday"
+                        type="date"
+                        :disabled="!isEditingPassengers || !!currentOrder.ticketIssuedAt"
+                        @input="isPassengersDirty = true"
+                      />
+                    </div>
                   </div>
+
+                  <!-- 退票按鈕 -->
+                  <button
+                    v-if="isEditingPassengers"
+                    @click="refundPassenger(slot, index)"
+                    type="button"
+                    class="shrink-0 mt-6 flex items-center gap-1 px-3 py-1.5 text-xs rounded border transition-colors"
+                    :class="theme === 'dark'
+                      ? 'border-red-700 text-red-400 hover:bg-red-900/30'
+                      : 'border-red-300 text-red-600 hover:bg-red-50'"
+                  >
+                    <TrashIcon class="w-3.5 h-3.5" />
+                    退票
+                  </button>
                 </div>
               </div>
+
+              <!-- 無票種資訊（舊訂單 fallback） -->
               <p v-else :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-400'">
-                尚未新增乘客
+                尚無乘客資訊。請至訂單建立時選擇票種數量。
               </p>
             </BaseCard>
           </div>
@@ -697,27 +887,20 @@ onMounted(() => {
             </BaseCard>
           </div>
 
-          <!-- 新增乘客表單 Modal -->
+          <!-- 加票 Modal -->
           <div
-            v-if="showPassengerForm"
+            v-if="showAddTicketModal"
             class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-            @click.self="showPassengerForm = false"
+            @click.self="showAddTicketModal = false"
           >
-            <BaseCard title="新增乘客" padding="lg" class="w-full max-w-md">
+            <BaseCard title="加票" padding="lg" class="w-full max-w-sm">
               <div class="space-y-4">
                 <div>
                   <label class="block text-sm font-medium mb-2" :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'">
-                    姓名 <span class="text-red-500">*</span>
-                  </label>
-                  <BaseInput v-model="passengerFormData.name" placeholder="請輸入姓名" />
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium mb-2" :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'">
-                    票種 <span class="text-red-500">*</span>
+                    選擇票種 <span class="text-red-500">*</span>
                   </label>
                   <select
-                    v-model="passengerFormData.ticketTypeId"
+                    v-model="addTicketTypeId"
                     :class="[
                       'w-full px-4 py-2.5 rounded-md border',
                       theme === 'dark'
@@ -725,47 +908,29 @@ onMounted(() => {
                         : 'bg-white border-neutral-200 text-neutral-900'
                     ]"
                   >
-                    <option value="">請選擇票種</option>
-                    <option v-for="ticket in ticketStore.ticketTypes" :key="ticket.id" :value="ticket.id">
-                      {{ ticket.name }} - NT$ {{ ticket.facePrice }}
+                    <option value="" disabled>請選擇票種</option>
+                    <option
+                      v-for="ticket in ticketStore.ticketTypes"
+                      :key="ticket.id"
+                      :value="ticket.id"
+                    >
+                      {{ ticket.passengerType }} — NT$ {{ ticket.facePrice }}
                     </option>
                   </select>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium mb-2" :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'">
-                    電話
-                  </label>
-                  <BaseInput v-model="passengerFormData.phone" placeholder="選填" />
-                </div>
-
-                <div class="flex items-center">
-                  <input
-                    v-model="passengerFormData.isResident"
-                    type="checkbox"
-                    :class="[
-                      'w-5 h-5 rounded',
-                      theme === 'dark'
-                        ? 'bg-secondary-900 border-secondary-700'
-                        : 'bg-white border-neutral-300'
-                    ]"
-                  />
-                  <label class="ml-2 text-sm" :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'">
-                    居民
-                  </label>
                 </div>
               </div>
 
               <div class="flex gap-3 mt-6">
-                <BaseButton variant="secondary" @click="showPassengerForm = false" class="flex-1">
+                <BaseButton variant="secondary" @click="showAddTicketModal = false" class="flex-1">
                   取消
                 </BaseButton>
-                <BaseButton variant="primary" @click="savePassenger" class="flex-1">
-                  新增
+                <BaseButton variant="primary" @click="confirmAddTicket" class="flex-1">
+                  加入
                 </BaseButton>
               </div>
             </BaseCard>
           </div>
+
         </PageContainer>
       </main>
     </div>

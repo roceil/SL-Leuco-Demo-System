@@ -28,6 +28,7 @@ const { theme } = useTheme()
 // 表單資料
 const formData = ref<Partial<TicketType>>({
   name: '',
+  passengerType: '',
   facePrice: 0,
   segmentDiscounts: [
     { segmentCount: 1, discountAmount: 0 }
@@ -112,6 +113,7 @@ watch(
     if (newTicketType) {
       formData.value = {
         name: newTicketType.name,
+        passengerType: newTicketType.passengerType,
         facePrice: newTicketType.facePrice,
         segmentDiscounts: [...newTicketType.segmentDiscounts],
         route: { ...newTicketType.route },
@@ -129,6 +131,7 @@ watch(
 function resetForm() {
   formData.value = {
     name: '',
+    passengerType: '',
     facePrice: 0,
     segmentDiscounts: [
       { segmentCount: 1, discountAmount: 0 }
@@ -157,6 +160,11 @@ function editTicket(ticketTypeId: string) {
 function saveTicket() {
   if (!formData.value.name) {
     alert('請輸入票種名稱')
+    return
+  }
+
+  if (!formData.value.passengerType?.trim()) {
+    alert('請輸入乘客類型')
     return
   }
 
@@ -204,6 +212,7 @@ function saveTicket() {
     // 更新現有票種
     ticketStore.updateTicketType(ticketStore.selectedTicketTypeId, {
       name: formData.value.name!,
+      passengerType: formData.value.passengerType!,
       facePrice: formData.value.facePrice!,
       segmentDiscounts: sortedDiscounts,
       route: formData.value.route!,
@@ -214,6 +223,7 @@ function saveTicket() {
     // 創建新票種
     ticketStore.createTicketType({
       name: formData.value.name!,
+      passengerType: formData.value.passengerType!,
       facePrice: formData.value.facePrice || 0,
       segmentDiscounts: sortedDiscounts,
       route: formData.value.route!,
@@ -285,6 +295,20 @@ function cancelEdit() {
                 <BaseInput
                   v-model="formData.name"
                   placeholder="例如：現場全票、現場半票"
+                />
+              </div>
+
+              <!-- 乘客類型 -->
+              <div>
+                <label
+                  class="block text-sm font-medium mb-2"
+                  :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                >
+                  乘客類型 <span class="text-red-500">*</span>
+                </label>
+                <BaseInput
+                  v-model="formData.passengerType"
+                  placeholder="例如：全票、半票、居民票"
                 />
               </div>
 
@@ -530,6 +554,18 @@ function cancelEdit() {
                   <TagIcon class="w-3 h-3" />
                   {{ ticket.isSpecial ? '特殊票種' : '票種' }}
                 </span>
+              </div>
+
+              <!-- 乘客類型標籤 -->
+              <div
+                :class="[
+                  'mb-2 inline-block px-2 py-0.5 rounded text-xs font-medium',
+                  theme === 'dark'
+                    ? 'bg-secondary-700 text-neutral-300'
+                    : 'bg-neutral-200 text-neutral-600'
+                ]"
+              >
+                {{ ticket.passengerType }}
               </div>
 
               <!-- 航段資訊 -->

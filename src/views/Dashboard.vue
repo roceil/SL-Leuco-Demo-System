@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import Navbar from '@/components/Navbar.vue'
 import Sidebar from '@/components/Sidebar.vue'
@@ -33,9 +33,9 @@ const orderStore = useOrderStore()
 const authStore = useAuthStore()
 const { initializePaymentInfo } = usePayment()
 
-// 票種數量（使用票種名稱作為 key，因為跨航段可能有相同名稱的票種）
+// 票種數量（使用乘客類型作為 key，跨航段統一分組）
 interface TicketQuantity {
-  ticketName: string
+  passengerType: string
   quantity: number
 }
 
@@ -43,6 +43,34 @@ const ticketQuantities = ref<TicketQuantity[]>([])
 
 const bookerName = ref('')
 const bookerPhone = ref('')
+
+// 乘客資訊（依票種分組）
+interface PassengerFormInfo {
+  name: string
+  idNumber: string
+  birthday: string
+}
+
+const passengersByType = ref<Record<string, PassengerFormInfo[]>>({})
+
+// 監聽票種數量變化，同步各票種的乘客欄位數量
+watch(ticketQuantities, (newQuantities) => {
+  for (const tq of newQuantities) {
+    if (tq.quantity > 0) {
+      const existing = passengersByType.value[tq.passengerType] ?? []
+      if (existing.length < tq.quantity) {
+        passengersByType.value[tq.passengerType] = [
+          ...existing,
+          ...Array.from({ length: tq.quantity - existing.length }, () => ({ name: '', idNumber: '', birthday: '' }))
+        ]
+      } else if (existing.length > tq.quantity) {
+        passengersByType.value[tq.passengerType] = existing.slice(0, tq.quantity)
+      }
+    } else {
+      delete passengersByType.value[tq.passengerType]
+    }
+  }
+}, { deep: true })
 
 // 航段資料結構
 interface Segment {
@@ -174,64 +202,63 @@ const getSeatStatus = (remainingSeats: number, maxCapacity: number) => {
   }
 }
 
-// 取得所有已選航段的唯一票種（合併所有航段的票種，去除重複）
+// 取得所有已選航段共同具備的乘客類型票種（交集）
 const availableTickets = computed(() => {
-  const ticketMap = new Map()
+  const validSegments = segments.value.filter(s => s.routeSegmentId)
+  if (validSegments.length === 0) return []
 
-  // 遍歷所有已選擇的航段
-  for (const segment of segments.value) {
-    if (!segment.routeSegmentId) continue
+  const firstRouteSegment = routeStore.getRouteSegmentWithPorts(validSegments[0]!.routeSegmentId)
+  if (!firstRouteSegment) return []
 
-    const routeSegment = routeStore.getRouteSegmentWithPorts(segment.routeSegmentId)
-    if (!routeSegment) continue
+  // 第一航段的所有票種
+  const firstSegTickets = ticketStore.ticketTypes.filter(t =>
+    t.route.from === firstRouteSegment.fromPortId &&
+    t.route.to === firstRouteSegment.toPortId
+  )
 
-    // 找到該航段的所有票種
-    const segmentTickets = ticketStore.ticketTypes.filter(ticket => {
-      return ticket.route.from === routeSegment.fromPortId &&
-             ticket.route.to === routeSegment.toPortId
+  // 保留在所有後續航段都有對應 passengerType 的票種
+  return firstSegTickets.filter(firstTicket =>
+    validSegments.slice(1).every(seg => {
+      const rs = routeStore.getRouteSegmentWithPorts(seg.routeSegmentId)
+      return rs && ticketStore.ticketTypes.some(t =>
+        t.passengerType === firstTicket.passengerType &&
+        t.route.from === rs.fromPortId &&
+        t.route.to === rs.toPortId
+      )
     })
-
-    // 將票種加入 Map（使用票種名稱作為 key，確保同名票種只出現一次）
-    for (const ticket of segmentTickets) {
-      if (!ticketMap.has(ticket.name)) {
-        ticketMap.set(ticket.name, ticket)
-      }
-    }
-  }
-
-  return Array.from(ticketMap.values())
+  )
 })
 
 // 取得票種數量
-const getTicketQuantity = (ticketName: string): number => {
-  const found = ticketQuantities.value.find((tq) => tq.ticketName === ticketName)
+const getTicketQuantity = (passengerType: string): number => {
+  const found = ticketQuantities.value.find((tq) => tq.passengerType === passengerType)
   return found ? found.quantity : 0
 }
 
 // 設定票種數量
-const setTicketQuantity = (ticketName: string, quantity: number) => {
-  const index = ticketQuantities.value.findIndex((tq) => tq.ticketName === ticketName)
+const setTicketQuantity = (passengerType: string, quantity: number) => {
+  const index = ticketQuantities.value.findIndex((tq) => tq.passengerType === passengerType)
   if (index !== -1) {
     const item = ticketQuantities.value[index]
     if (item) {
       item.quantity = Math.max(0, quantity)
     }
   } else {
-    ticketQuantities.value.push({ ticketName, quantity: Math.max(0, quantity) })
+    ticketQuantities.value.push({ passengerType, quantity: Math.max(0, quantity) })
   }
 }
 
-// 根據票種名稱和航段，取得該航段的票種價格
-const getTicketPriceForSegment = (ticketName: string, segmentIndex: number): number => {
+// 根據乘客類型和航段，取得該航段的票種價格
+const getTicketPriceForSegment = (passengerType: string, segmentIndex: number): number => {
   const segment = segments.value[segmentIndex]
   if (!segment || !segment.routeSegmentId) return 0
 
   const routeSegment = routeStore.getRouteSegmentWithPorts(segment.routeSegmentId)
   if (!routeSegment) return 0
 
-  // 找到該航段對應的票種
+  // 找到該航段對應的票種（以 passengerType 比對）
   const ticket = ticketStore.ticketTypes.find(t =>
-    t.name === ticketName &&
+    t.passengerType === passengerType &&
     t.route.from === routeSegment.fromPortId &&
     t.route.to === routeSegment.toPortId
   )
@@ -239,11 +266,11 @@ const getTicketPriceForSegment = (ticketName: string, segmentIndex: number): num
   return ticket ? ticket.facePrice : 0
 }
 
-// 計算某個票種在所有航段的總價
-const getTotalPriceForTicket = (ticketName: string): number => {
+// 計算某個乘客類型在所有航段的總價
+const getTotalPriceForTicket = (passengerType: string): number => {
   let total = 0
   for (let i = 0; i < segments.value.length; i++) {
-    total += getTicketPriceForSegment(ticketName, i)
+    total += getTicketPriceForSegment(passengerType, i)
   }
   return total
 }
@@ -293,16 +320,16 @@ const removeSegment = (id: string) => {
 }
 
 // 修改票種數量
-const changeTicketQuantity = (ticketName: string, delta: number) => {
-  const currentQuantity = getTicketQuantity(ticketName)
-  setTicketQuantity(ticketName, currentQuantity + delta)
+const changeTicketQuantity = (passengerType: string, delta: number) => {
+  const currentQuantity = getTicketQuantity(passengerType)
+  setTicketQuantity(passengerType, currentQuantity + delta)
 }
 
 // 計算總售價（所有航段的總票價）
 const totalPrice = () => {
   let total = 0
   for (const tq of ticketQuantities.value) {
-    const pricePerPerson = getTotalPriceForTicket(tq.ticketName)
+    const pricePerPerson = getTotalPriceForTicket(tq.passengerType)
     total += pricePerPerson * tq.quantity
   }
   return total
@@ -361,18 +388,64 @@ const handleSubmit = () => {
   const ticketsSummary: string[] = []
   for (const tq of ticketQuantities.value) {
     if (tq.quantity > 0) {
-      ticketsSummary.push(`${tq.ticketName} x${tq.quantity}`)
+      ticketsSummary.push(`${tq.passengerType} x${tq.quantity}`)
     }
   }
 
-  // 構建航班名稱（從航段資訊組合）
-  const scheduleName = segments.value.map(seg => {
+  // 構建票種拆解（記錄第一航段的票種 ID）
+  const ticketBreakdown = ticketQuantities.value
+    .filter(tq => tq.quantity > 0)
+    .map(tq => {
+      const firstSeg = segments.value[0]
+      const routeSegment = routeStore.getRouteSegmentWithPorts(firstSeg?.routeSegmentId || '')
+      const ticket = ticketStore.ticketTypes.find(t =>
+        t.passengerType === tq.passengerType &&
+        t.route.from === routeSegment?.fromPortId &&
+        t.route.to === routeSegment?.toPortId
+      )
+      return {
+        passengerType: tq.passengerType,
+        ticketTypeId: ticket?.id || '',
+        quantity: tq.quantity
+      }
+    })
+
+  // 構建航段陣列
+  const scheduleSegments = segments.value.map(seg => {
     const routeSegment = routeStore.getRouteSegmentWithPorts(seg.routeSegmentId)
-    if (routeSegment) {
-      return `${seg.date} ${routeSegment.fromPort.name}→${routeSegment.toPort.name} ${seg.time}`
+    return {
+      date: seg.date,
+      time: seg.time,
+      route: routeSegment ? `${routeSegment.fromPort.name}→${routeSegment.toPort.name}` : ''
     }
-    return `${seg.date} ${seg.time}`
-  }).join(' + ')
+  })
+
+  // 建立乘客資訊列表（所有票種）
+  const firstSeg = segments.value[0]
+  const firstRouteSegment = routeStore.getRouteSegmentWithPorts(firstSeg?.routeSegmentId || '')
+  const passengers: Array<{
+    id: string; name: string; idNumber?: string; birthday?: string
+    ticketTypeId: string; hasBoarded: boolean
+  }> = []
+  let passengerCounter = 0
+  for (const tq of ticketQuantities.value.filter(tq => tq.quantity > 0)) {
+    const ticketType = ticketStore.ticketTypes.find(t =>
+      t.passengerType === tq.passengerType &&
+      t.route.from === firstRouteSegment?.fromPortId &&
+      t.route.to === firstRouteSegment?.toPortId
+    )
+    const list = passengersByType.value[tq.passengerType] ?? []
+    for (const p of list) {
+      passengers.push({
+        id: `passenger-${Date.now()}-${passengerCounter++}`,
+        name: p.name,
+        idNumber: p.idNumber || undefined,
+        birthday: p.birthday || undefined,
+        ticketTypeId: ticketType?.id || '',
+        hasBoarded: false
+      })
+    }
+  }
 
   // 建立 Order 格式的訂單（存入 orderStore，OrderDetail 才能讀到）
   const userId = authStore.currentUser?.id || 'system'
@@ -381,10 +454,11 @@ const handleSubmit = () => {
       customerName: bookerName.value,
       customerPhone: bookerPhone.value,
       scheduleId: `${segments.value[0]?.routeSegmentId}-${segments.value[0]?.date}-${segments.value[0]?.time}`,
-      scheduleName,
-      passengers: [],
+      scheduleSegments,
+      passengers,
       paymentInfo: initializePaymentInfo(0, totalPrice(), 0, 'cash'),
       status: 'pending',
+      ticketBreakdown,
       notes: ticketsSummary.join('、'),
       createdBy: userId
     },
@@ -421,6 +495,7 @@ const resetForm = () => {
   ticketQuantities.value = []
   bookerName.value = ''
   bookerPhone.value = ''
+  passengersByType.value = {}
 
   // 重置航段為預設一個（支援單程票）
   const today = new Date()
@@ -692,7 +767,7 @@ const resetForm = () => {
                     class="font-semibold mb-1"
                     :class="theme === 'dark' ? 'text-white' : 'text-neutral-800'"
                   >
-                    {{ ticket.name }}
+                    {{ ticket.passengerType }}
                     <span
                       v-if="ticket.isSpecial"
                       class="ml-2 px-2 py-0.5 text-xs rounded"
@@ -706,17 +781,17 @@ const resetForm = () => {
                     :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
                   >
                     <span v-if="segments.length === 1">
-                      單價: {{ getTotalPriceForTicket(ticket.name) }}元
+                      單價: {{ getTotalPriceForTicket(ticket.passengerType) }}元
                     </span>
                     <span v-else>
-                      總價: {{ getTotalPriceForTicket(ticket.name) }}元
+                      總價: {{ getTotalPriceForTicket(ticket.passengerType) }}元
                       <span class="text-xs ml-1">({{ segments.length }} 個航段)</span>
                     </span>
                   </div>
                 </div>
                 <div class="flex items-center gap-3">
                   <button
-                    @click="changeTicketQuantity(ticket.name, -1)"
+                    @click="changeTicketQuantity(ticket.passengerType, -1)"
                     class="w-10 h-10 border-2 border-primary-500 text-primary-500 rounded-lg text-xl font-bold cursor-pointer transition-all hover:bg-primary-500 hover:text-white"
                     type="button"
                   >
@@ -726,10 +801,10 @@ const resetForm = () => {
                     class="w-16 text-center text-lg font-bold"
                     :class="theme === 'dark' ? 'text-white' : 'text-neutral-800'"
                   >
-                    {{ getTicketQuantity(ticket.name) }}
+                    {{ getTicketQuantity(ticket.passengerType) }}
                   </div>
                   <button
-                    @click="changeTicketQuantity(ticket.name, 1)"
+                    @click="changeTicketQuantity(ticket.passengerType, 1)"
                     class="w-10 h-10 border-2 border-primary-500 text-primary-500 rounded-lg text-xl font-bold cursor-pointer transition-all hover:bg-primary-500 hover:text-white"
                     type="button"
                   >
@@ -784,6 +859,78 @@ const resetForm = () => {
               </div>
             </BaseCard>
           </div>
+
+          <!-- 4. 乘客資訊 -->
+          <BaseCard
+            v-if="ticketQuantities.some(tq => tq.quantity > 0)"
+            title="乘客資訊"
+            padding="lg"
+            class="mb-6"
+          >
+            <p
+              class="text-sm mb-5"
+              :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'"
+            >
+              以下欄位為選填，可於後續在訂單詳情頁補填
+            </p>
+
+            <template
+              v-for="(tq, typeIndex) in ticketQuantities.filter(tq => tq.quantity > 0)"
+              :key="tq.passengerType"
+            >
+              <!-- 票種分隔線 -->
+              <div
+                v-if="typeIndex > 0"
+                class="border-t my-6"
+                :class="theme === 'dark' ? 'border-secondary-700' : 'border-neutral-200'"
+              />
+
+              <!-- 票種標題 -->
+              <div
+                class="text-sm font-semibold mb-4"
+                :class="theme === 'dark' ? 'text-primary-400' : 'text-primary-700'"
+              >
+                {{ tq.passengerType }}
+              </div>
+
+              <!-- 該票種的每位乘客 -->
+              <div
+                v-for="(passenger, index) in (passengersByType[tq.passengerType] ?? [])"
+                :key="index"
+              >
+                <div
+                  v-if="index > 0"
+                  class="border-t my-4"
+                  :class="theme === 'dark' ? 'border-secondary-800' : 'border-neutral-100'"
+                />
+
+                <div
+                  class="text-xs font-medium mb-3"
+                  :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'"
+                >
+                  乘客 {{ index + 1 }}
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <BaseInput
+                    v-model="passenger.name"
+                    label="姓名"
+                    placeholder="請輸入姓名"
+                  />
+                  <BaseInput
+                    v-model="passenger.idNumber"
+                    label="身分證字號"
+                    placeholder="請輸入身分證字號"
+                  />
+                  <BaseInput
+                    v-model="passenger.birthday"
+                    type="date"
+                    label="生日"
+                  />
+                </div>
+              </div>
+            </template>
+          </BaseCard>
 
           <!-- 操作按鈕 -->
           <div class="flex gap-3 justify-end pt-4">

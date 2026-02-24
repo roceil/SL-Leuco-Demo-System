@@ -4,35 +4,57 @@
   "login_records": [],
   "orders": [
     {
-      "id": "order-20260224151339148",
-      "orderNumber": "ORD20260224151339148",
-      "customerName": "測試訂單-三角",
-      "customerPhone": "0900000000",
+      "customerName": "測試測試",
+      "customerPhone": "099999999",
       "scheduleId": "rs-tt-gi-2026-02-24-08:00",
-      "scheduleName": "2026-02-24 台東→綠島 08:00 + 2026-02-25 綠島→台東 07:00",
+      "scheduleSegments": [
+        {
+          "date": "2026-02-24",
+          "time": "08:00",
+          "route": "台東→綠島"
+        },
+        {
+          "date": "2026-02-25",
+          "time": "07:00",
+          "route": "綠島→蘭嶼"
+        },
+        {
+          "date": "2026-02-26",
+          "time": "16:00",
+          "route": "蘭嶼→台東"
+        }
+      ],
       "passengers": [],
       "paymentInfo": {
         "deposit": 0,
-        "balance": 1500,
+        "balance": 7050,
         "discount": 0,
-        "totalAmount": 1500,
+        "totalAmount": 7050,
         "paidAmount": 0,
-        "remainingAmount": 1500,
+        "remainingAmount": 7050,
         "paymentMethod": "cash",
         "paymentStatus": "unpaid",
         "paymentRecords": []
       },
-      "notes": "台東─綠島 全票 x2、台東─綠島 綠島居民票 x2",
       "status": "pending",
-      "createdAt": "2026-02-24T07:13:39.161Z",
-      "createdBy": "system",
-      "updatedAt": "2026-02-24T07:13:39.161Z"
+      "notes": "全票 x3",
+      "createdBy": "admin",
+      "id": "order-1771921292630",
+      "orderNumber": "20260224-7299",
+      "createdAt": "2026-02-24T08:21:32.630Z",
+      "updatedAt": "2026-02-24T08:21:32.630Z"
     },
     {
-      "customerName": "測試三角",
-      "customerPhone": "0999999999",
+      "customerName": "測試測試",
+      "customerPhone": "0900000",
       "scheduleId": "rs-tt-gi-2026-02-24-08:00",
-      "scheduleName": "2026-02-24 台東→綠島 08:00 + 2026-02-25 綠島→蘭嶼 07:00 + 2026-02-26 蘭嶼→台東 16:00",
+      "scheduleSegments": [
+        {
+          "date": "2026-02-24",
+          "time": "08:00",
+          "route": "台東→綠島"
+        }
+      ],
       "passengers": [],
       "paymentInfo": {
         "deposit": 0,
@@ -46,12 +68,177 @@
         "paymentRecords": []
       },
       "status": "pending",
-      "notes": "台東─綠島 全票 x3",
+      "ticketBreakdown": [
+        {
+          "passengerType": "全票",
+          "ticketTypeId": "tt-tt-gi-adult",
+          "quantity": 3
+        }
+      ],
+      "notes": "全票 x3",
       "createdBy": "admin",
-      "id": "order-1771918977948",
-      "orderNumber": "20260224-5683",
-      "createdAt": "2026-02-24T07:42:57.948Z",
-      "updatedAt": "2026-02-24T07:42:57.948Z"
+      "id": "order-1771922166024",
+      "orderNumber": "20260224-3234",
+      "createdAt": "2026-02-24T08:36:06.024Z",
+      "updatedAt": "2026-02-24T08:36:06.024Z"
+    },
+    {
+      "customerName": "測試測試",
+      "customerPhone": "098877665",
+      "scheduleId": "rs-tt-gi-2026-02-24-08:00",
+      "scheduleSegments": [
+        {
+          "date": "2026-02-24",
+          "time": "08:00",
+          "route": "台東→綠島"
+        },
+        {
+          "date": "2026-02-25",
+          "time": "07:00",
+          "route": "綠島→蘭嶼"
+        },
+        {
+          "date": "2026-02-26",
+          "time": "16:00",
+          "route": "蘭嶼→台東"
+        }
+      ],
+      "passengers": [
+        {
+          "id": "passenger-1771923639607-0",
+          "name": "",
+          "ticketTypeId": "tt-tt-gi-adult",
+          "hasBoarded": false
+        },
+        {
+          "id": "passenger-1771923639607-1",
+          "name": "",
+          "ticketTypeId": "tt-tt-gi-adult",
+          "hasBoarded": false
+        },
+        {
+          "id": "passenger-1771923639607-2",
+          "name": "",
+          "ticketTypeId": "tt-tt-gi-child",
+          "hasBoarded": false
+        },
+        {
+          "name": "",
+          "ticketTypeId": "tt-tt-gi-adult",
+          "hasBoarded": false,
+          "id": "passenger-1771924517862"
+        }
+      ],
+      "paymentInfo": {
+        "deposit": 0,
+        "balance": 7525,
+        "discount": 0,
+        "totalAmount": 7525,
+        "paidAmount": 0,
+        "remainingAmount": 7525,
+        "paymentMethod": "cash",
+        "paymentStatus": "unpaid",
+        "paymentRecords": []
+      },
+      "status": "pending",
+      "ticketBreakdown": [
+        {
+          "passengerType": "全票",
+          "ticketTypeId": "tt-tt-gi-adult",
+          "quantity": 3
+        },
+        {
+          "passengerType": "半票",
+          "ticketTypeId": "tt-tt-gi-child",
+          "quantity": 1
+        }
+      ],
+      "notes": "全票 x2、半票 x1",
+      "createdBy": "admin",
+      "id": "order-1771923639607",
+      "orderNumber": "20260224-0934",
+      "createdAt": "2026-02-24T09:00:39.607Z",
+      "updatedAt": "2026-02-24T09:15:20.479Z",
+      "updatedBy": "admin"
+    },
+    {
+      "customerName": "測試",
+      "customerPhone": "0900000000",
+      "scheduleId": "rs-tt-gi-2026-02-24-08:00",
+      "scheduleSegments": [
+        {
+          "date": "2026-02-24",
+          "time": "08:00",
+          "route": "台東→綠島"
+        },
+        {
+          "date": "2026-02-25",
+          "time": "07:00",
+          "route": "綠島→蘭嶼"
+        },
+        {
+          "date": "2026-02-26",
+          "time": "09:30",
+          "route": "蘭嶼→台東"
+        }
+      ],
+      "passengers": [
+        {
+          "id": "passenger-1771924676290-0",
+          "name": "",
+          "ticketTypeId": "tt-tt-gi-adult",
+          "hasBoarded": false
+        },
+        {
+          "id": "passenger-1771924676290-2",
+          "name": "",
+          "ticketTypeId": "tt-tt-gi-child",
+          "hasBoarded": false
+        },
+        {
+          "id": "passenger-1771924676290-3",
+          "name": "",
+          "ticketTypeId": "tt-tt-gi-child",
+          "hasBoarded": false
+        },
+        {
+          "name": "",
+          "ticketTypeId": "tt-tt-gi-adult",
+          "hasBoarded": false,
+          "id": "passenger-1771924684539"
+        }
+      ],
+      "paymentInfo": {
+        "deposit": 0,
+        "balance": 7050,
+        "discount": 0,
+        "totalAmount": 7050,
+        "paidAmount": 0,
+        "remainingAmount": 7050,
+        "paymentMethod": "cash",
+        "paymentStatus": "unpaid",
+        "paymentRecords": []
+      },
+      "status": "pending",
+      "ticketBreakdown": [
+        {
+          "passengerType": "全票",
+          "ticketTypeId": "tt-tt-gi-adult",
+          "quantity": 2
+        },
+        {
+          "passengerType": "半票",
+          "ticketTypeId": "tt-tt-gi-child",
+          "quantity": 2
+        }
+      ],
+      "notes": "全票 x2、半票 x2",
+      "createdBy": "admin",
+      "id": "order-1771924676290",
+      "orderNumber": "20260224-3295",
+      "createdAt": "2026-02-24T09:17:56.290Z",
+      "updatedAt": "2026-02-24T09:18:04.540Z",
+      "updatedBy": "admin"
     }
   ],
   "ports": [
@@ -445,6 +632,7 @@
     {
       "id": "tt-tt-gi-adult",
       "name": "台東─綠島 全票",
+      "passengerType": "全票",
       "facePrice": 550,
       "segmentDiscounts": [
         {
@@ -467,6 +655,7 @@
     {
       "id": "tt-tt-gi-child",
       "name": "台東─綠島 半票（兒童/敬老）",
+      "passengerType": "半票",
       "facePrice": 275,
       "segmentDiscounts": [
         {
@@ -489,6 +678,7 @@
     {
       "id": "tt-tt-gi-resident",
       "name": "台東─綠島 綠島居民票",
+      "passengerType": "居民票",
       "facePrice": 200,
       "segmentDiscounts": [
         {
@@ -507,6 +697,7 @@
     {
       "id": "tt-gi-tt-adult",
       "name": "綠島─台東 全票",
+      "passengerType": "全票",
       "facePrice": 550,
       "segmentDiscounts": [
         {
@@ -529,6 +720,7 @@
     {
       "id": "tt-gi-tt-child",
       "name": "綠島─台東 半票（兒童/敬老）",
+      "passengerType": "半票",
       "facePrice": 275,
       "segmentDiscounts": [
         {
@@ -551,6 +743,7 @@
     {
       "id": "tt-gi-tt-resident",
       "name": "綠島─台東 綠島居民票",
+      "passengerType": "居民票",
       "facePrice": 200,
       "segmentDiscounts": [
         {
@@ -569,6 +762,7 @@
     {
       "id": "tt-tt-ly-adult",
       "name": "台東─蘭嶼 全票",
+      "passengerType": "全票",
       "facePrice": 1000,
       "segmentDiscounts": [
         {
@@ -587,6 +781,7 @@
     {
       "id": "tt-tt-ly-child",
       "name": "台東─蘭嶼 半票（兒童/敬老）",
+      "passengerType": "半票",
       "facePrice": 500,
       "segmentDiscounts": [
         {
@@ -605,6 +800,7 @@
     {
       "id": "tt-tt-ly-resident",
       "name": "台東─蘭嶼 蘭嶼居民票",
+      "passengerType": "居民票",
       "facePrice": 400,
       "segmentDiscounts": [
         {
@@ -623,6 +819,7 @@
     {
       "id": "tt-ly-tt-adult",
       "name": "蘭嶼─台東 全票",
+      "passengerType": "全票",
       "facePrice": 1000,
       "segmentDiscounts": [
         {
@@ -641,6 +838,7 @@
     {
       "id": "tt-ly-tt-child",
       "name": "蘭嶼─台東 半票（兒童/敬老）",
+      "passengerType": "半票",
       "facePrice": 500,
       "segmentDiscounts": [
         {
@@ -659,6 +857,7 @@
     {
       "id": "tt-ly-tt-resident",
       "name": "蘭嶼─台東 蘭嶼居民票",
+      "passengerType": "居民票",
       "facePrice": 400,
       "segmentDiscounts": [
         {
@@ -677,6 +876,7 @@
     {
       "id": "tt-hbh-ly-adult",
       "name": "後壁湖─蘭嶼 全票",
+      "passengerType": "全票",
       "facePrice": 1000,
       "segmentDiscounts": [
         {
@@ -695,6 +895,7 @@
     {
       "id": "tt-hbh-ly-child",
       "name": "後壁湖─蘭嶼 半票（兒童/敬老）",
+      "passengerType": "半票",
       "facePrice": 500,
       "segmentDiscounts": [
         {
@@ -713,6 +914,7 @@
     {
       "id": "tt-hbh-ly-resident",
       "name": "後壁湖─蘭嶼 蘭嶼居民票",
+      "passengerType": "居民票",
       "facePrice": 400,
       "segmentDiscounts": [
         {
@@ -731,6 +933,7 @@
     {
       "id": "tt-ly-hbh-adult",
       "name": "蘭嶼─後壁湖 全票",
+      "passengerType": "全票",
       "facePrice": 1000,
       "segmentDiscounts": [
         {
@@ -749,6 +952,7 @@
     {
       "id": "tt-ly-hbh-child",
       "name": "蘭嶼─後壁湖 半票（兒童/敬老）",
+      "passengerType": "半票",
       "facePrice": 500,
       "segmentDiscounts": [
         {
@@ -767,6 +971,7 @@
     {
       "id": "tt-ly-hbh-resident",
       "name": "蘭嶼─後壁湖 蘭嶼居民票",
+      "passengerType": "居民票",
       "facePrice": 400,
       "segmentDiscounts": [
         {
@@ -785,6 +990,7 @@
     {
       "id": "tt-gi-ly-adult",
       "name": "綠島─蘭嶼 全票",
+      "passengerType": "全票",
       "facePrice": 800,
       "segmentDiscounts": [
         {
@@ -803,6 +1009,7 @@
     {
       "id": "tt-gi-ly-child",
       "name": "綠島─蘭嶼 半票（兒童/敬老）",
+      "passengerType": "半票",
       "facePrice": 400,
       "segmentDiscounts": [
         {
@@ -821,6 +1028,7 @@
     {
       "id": "tt-ly-gi-adult",
       "name": "蘭嶼─綠島 全票",
+      "passengerType": "全票",
       "facePrice": 800,
       "segmentDiscounts": [
         {
@@ -839,6 +1047,7 @@
     {
       "id": "tt-ly-gi-child",
       "name": "蘭嶼─綠島 半票（兒童/敬老）",
+      "passengerType": "半票",
       "facePrice": 400,
       "segmentDiscounts": [
         {

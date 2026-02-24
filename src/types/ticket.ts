@@ -14,6 +14,7 @@ export interface SegmentDiscount {
 export interface TicketType {
   id: string
   name: string // 票種名稱，如 "全票"、"半票"、"優待票"
+  passengerType: string // 乘客類型，例如："全票"、"半票"、"居民票"
   facePrice: number // 票面價（原價）
   // 根據航段數量的折扣設定（彈性陣列）
   segmentDiscounts: SegmentDiscount[]
