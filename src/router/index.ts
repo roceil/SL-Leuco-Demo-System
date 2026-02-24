@@ -105,9 +105,24 @@ const router = createRouter({
       component: () => import('../views/ScheduleManagement.vue'),
     },
     {
+      path: '/schedule-management/:id',
+      name: 'flight-detail',
+      component: () => import('../views/FlightDetail.vue'),
+    },
+    {
       path: '/passenger-list',
       name: 'passenger-list',
       component: () => import('../views/PassengerList.vue'),
+    },
+    {
+      path: '/audit-log',
+      name: 'audit-log',
+      component: () => import('../views/AuditLogView.vue'),
+    },
+    {
+      path: '/route-management',
+      name: 'route-management',
+      component: () => import('../views/RouteManagement.vue'),
     },
     {
       path: '/:pathMatch(.*)*',

@@ -5,44 +5,23 @@
 
 import { ref, computed } from 'vue'
 import type { SavedOrder } from '@/constants/mockOrders'
-import { getFromStorage, saveToStorage, STORAGE_KEYS } from './useLocalStorage'
-import { mockOrders } from '@/constants/mockOrders'
+import { apiGet, apiPut } from './useLocalStorage'
 
-// 訂單資料
+// 訂單資料（模組級別，單例）
 const orders = ref<SavedOrder[]>([])
 
-// 是否已初始化
-let initialized = false
-
 /**
- * 初始化訂單資料
- * 從 localStorage 讀取，如果沒有則使用 mock 資料
+ * 從 /api/orders 初始化訂單資料
  */
-export function initializeOrders() {
-  if (initialized) return
-
-  const storedOrders = getFromStorage<SavedOrder[]>(STORAGE_KEYS.ORDERS, [])
-
-  // 如果 localStorage 中沒有資料，使用 mock 資料並儲存
-  if (storedOrders.length === 0) {
-    orders.value = [...mockOrders]
-    saveToStorage(STORAGE_KEYS.ORDERS, orders.value)
-  } else {
-    orders.value = storedOrders
-  }
-
-  initialized = true
+export async function initOrders(): Promise<void> {
+  const data = await apiGet<SavedOrder[]>('orders')
+  orders.value = data
 }
 
 /**
  * 訂單管理 Composable
  */
 export function useOrders() {
-  // 確保資料已初始化
-  if (!initialized) {
-    initializeOrders()
-  }
-
   // Getters
   const allOrders = computed(() => orders.value)
 
@@ -66,18 +45,12 @@ export function useOrders() {
   }
 
   // Actions
-  /**
-   * 新增訂單
-   */
   const addOrder = (order: SavedOrder) => {
     orders.value.push(order)
-    saveToStorage(STORAGE_KEYS.ORDERS, orders.value)
+    apiPut('orders', orders.value)
     return order
   }
 
-  /**
-   * 更新訂單
-   */
   const updateOrder = (orderNumber: string, updates: Partial<SavedOrder>): SavedOrder | null => {
     const index = orders.value.findIndex(order => order.orderNumber === orderNumber)
     if (index !== -1) {
@@ -85,39 +58,25 @@ export function useOrders() {
         ...orders.value[index],
         ...updates
       } as SavedOrder
-      saveToStorage(STORAGE_KEYS.ORDERS, orders.value)
+      apiPut('orders', orders.value)
       return orders.value[index]
     }
     return null
   }
 
-  /**
-   * 刪除訂單
-   */
   const deleteOrder = (orderNumber: string) => {
     const index = orders.value.findIndex(order => order.orderNumber === orderNumber)
     if (index !== -1) {
       const deletedOrder = orders.value.splice(index, 1)[0]
-      saveToStorage(STORAGE_KEYS.ORDERS, orders.value)
+      apiPut('orders', orders.value)
       return deletedOrder
     }
     return null
   }
 
-  /**
-   * 重設為 mock 資料
-   */
-  const resetToMockData = () => {
-    orders.value = [...mockOrders]
-    saveToStorage(STORAGE_KEYS.ORDERS, orders.value)
-  }
-
-  /**
-   * 清空所有訂單
-   */
   const clearAllOrders = () => {
     orders.value = []
-    saveToStorage(STORAGE_KEYS.ORDERS, orders.value)
+    apiPut('orders', orders.value)
   }
 
   return {
@@ -132,7 +91,6 @@ export function useOrders() {
     addOrder,
     updateOrder,
     deleteOrder,
-    resetToMockData,
     clearAllOrders
   }
 }

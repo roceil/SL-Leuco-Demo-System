@@ -1,11 +1,18 @@
 import { ref, computed } from 'vue'
 import type { WhitelistEntry } from '@/types/whitelist'
-import { MOCK_WHITELIST } from '@/constants/mockWhitelist'
+import { apiGet, apiPut } from './useLocalStorage'
+
+// 模組級別共享狀態
+const whitelistData = ref<WhitelistEntry[]>([])
+const loading = ref(false)
+
+/** 從 /api/whitelist 初始化白名單 */
+export async function initWhitelist(): Promise<void> {
+  const data = await apiGet<WhitelistEntry[]>('whitelist')
+  whitelistData.value = data
+}
 
 export function useWhitelist() {
-  const whitelistData = ref<WhitelistEntry[]>([...MOCK_WHITELIST])
-  const loading = ref(false)
-
   // 根據票種 ID 獲取白名單
   const getWhitelistByTicketType = (ticketTypeId: string) => {
     return computed(() => whitelistData.value.filter((entry) => entry.ticketTypeId === ticketTypeId))
@@ -20,9 +27,6 @@ export function useWhitelist() {
   const addWhitelistEntry = async (entry: Omit<WhitelistEntry, 'id' | 'createdAt' | 'updatedAt'>) => {
     loading.value = true
     try {
-      // 模擬 API 延遲
-      await new Promise((resolve) => setTimeout(resolve, 500))
-
       const newEntry: WhitelistEntry = {
         ...entry,
         id: `wl-${Date.now()}`,
@@ -31,6 +35,7 @@ export function useWhitelist() {
       }
 
       whitelistData.value.push(newEntry)
+      apiPut('whitelist', whitelistData.value)
       return { success: true, data: newEntry }
     } catch (error) {
       console.error('新增白名單失敗:', error)
@@ -44,9 +49,6 @@ export function useWhitelist() {
   const updateWhitelistEntry = async (id: string, updates: Partial<WhitelistEntry>) => {
     loading.value = true
     try {
-      // 模擬 API 延遲
-      await new Promise((resolve) => setTimeout(resolve, 500))
-
       const index = whitelistData.value.findIndex((entry) => entry.id === id)
       if (index === -1) {
         return { success: false, error: '找不到該白名單項目' }
@@ -67,6 +69,7 @@ export function useWhitelist() {
         remark: validUpdates.remark ?? existingEntry.remark
       }
 
+      apiPut('whitelist', whitelistData.value)
       return { success: true, data: whitelistData.value[index] }
     } catch (error) {
       console.error('更新白名單失敗:', error)
@@ -80,15 +83,13 @@ export function useWhitelist() {
   const deleteWhitelistEntry = async (id: string) => {
     loading.value = true
     try {
-      // 模擬 API 延遲
-      await new Promise((resolve) => setTimeout(resolve, 500))
-
       const index = whitelistData.value.findIndex((entry) => entry.id === id)
       if (index === -1) {
         return { success: false, error: '找不到該白名單項目' }
       }
 
       whitelistData.value.splice(index, 1)
+      apiPut('whitelist', whitelistData.value)
       return { success: true }
     } catch (error) {
       console.error('刪除白名單失敗:', error)
@@ -102,10 +103,8 @@ export function useWhitelist() {
   const batchDeleteWhitelist = async (ids: string[]) => {
     loading.value = true
     try {
-      // 模擬 API 延遲
-      await new Promise((resolve) => setTimeout(resolve, 500))
-
       whitelistData.value = whitelistData.value.filter((entry) => !ids.includes(entry.id))
+      apiPut('whitelist', whitelistData.value)
       return { success: true }
     } catch (error) {
       console.error('批次刪除白名單失敗:', error)
@@ -120,11 +119,9 @@ export function useWhitelist() {
     const regex = /^[A-Z][12]\d{8}$/
     if (!regex.test(idNumber)) return false
 
-    // 字母對應數字
     const letters = 'ABCDEFGHJKLMNPQRSTUVXYWZIO'
     const letterValue = letters.indexOf(idNumber[0]!) + 10
 
-    // 計算檢查碼
     const weights = [1, 9, 8, 7, 6, 5, 4, 3, 2, 1, 1]
     const digits = [Math.floor(letterValue / 10), letterValue % 10, ...idNumber.slice(1).split('').map(Number)]
 

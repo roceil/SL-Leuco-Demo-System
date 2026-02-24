@@ -26,7 +26,7 @@ const { theme, toggleTheme } = useTheme()
             d="M3 15s3-3 9-3 9 3 9 3M3 15v5a2 2 0 002 2h14a2 2 0 002-2v-5M3 15l3-6m15 6l-3-6m-6-3v3m0 0H9m3 0h3" />
         </svg>
         <span :class="theme === 'dark' ? 'text-white' : 'text-secondary-900'">
-          藍白航運訂票系統
+          航運管理系統
         </span>
       </div>
     </div>

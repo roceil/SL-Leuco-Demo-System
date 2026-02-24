@@ -1,9 +1,16 @@
 import { ref, computed } from 'vue'
 import type { Ship, ShipFormData } from '@/types/ship'
 import { ShipStatus } from '@/types/ship'
-import { mockShips } from '@/constants/mockShips'
+import { apiGet, apiPut } from './useLocalStorage'
 
-const ships = ref<Ship[]>([...mockShips])
+// 模組級別共享狀態
+const ships = ref<Ship[]>([])
+
+/** 從 /api/ships 初始化船隻資料 */
+export async function initShips(): Promise<void> {
+  const data = await apiGet<Ship[]>('ships')
+  ships.value = data
+}
 
 export function useShips() {
   // 取得所有船隻
@@ -30,6 +37,7 @@ export function useShips() {
       updatedAt: now
     }
     ships.value.push(newShip)
+    apiPut('ships', ships.value)
     return newShip
   }
 
@@ -46,6 +54,7 @@ export function useShips() {
       createdAt: existingShip.createdAt,
       updatedAt: new Date().toISOString()
     }
+    apiPut('ships', ships.value)
     return true
   }
 
@@ -55,6 +64,7 @@ export function useShips() {
     if (index === -1) return false
 
     ships.value.splice(index, 1)
+    apiPut('ships', ships.value)
     return true
   }
 
@@ -65,6 +75,7 @@ export function useShips() {
 
     ship.status = status
     ship.updatedAt = new Date().toISOString()
+    apiPut('ships', ships.value)
     return true
   }
 

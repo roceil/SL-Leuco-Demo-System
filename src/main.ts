@@ -5,14 +5,41 @@ import { createPinia } from 'pinia'
 
 import App from './App.vue'
 import router from './router'
-import { initializeOrders } from './composables/useOrders'
+import { useRouteStore } from './stores/route'
+import { useTicketStore } from './stores/ticket'
+import { useRbacStore } from './stores/rbac'
+import { useOrderStore } from './stores/order'
+import { initSchedules } from './composables/useSchedules'
+import { initShips } from './composables/useShips'
+import { initWhitelist } from './composables/useWhitelist'
 
-// 初始化訂單資料（從 localStorage 讀取，如果沒有則使用 mock 資料）
-initializeOrders()
+async function bootstrap() {
+  const app = createApp(App)
+  const pinia = createPinia()
+  app.use(pinia)
+  app.use(router)
 
-const app = createApp(App)
+  // 初始化所有 stores（從 db.json 載入）
+  const routeStore = useRouteStore()
+  const ticketStore = useTicketStore()
+  const rbacStore = useRbacStore()
+  const orderStore = useOrderStore()
 
-app.use(createPinia())
-app.use(router)
+  await Promise.all([
+    routeStore.init(),
+    ticketStore.init(),
+    rbacStore.init(),
+    orderStore.init(),
+  ])
 
-app.mount('#app')
+  // 初始化 composables（ships 需先於 schedules，因 schedules 依賴 ships）
+  await initShips()
+  await Promise.all([
+    initSchedules(),
+    initWhitelist(),
+  ])
+
+  app.mount('#app')
+}
+
+bootstrap()

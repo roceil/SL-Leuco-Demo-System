@@ -9,7 +9,7 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import { useSidebar } from '@/composables/useSidebar'
 import { useTheme } from '@/composables/useTheme'
-import { useOrders } from '@/composables/useOrders'
+import { useOrderStore } from '@/stores/order'
 import {
   ClipboardDocumentListIcon,
   MagnifyingGlassIcon,
@@ -20,22 +20,23 @@ import {
 const router = useRouter()
 const { isCollapsed } = useSidebar()
 const { theme } = useTheme()
-const { allOrders } = useOrders()
+const orderStore = useOrderStore()
 
 const searchQuery = ref('')
 const statusFilter = ref('all')
 
-// 訂單狀態選項
+// 訂單狀態選項（對應新 Order 型別的 status）
 const statusOptions = [
   { value: 'all', label: '全部狀態' },
-  { value: '未取票', label: '未取票' },
-  { value: '已取票', label: '已取票' },
-  { value: '已取消', label: '已取消' }
+  { value: 'pending', label: '待確認' },
+  { value: 'confirmed', label: '已確認' },
+  { value: 'completed', label: '已完成' },
+  { value: 'cancelled', label: '已取消' }
 ]
 
 // 篩選和搜尋訂單
 const filteredOrders = computed(() => {
-  let result = allOrders.value
+  let result = orderStore.orders
 
   // 狀態篩選
   if (statusFilter.value !== 'all') {
@@ -47,24 +48,23 @@ const filteredOrders = computed(() => {
     const query = searchQuery.value.toLowerCase()
     result = result.filter(order =>
       order.orderNumber.toLowerCase().includes(query) ||
-      order.bookerName.toLowerCase().includes(query) ||
-      order.bookerPhone.includes(query) ||
-      order.orderOwnerName.toLowerCase().includes(query)
+      order.customerName.toLowerCase().includes(query) ||
+      order.customerPhone.includes(query)
     )
   }
 
   return result
 })
 
-// 格式化日期
-const formatDate = (dateString: string) => {
-  if (!dateString) return '-'
-  const date = new Date(dateString)
-  return date.toLocaleDateString('zh-TW', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  })
+// 格式化狀態顯示文字
+const formatStatus = (status: string) => {
+  const map: Record<string, string> = {
+    pending: '待確認',
+    confirmed: '已確認',
+    completed: '已完成',
+    cancelled: '已取消'
+  }
+  return map[status] || status
 }
 
 // 查看訂單詳細
@@ -82,11 +82,13 @@ const handleRefresh = () => {
 const getStatusClass = (status: string) => {
   const baseClasses = 'px-3 py-1 rounded-full text-xs font-medium'
   switch (status) {
-    case '未取票':
+    case 'pending':
       return `${baseClasses} bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400`
-    case '已取票':
+    case 'confirmed':
       return `${baseClasses} bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400`
-    case '已取消':
+    case 'completed':
+      return `${baseClasses} bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400`
+    case 'cancelled':
       return `${baseClasses} bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400`
     default:
       return `${baseClasses} bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300`
@@ -163,7 +165,7 @@ const getStatusClass = (status: string) => {
                 class="text-2xl font-bold"
                 :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'"
               >
-                {{ allOrders.length }}
+                {{ orderStore.orders.length }}
               </div>
             </BaseCard>
 
@@ -172,10 +174,10 @@ const getStatusClass = (status: string) => {
                 class="text-sm font-medium mb-1"
                 :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
               >
-                未取票
+                待確認
               </div>
               <div class="text-2xl font-bold text-amber-500">
-                {{ allOrders.filter(o => o.status === '未取票').length }}
+                {{ orderStore.orders.filter(o => o.status === 'pending').length }}
               </div>
             </BaseCard>
 
@@ -184,10 +186,10 @@ const getStatusClass = (status: string) => {
                 class="text-sm font-medium mb-1"
                 :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
               >
-                已取票
+                已確認
               </div>
               <div class="text-2xl font-bold text-green-500">
-                {{ allOrders.filter(o => o.status === '已取票').length }}
+                {{ orderStore.orders.filter(o => o.status === 'confirmed').length }}
               </div>
             </BaseCard>
 
@@ -220,11 +222,10 @@ const getStatusClass = (status: string) => {
                 >
                   <tr>
                     <th class="text-left py-4 px-6">訂單編號</th>
-                    <th class="text-left py-4 px-6">訂票人</th>
-                    <th class="text-left py-4 px-6">訂票單位</th>
-                    <th class="text-left py-4 px-6">去程日期</th>
-                    <th class="text-left py-4 px-6">票數</th>
-                    <th class="text-left py-4 px-6">金額</th>
+                    <th class="text-left py-4 px-6">客戶姓名</th>
+                    <th class="text-left py-4 px-6">航班</th>
+                    <th class="text-left py-4 px-6">乘客 / 票種</th>
+                    <th class="text-left py-4 px-6">總金額</th>
                     <th class="text-left py-4 px-6">狀態</th>
                     <th class="text-right py-4 px-6">操作</th>
                   </tr>
@@ -244,47 +245,41 @@ const getStatusClass = (status: string) => {
                       {{ order.orderNumber }}
                     </td>
                     <td class="py-4 px-6">
-                      <div>{{ order.bookerName }}</div>
+                      <div>{{ order.customerName }}</div>
                       <div
                         class="text-sm"
                         :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-500'"
                       >
-                        {{ order.bookerPhone }}
+                        {{ order.customerPhone }}
                       </div>
                     </td>
-                    <td class="py-4 px-6">
-                      {{ order.orderOwnerName }}
-                    </td>
-                    <td class="py-4 px-6">
-                      <div>{{ formatDate(order.outboundDate) }}</div>
-                      <div
-                        class="text-sm"
-                        :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-500'"
-                      >
-                        {{ order.outboundTime }}
-                      </div>
+                    <td class="py-4 px-6 text-sm">
+                      {{ order.scheduleName }}
                     </td>
                     <td class="py-4 px-6">
                       <div class="text-sm">
-                        <div v-if="order.tickets.full">全票 x{{ order.tickets.full }}</div>
-                        <div v-if="order.tickets.half">半票 x{{ order.tickets.half }}</div>
+                        <div v-if="order.passengers.length > 0">{{ order.passengers.length }} 人</div>
+                        <div v-if="order.notes" class="text-xs" :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-500'">
+                          {{ order.notes }}
+                        </div>
+                        <div v-if="order.passengers.length === 0 && !order.notes" :class="theme === 'dark' ? 'text-neutral-600' : 'text-neutral-400'">—</div>
                       </div>
                     </td>
                     <td class="py-4 px-6">
                       <div class="font-medium">
-                        ${{ order.pricing.discountedTotal.toLocaleString() }}
+                        NT$ {{ order.paymentInfo.totalAmount.toLocaleString() }}
                       </div>
                       <div
-                        v-if="order.pricing.originalTotal !== order.pricing.discountedTotal"
-                        class="text-sm line-through"
+                        v-if="order.paymentInfo.discount > 0"
+                        class="text-sm"
                         :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-500'"
                       >
-                        ${{ order.pricing.originalTotal.toLocaleString() }}
+                        折扣 -{{ order.paymentInfo.discount }}
                       </div>
                     </td>
                     <td class="py-4 px-6">
                       <span :class="getStatusClass(order.status)">
-                        {{ order.status }}
+                        {{ formatStatus(order.status) }}
                       </span>
                     </td>
                     <td class="py-4 px-6 text-right">

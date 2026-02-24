@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import type {
   Role,
   PermissionGroup,
@@ -8,29 +8,33 @@ import type {
   Permission
 } from '@/types/rbac'
 import { PermissionAction } from '@/types/rbac'
-import {
-  MOCK_ROLES,
-  MOCK_PERMISSION_GROUPS,
-  MOCK_ORGANIZATIONS,
-  MOCK_ACCOUNTS
-} from '@/constants/mockRBAC'
-import { getFromStorage, saveToStorage, STORAGE_KEYS } from '@/composables/useLocalStorage'
+import { apiGet, apiPut } from '@/composables/useLocalStorage'
 
 export const useRbacStore = defineStore('rbac', () => {
-  // State - 從 localStorage 讀取，如果沒有則使用 MOCK 資料
-  const roles = ref<Role[]>(getFromStorage(STORAGE_KEYS.RBAC_ROLES, [...MOCK_ROLES]))
-  const permissionGroups = ref<PermissionGroup[]>(
-    getFromStorage(STORAGE_KEYS.RBAC_PERMISSION_GROUPS, [...MOCK_PERMISSION_GROUPS])
-  )
-  const organizations = ref<Organization[]>(
-    getFromStorage(STORAGE_KEYS.RBAC_ORGANIZATIONS, [...MOCK_ORGANIZATIONS])
-  )
-  const accounts = ref<Account[]>(getFromStorage(STORAGE_KEYS.RBAC_ACCOUNTS, [...MOCK_ACCOUNTS]))
+  const isLoading = ref(false)
+  const roles = ref<Role[]>([])
+  const permissionGroups = ref<PermissionGroup[]>([])
+  const organizations = ref<Organization[]>([])
+  const accounts = ref<Account[]>([])
 
-  // 當前選中的角色、權限組和帳號（用於編輯）
   const selectedRoleId = ref<string | null>(null)
   const selectedPermissionGroupId = ref<string | null>(null)
   const selectedAccountId = ref<string | null>(null)
+
+  async function init() {
+    isLoading.value = true
+    try {
+      ;[roles.value, permissionGroups.value, organizations.value, accounts.value] =
+        await Promise.all([
+          apiGet<Role[]>('rbac_roles'),
+          apiGet<PermissionGroup[]>('rbac_permission_groups'),
+          apiGet<Organization[]>('rbac_organizations'),
+          apiGet<Account[]>('rbac_accounts')
+        ])
+    } finally {
+      isLoading.value = false
+    }
+  }
 
   // Getters
   const selectedRole = computed(() => {
@@ -40,9 +44,7 @@ export const useRbacStore = defineStore('rbac', () => {
 
   const selectedPermissionGroup = computed(() => {
     if (!selectedPermissionGroupId.value) return null
-    return (
-      permissionGroups.value.find((pg) => pg.id === selectedPermissionGroupId.value) || null
-    )
+    return permissionGroups.value.find((pg) => pg.id === selectedPermissionGroupId.value) || null
   })
 
   const selectedAccount = computed(() => {
@@ -50,7 +52,6 @@ export const useRbacStore = defineStore('rbac', () => {
     return accounts.value.find((a) => a.id === selectedAccountId.value) || null
   })
 
-  // 根據機構 ID 獲取角色列表
   const getRolesByOrganization = computed(() => {
     return (orgId: string) => roles.value.filter((r) => r.organizationId === orgId)
   })
@@ -68,6 +69,7 @@ export const useRbacStore = defineStore('rbac', () => {
       updatedAt: new Date().toISOString()
     }
     roles.value.push(newRole)
+    apiPut('rbac_roles', roles.value)
     return newRole
   }
 
@@ -79,6 +81,7 @@ export const useRbacStore = defineStore('rbac', () => {
         ...updates,
         updatedAt: new Date().toISOString()
       } as Role
+      apiPut('rbac_roles', roles.value)
     }
   }
 
@@ -86,9 +89,8 @@ export const useRbacStore = defineStore('rbac', () => {
     const index = roles.value.findIndex((r) => r.id === roleId)
     if (index !== -1) {
       roles.value.splice(index, 1)
-      if (selectedRoleId.value === roleId) {
-        selectedRoleId.value = null
-      }
+      if (selectedRoleId.value === roleId) selectedRoleId.value = null
+      apiPut('rbac_roles', roles.value)
     }
   }
 
@@ -107,6 +109,7 @@ export const useRbacStore = defineStore('rbac', () => {
       updatedAt: new Date().toISOString()
     }
     permissionGroups.value.push(newGroup)
+    apiPut('rbac_permission_groups', permissionGroups.value)
     return newGroup
   }
 
@@ -121,6 +124,7 @@ export const useRbacStore = defineStore('rbac', () => {
         ...updates,
         updatedAt: new Date().toISOString()
       } as PermissionGroup
+      apiPut('rbac_permission_groups', permissionGroups.value)
     }
   }
 
@@ -128,17 +132,16 @@ export const useRbacStore = defineStore('rbac', () => {
     const index = permissionGroups.value.findIndex((pg) => pg.id === groupId)
     if (index !== -1) {
       permissionGroups.value.splice(index, 1)
-      if (selectedPermissionGroupId.value === groupId) {
-        selectedPermissionGroupId.value = null
-      }
+      if (selectedPermissionGroupId.value === groupId) selectedPermissionGroupId.value = null
 
-      // 移除所有角色中對此權限組的引用
       roles.value.forEach((role) => {
         const pgIndex = role.permissionGroupIds.indexOf(groupId)
         if (pgIndex !== -1) {
           role.permissionGroupIds.splice(pgIndex, 1)
         }
       })
+      apiPut('rbac_permission_groups', permissionGroups.value)
+      apiPut('rbac_roles', roles.value)
     }
   }
 
@@ -148,20 +151,16 @@ export const useRbacStore = defineStore('rbac', () => {
     resource: string,
     action: PermissionAction
   ): boolean {
-    // 1. 獲取帳戶
     const account = accounts.value.find((a) => a.id === accountId)
     if (!account) return false
 
-    // 2. 獲取角色
     const role = roles.value.find((r) => r.id === account.roleId)
     if (!role) return false
 
-    // 3. 獲取所有權限組
     const groups = permissionGroups.value.filter((pg) =>
       role.permissionGroupIds.includes(pg.id)
     )
 
-    // 4. 檢查是否有匹配的權限
     return groups.some((group) =>
       group.permissions.some(
         (permission) =>
@@ -170,7 +169,6 @@ export const useRbacStore = defineStore('rbac', () => {
     )
   }
 
-  // 獲取帳戶的所有權限
   function getAccountPermissions(accountId: string): Permission[] {
     const account = accounts.value.find((a) => a.id === accountId)
     if (!account) return []
@@ -182,7 +180,6 @@ export const useRbacStore = defineStore('rbac', () => {
       role.permissionGroupIds.includes(pg.id)
     )
 
-    // 合併所有權限組的權限
     const permissionsMap = new Map<string, Set<PermissionAction>>()
 
     groups.forEach((group) => {
@@ -215,6 +212,7 @@ export const useRbacStore = defineStore('rbac', () => {
       updatedAt: new Date().toISOString()
     }
     accounts.value.push(newAccount)
+    apiPut('rbac_accounts', accounts.value)
     return newAccount
   }
 
@@ -226,6 +224,7 @@ export const useRbacStore = defineStore('rbac', () => {
         ...updates,
         updatedAt: new Date().toISOString()
       } as Account
+      apiPut('rbac_accounts', accounts.value)
     }
   }
 
@@ -233,47 +232,14 @@ export const useRbacStore = defineStore('rbac', () => {
     const index = accounts.value.findIndex((a) => a.id === accountId)
     if (index !== -1) {
       accounts.value.splice(index, 1)
-      if (selectedAccountId.value === accountId) {
-        selectedAccountId.value = null
-      }
+      if (selectedAccountId.value === accountId) selectedAccountId.value = null
+      apiPut('rbac_accounts', accounts.value)
     }
   }
 
-  // 自動持久化：監聽資料變化並儲存到 localStorage
-  watch(
-    roles,
-    (newRoles) => {
-      saveToStorage(STORAGE_KEYS.RBAC_ROLES, newRoles)
-    },
-    { deep: true }
-  )
-
-  watch(
-    permissionGroups,
-    (newGroups) => {
-      saveToStorage(STORAGE_KEYS.RBAC_PERMISSION_GROUPS, newGroups)
-    },
-    { deep: true }
-  )
-
-  watch(
-    organizations,
-    (newOrgs) => {
-      saveToStorage(STORAGE_KEYS.RBAC_ORGANIZATIONS, newOrgs)
-    },
-    { deep: true }
-  )
-
-  watch(
-    accounts,
-    (newAccounts) => {
-      saveToStorage(STORAGE_KEYS.RBAC_ACCOUNTS, newAccounts)
-    },
-    { deep: true }
-  )
-
   return {
     // State
+    isLoading,
     roles,
     permissionGroups,
     organizations,
@@ -289,6 +255,7 @@ export const useRbacStore = defineStore('rbac', () => {
     getRolesByOrganization,
 
     // Actions
+    init,
     selectRole,
     createRole,
     updateRole,

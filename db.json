@@ -1,0 +1,1386 @@
+{
+  "account_locks": [],
+  "audit_logs": [],
+  "login_records": [],
+  "orders": [
+    {
+      "id": "order-20260224151339148",
+      "orderNumber": "ORD20260224151339148",
+      "customerName": "測試訂單-三角",
+      "customerPhone": "0900000000",
+      "scheduleId": "rs-tt-gi-2026-02-24-08:00",
+      "scheduleName": "2026-02-24 台東→綠島 08:00 + 2026-02-25 綠島→台東 07:00",
+      "passengers": [],
+      "paymentInfo": {
+        "deposit": 0,
+        "balance": 1500,
+        "discount": 0,
+        "totalAmount": 1500,
+        "paidAmount": 0,
+        "remainingAmount": 1500,
+        "paymentMethod": "cash",
+        "paymentStatus": "unpaid",
+        "paymentRecords": []
+      },
+      "notes": "台東─綠島 全票 x2、台東─綠島 綠島居民票 x2",
+      "status": "pending",
+      "createdAt": "2026-02-24T07:13:39.161Z",
+      "createdBy": "system",
+      "updatedAt": "2026-02-24T07:13:39.161Z"
+    },
+    {
+      "customerName": "測試三角",
+      "customerPhone": "0999999999",
+      "scheduleId": "rs-tt-gi-2026-02-24-08:00",
+      "scheduleName": "2026-02-24 台東→綠島 08:00 + 2026-02-25 綠島→蘭嶼 07:00 + 2026-02-26 蘭嶼→台東 16:00",
+      "passengers": [],
+      "paymentInfo": {
+        "deposit": 0,
+        "balance": 1650,
+        "discount": 0,
+        "totalAmount": 1650,
+        "paidAmount": 0,
+        "remainingAmount": 1650,
+        "paymentMethod": "cash",
+        "paymentStatus": "unpaid",
+        "paymentRecords": []
+      },
+      "status": "pending",
+      "notes": "台東─綠島 全票 x3",
+      "createdBy": "admin",
+      "id": "order-1771918977948",
+      "orderNumber": "20260224-5683",
+      "createdAt": "2026-02-24T07:42:57.948Z",
+      "updatedAt": "2026-02-24T07:42:57.948Z"
+    }
+  ],
+  "ports": [
+    {
+      "id": "port-hbh",
+      "name": "後壁湖",
+      "code": "HBH",
+      "isActive": true,
+      "order": 1,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "port-tt",
+      "name": "台東",
+      "code": "TT",
+      "isActive": true,
+      "order": 2,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "port-gi",
+      "name": "綠島",
+      "code": "GI",
+      "isActive": true,
+      "order": 3,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "port-ly",
+      "name": "蘭嶼",
+      "code": "LY",
+      "isActive": true,
+      "order": 4,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "ships": [
+    {
+      "id": "ship-kx1",
+      "name": "凱旋 1 號",
+      "registrationNumber": "CT-1001",
+      "maxCapacity": 280,
+      "status": "active",
+      "description": "凱旋航運旗艦船隻，主要往返台東─綠島航線",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "ship-kx2",
+      "name": "凱旋 2 號",
+      "registrationNumber": "CT-1002",
+      "maxCapacity": 260,
+      "status": "active",
+      "description": "凱旋航運二號船，主要往返台東─綠島航線",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "ship-kx3",
+      "name": "凱旋 3 號",
+      "registrationNumber": "CT-1003",
+      "maxCapacity": 240,
+      "status": "active",
+      "description": "凱旋航運三號船，提供台東─綠島機動班次",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "ship-jx1",
+      "name": "金星 1 號",
+      "registrationNumber": "VS-2001",
+      "maxCapacity": 350,
+      "status": "active",
+      "description": "金星航運旗艦船隻，主要往返台東─蘭嶼航線",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "ship-jx2",
+      "name": "金星 2 號",
+      "registrationNumber": "VS-2002",
+      "maxCapacity": 320,
+      "status": "active",
+      "description": "金星航運二號船，主要往返台東─蘭嶼航線",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "ship-jx3",
+      "name": "金星 3 號",
+      "registrationNumber": "VS-2003",
+      "maxCapacity": 300,
+      "status": "active",
+      "description": "金星航運三號船，往返後壁湖─蘭嶼及機動班次",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "route_segments": [
+    {
+      "id": "rs-tt-gi",
+      "fromPortId": "port-tt",
+      "toPortId": "port-gi",
+      "allowedNextSegments": [
+        "rs-gi-ly"
+      ],
+      "estimatedDuration": 50,
+      "isActive": true,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "rs-gi-tt",
+      "fromPortId": "port-gi",
+      "toPortId": "port-tt",
+      "allowedNextSegments": [],
+      "estimatedDuration": 50,
+      "isActive": true,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "rs-tt-ly",
+      "fromPortId": "port-tt",
+      "toPortId": "port-ly",
+      "allowedNextSegments": [],
+      "estimatedDuration": 150,
+      "isActive": true,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "rs-ly-tt",
+      "fromPortId": "port-ly",
+      "toPortId": "port-tt",
+      "allowedNextSegments": [],
+      "estimatedDuration": 150,
+      "isActive": true,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "rs-hbh-ly",
+      "fromPortId": "port-hbh",
+      "toPortId": "port-ly",
+      "allowedNextSegments": [],
+      "estimatedDuration": 90,
+      "isActive": true,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "rs-ly-hbh",
+      "fromPortId": "port-ly",
+      "toPortId": "port-hbh",
+      "allowedNextSegments": [],
+      "estimatedDuration": 90,
+      "isActive": true,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "rs-gi-ly",
+      "fromPortId": "port-gi",
+      "toPortId": "port-ly",
+      "allowedNextSegments": [
+        "rs-ly-tt",
+        "rs-ly-hbh"
+      ],
+      "estimatedDuration": 90,
+      "isActive": true,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-02-24T07:12:21.637Z"
+    },
+    {
+      "id": "rs-ly-gi",
+      "fromPortId": "port-ly",
+      "toPortId": "port-gi",
+      "allowedNextSegments": [
+        "rs-gi-tt"
+      ],
+      "estimatedDuration": 90,
+      "isActive": true,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "schedules": [
+    {
+      "id": "sch-tt-gi-0800",
+      "type": "regular",
+      "shipId": "ship-kx1",
+      "shipName": "凱旋 1 號",
+      "routeSegmentId": "rs-tt-gi",
+      "departureTime": "08:00",
+      "isDaily": true,
+      "currentPassengers": 0,
+      "maxCapacity": 280,
+      "status": "active",
+      "description": "台東→綠島 早班",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "sch-tt-gi-1100",
+      "type": "regular",
+      "shipId": "ship-kx2",
+      "shipName": "凱旋 2 號",
+      "routeSegmentId": "rs-tt-gi",
+      "departureTime": "11:00",
+      "isDaily": true,
+      "currentPassengers": 0,
+      "maxCapacity": 260,
+      "status": "active",
+      "description": "台東→綠島 中班",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "sch-tt-gi-1400",
+      "type": "regular",
+      "shipId": "ship-kx3",
+      "shipName": "凱旋 3 號",
+      "routeSegmentId": "rs-tt-gi",
+      "departureTime": "14:00",
+      "isDaily": true,
+      "currentPassengers": 0,
+      "maxCapacity": 240,
+      "status": "active",
+      "description": "台東→綠島 下午班",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "sch-gi-tt-0930",
+      "type": "regular",
+      "shipId": "ship-kx1",
+      "shipName": "凱旋 1 號",
+      "routeSegmentId": "rs-gi-tt",
+      "departureTime": "09:30",
+      "isDaily": true,
+      "currentPassengers": 0,
+      "maxCapacity": 280,
+      "status": "active",
+      "description": "綠島→台東 早班",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "sch-gi-tt-1230",
+      "type": "regular",
+      "shipId": "ship-kx2",
+      "shipName": "凱旋 2 號",
+      "routeSegmentId": "rs-gi-tt",
+      "departureTime": "12:30",
+      "isDaily": true,
+      "currentPassengers": 0,
+      "maxCapacity": 260,
+      "status": "active",
+      "description": "綠島→台東 中班",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "sch-gi-tt-1530",
+      "type": "regular",
+      "shipId": "ship-kx3",
+      "shipName": "凱旋 3 號",
+      "routeSegmentId": "rs-gi-tt",
+      "departureTime": "15:30",
+      "isDaily": true,
+      "currentPassengers": 0,
+      "maxCapacity": 240,
+      "status": "active",
+      "description": "綠島→台東 下午班",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "sch-tt-ly-0700",
+      "type": "regular",
+      "shipId": "ship-jx1",
+      "shipName": "金星 1 號",
+      "routeSegmentId": "rs-tt-ly",
+      "departureTime": "07:00",
+      "isDaily": true,
+      "currentPassengers": 0,
+      "maxCapacity": 350,
+      "status": "active",
+      "description": "台東→蘭嶼 早班",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "sch-tt-ly-1300",
+      "type": "regular",
+      "shipId": "ship-jx2",
+      "shipName": "金星 2 號",
+      "routeSegmentId": "rs-tt-ly",
+      "departureTime": "13:00",
+      "isDaily": true,
+      "currentPassengers": 0,
+      "maxCapacity": 320,
+      "status": "active",
+      "description": "台東→蘭嶼 下午班",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "sch-ly-tt-0930",
+      "type": "regular",
+      "shipId": "ship-jx1",
+      "shipName": "金星 1 號",
+      "routeSegmentId": "rs-ly-tt",
+      "departureTime": "09:30",
+      "isDaily": true,
+      "currentPassengers": 0,
+      "maxCapacity": 350,
+      "status": "active",
+      "description": "蘭嶼→台東 早班",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "sch-ly-tt-1600",
+      "type": "regular",
+      "shipId": "ship-jx2",
+      "shipName": "金星 2 號",
+      "routeSegmentId": "rs-ly-tt",
+      "departureTime": "16:00",
+      "isDaily": true,
+      "currentPassengers": 0,
+      "maxCapacity": 320,
+      "status": "active",
+      "description": "蘭嶼→台東 下午班",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "sch-hbh-ly-0800",
+      "type": "regular",
+      "shipId": "ship-jx3",
+      "shipName": "金星 3 號",
+      "routeSegmentId": "rs-hbh-ly",
+      "departureTime": "08:00",
+      "isDaily": true,
+      "currentPassengers": 0,
+      "maxCapacity": 300,
+      "status": "active",
+      "description": "後壁湖→蘭嶼 早班",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "sch-ly-hbh-1300",
+      "type": "regular",
+      "shipId": "ship-jx3",
+      "shipName": "金星 3 號",
+      "routeSegmentId": "rs-ly-hbh",
+      "departureTime": "13:00",
+      "isDaily": true,
+      "currentPassengers": 0,
+      "maxCapacity": 300,
+      "status": "active",
+      "description": "蘭嶼→後壁湖 下午班",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "SCH013",
+      "type": "regular",
+      "shipId": "ship-jx1",
+      "shipName": "金星 1 號",
+      "routeSegmentId": "rs-gi-ly",
+      "departureTime": "07:00",
+      "date": "",
+      "isDaily": true,
+      "currentPassengers": 0,
+      "maxCapacity": 350,
+      "status": "active",
+      "description": "",
+      "createdAt": "2026-02-24T07:11:01.237Z",
+      "updatedAt": "2026-02-24T07:11:01.237Z"
+    }
+  ],
+  "ticket_types": [
+    {
+      "id": "tt-tt-gi-adult",
+      "name": "台東─綠島 全票",
+      "facePrice": 550,
+      "segmentDiscounts": [
+        {
+          "segmentCount": 1,
+          "discountAmount": 0
+        },
+        {
+          "segmentCount": 2,
+          "discountAmount": 80
+        }
+      ],
+      "route": {
+        "from": "port-tt",
+        "to": "port-gi"
+      },
+      "isSpecial": false,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "tt-tt-gi-child",
+      "name": "台東─綠島 半票（兒童/敬老）",
+      "facePrice": 275,
+      "segmentDiscounts": [
+        {
+          "segmentCount": 1,
+          "discountAmount": 0
+        },
+        {
+          "segmentCount": 2,
+          "discountAmount": 40
+        }
+      ],
+      "route": {
+        "from": "port-tt",
+        "to": "port-gi"
+      },
+      "isSpecial": false,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "tt-tt-gi-resident",
+      "name": "台東─綠島 綠島居民票",
+      "facePrice": 200,
+      "segmentDiscounts": [
+        {
+          "segmentCount": 1,
+          "discountAmount": 0
+        }
+      ],
+      "route": {
+        "from": "port-tt",
+        "to": "port-gi"
+      },
+      "isSpecial": true,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "tt-gi-tt-adult",
+      "name": "綠島─台東 全票",
+      "facePrice": 550,
+      "segmentDiscounts": [
+        {
+          "segmentCount": 1,
+          "discountAmount": 0
+        },
+        {
+          "segmentCount": 2,
+          "discountAmount": 80
+        }
+      ],
+      "route": {
+        "from": "port-gi",
+        "to": "port-tt"
+      },
+      "isSpecial": false,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "tt-gi-tt-child",
+      "name": "綠島─台東 半票（兒童/敬老）",
+      "facePrice": 275,
+      "segmentDiscounts": [
+        {
+          "segmentCount": 1,
+          "discountAmount": 0
+        },
+        {
+          "segmentCount": 2,
+          "discountAmount": 40
+        }
+      ],
+      "route": {
+        "from": "port-gi",
+        "to": "port-tt"
+      },
+      "isSpecial": false,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "tt-gi-tt-resident",
+      "name": "綠島─台東 綠島居民票",
+      "facePrice": 200,
+      "segmentDiscounts": [
+        {
+          "segmentCount": 1,
+          "discountAmount": 0
+        }
+      ],
+      "route": {
+        "from": "port-gi",
+        "to": "port-tt"
+      },
+      "isSpecial": true,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "tt-tt-ly-adult",
+      "name": "台東─蘭嶼 全票",
+      "facePrice": 1000,
+      "segmentDiscounts": [
+        {
+          "segmentCount": 1,
+          "discountAmount": 0
+        }
+      ],
+      "route": {
+        "from": "port-tt",
+        "to": "port-ly"
+      },
+      "isSpecial": false,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "tt-tt-ly-child",
+      "name": "台東─蘭嶼 半票（兒童/敬老）",
+      "facePrice": 500,
+      "segmentDiscounts": [
+        {
+          "segmentCount": 1,
+          "discountAmount": 0
+        }
+      ],
+      "route": {
+        "from": "port-tt",
+        "to": "port-ly"
+      },
+      "isSpecial": false,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "tt-tt-ly-resident",
+      "name": "台東─蘭嶼 蘭嶼居民票",
+      "facePrice": 400,
+      "segmentDiscounts": [
+        {
+          "segmentCount": 1,
+          "discountAmount": 0
+        }
+      ],
+      "route": {
+        "from": "port-tt",
+        "to": "port-ly"
+      },
+      "isSpecial": true,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "tt-ly-tt-adult",
+      "name": "蘭嶼─台東 全票",
+      "facePrice": 1000,
+      "segmentDiscounts": [
+        {
+          "segmentCount": 1,
+          "discountAmount": 0
+        }
+      ],
+      "route": {
+        "from": "port-ly",
+        "to": "port-tt"
+      },
+      "isSpecial": false,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "tt-ly-tt-child",
+      "name": "蘭嶼─台東 半票（兒童/敬老）",
+      "facePrice": 500,
+      "segmentDiscounts": [
+        {
+          "segmentCount": 1,
+          "discountAmount": 0
+        }
+      ],
+      "route": {
+        "from": "port-ly",
+        "to": "port-tt"
+      },
+      "isSpecial": false,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "tt-ly-tt-resident",
+      "name": "蘭嶼─台東 蘭嶼居民票",
+      "facePrice": 400,
+      "segmentDiscounts": [
+        {
+          "segmentCount": 1,
+          "discountAmount": 0
+        }
+      ],
+      "route": {
+        "from": "port-ly",
+        "to": "port-tt"
+      },
+      "isSpecial": true,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "tt-hbh-ly-adult",
+      "name": "後壁湖─蘭嶼 全票",
+      "facePrice": 1000,
+      "segmentDiscounts": [
+        {
+          "segmentCount": 1,
+          "discountAmount": 0
+        }
+      ],
+      "route": {
+        "from": "port-hbh",
+        "to": "port-ly"
+      },
+      "isSpecial": false,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "tt-hbh-ly-child",
+      "name": "後壁湖─蘭嶼 半票（兒童/敬老）",
+      "facePrice": 500,
+      "segmentDiscounts": [
+        {
+          "segmentCount": 1,
+          "discountAmount": 0
+        }
+      ],
+      "route": {
+        "from": "port-hbh",
+        "to": "port-ly"
+      },
+      "isSpecial": false,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "tt-hbh-ly-resident",
+      "name": "後壁湖─蘭嶼 蘭嶼居民票",
+      "facePrice": 400,
+      "segmentDiscounts": [
+        {
+          "segmentCount": 1,
+          "discountAmount": 0
+        }
+      ],
+      "route": {
+        "from": "port-hbh",
+        "to": "port-ly"
+      },
+      "isSpecial": true,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "tt-ly-hbh-adult",
+      "name": "蘭嶼─後壁湖 全票",
+      "facePrice": 1000,
+      "segmentDiscounts": [
+        {
+          "segmentCount": 1,
+          "discountAmount": 0
+        }
+      ],
+      "route": {
+        "from": "port-ly",
+        "to": "port-hbh"
+      },
+      "isSpecial": false,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "tt-ly-hbh-child",
+      "name": "蘭嶼─後壁湖 半票（兒童/敬老）",
+      "facePrice": 500,
+      "segmentDiscounts": [
+        {
+          "segmentCount": 1,
+          "discountAmount": 0
+        }
+      ],
+      "route": {
+        "from": "port-ly",
+        "to": "port-hbh"
+      },
+      "isSpecial": false,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "tt-ly-hbh-resident",
+      "name": "蘭嶼─後壁湖 蘭嶼居民票",
+      "facePrice": 400,
+      "segmentDiscounts": [
+        {
+          "segmentCount": 1,
+          "discountAmount": 0
+        }
+      ],
+      "route": {
+        "from": "port-ly",
+        "to": "port-hbh"
+      },
+      "isSpecial": true,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "tt-gi-ly-adult",
+      "name": "綠島─蘭嶼 全票",
+      "facePrice": 800,
+      "segmentDiscounts": [
+        {
+          "segmentCount": 1,
+          "discountAmount": 0
+        }
+      ],
+      "route": {
+        "from": "port-gi",
+        "to": "port-ly"
+      },
+      "isSpecial": false,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "tt-gi-ly-child",
+      "name": "綠島─蘭嶼 半票（兒童/敬老）",
+      "facePrice": 400,
+      "segmentDiscounts": [
+        {
+          "segmentCount": 1,
+          "discountAmount": 0
+        }
+      ],
+      "route": {
+        "from": "port-gi",
+        "to": "port-ly"
+      },
+      "isSpecial": false,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "tt-ly-gi-adult",
+      "name": "蘭嶼─綠島 全票",
+      "facePrice": 800,
+      "segmentDiscounts": [
+        {
+          "segmentCount": 1,
+          "discountAmount": 0
+        }
+      ],
+      "route": {
+        "from": "port-ly",
+        "to": "port-gi"
+      },
+      "isSpecial": false,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "tt-ly-gi-child",
+      "name": "蘭嶼─綠島 半票（兒童/敬老）",
+      "facePrice": 400,
+      "segmentDiscounts": [
+        {
+          "segmentCount": 1,
+          "discountAmount": 0
+        }
+      ],
+      "route": {
+        "from": "port-ly",
+        "to": "port-gi"
+      },
+      "isSpecial": false,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "ticket_price_history": [],
+  "whitelist": [],
+  "rbac_organizations": [
+    {
+      "id": "org-sys",
+      "name": "系統管理"
+    },
+    {
+      "id": "org-kx",
+      "name": "凱旋航運"
+    },
+    {
+      "id": "org-jx",
+      "name": "金星航運"
+    }
+  ],
+  "rbac_permission_groups": [
+    {
+      "id": "pg-all",
+      "name": "系統完整權限",
+      "permissions": [
+        {
+          "resource": "manage-member",
+          "actions": [
+            "read",
+            "create",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "resource": "manage-order",
+          "actions": [
+            "read",
+            "create",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "resource": "manage-ticket",
+          "actions": [
+            "read",
+            "create",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "resource": "manage-schedule",
+          "actions": [
+            "read",
+            "create",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "resource": "manage-ship",
+          "actions": [
+            "read",
+            "create",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "resource": "manage-route",
+          "actions": [
+            "read",
+            "create",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "resource": "manage-whitelist",
+          "actions": [
+            "read",
+            "create",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "resource": "manage-rbac",
+          "actions": [
+            "read",
+            "create",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "resource": "view-audit-log",
+          "actions": [
+            "read"
+          ]
+        },
+        {
+          "resource": "manage-audit-log",
+          "actions": [
+            "read",
+            "delete"
+          ]
+        }
+      ],
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "pg-kx-admin",
+      "name": "凱旋航運管理權限",
+      "permissions": [
+        {
+          "resource": "manage-member",
+          "actions": [
+            "read",
+            "create",
+            "update"
+          ]
+        },
+        {
+          "resource": "manage-order",
+          "actions": [
+            "read",
+            "create",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "resource": "manage-ticket",
+          "actions": [
+            "read",
+            "create",
+            "update"
+          ]
+        },
+        {
+          "resource": "manage-schedule",
+          "actions": [
+            "read",
+            "create",
+            "update"
+          ]
+        },
+        {
+          "resource": "manage-ship",
+          "actions": [
+            "read",
+            "create",
+            "update"
+          ]
+        },
+        {
+          "resource": "manage-route",
+          "actions": [
+            "read"
+          ]
+        },
+        {
+          "resource": "manage-whitelist",
+          "actions": [
+            "read",
+            "create",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "resource": "view-audit-log",
+          "actions": [
+            "read"
+          ]
+        }
+      ],
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "pg-jx-admin",
+      "name": "金星航運管理權限",
+      "permissions": [
+        {
+          "resource": "manage-member",
+          "actions": [
+            "read",
+            "create",
+            "update"
+          ]
+        },
+        {
+          "resource": "manage-order",
+          "actions": [
+            "read",
+            "create",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "resource": "manage-ticket",
+          "actions": [
+            "read",
+            "create",
+            "update"
+          ]
+        },
+        {
+          "resource": "manage-schedule",
+          "actions": [
+            "read",
+            "create",
+            "update"
+          ]
+        },
+        {
+          "resource": "manage-ship",
+          "actions": [
+            "read",
+            "create",
+            "update"
+          ]
+        },
+        {
+          "resource": "manage-route",
+          "actions": [
+            "read"
+          ]
+        },
+        {
+          "resource": "manage-whitelist",
+          "actions": [
+            "read",
+            "create",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "resource": "view-audit-log",
+          "actions": [
+            "read"
+          ]
+        }
+      ],
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "pg-ticket-agent",
+      "name": "售票員基本權限",
+      "permissions": [
+        {
+          "resource": "manage-order",
+          "actions": [
+            "read",
+            "create",
+            "update"
+          ]
+        },
+        {
+          "resource": "manage-ticket",
+          "actions": [
+            "read"
+          ]
+        },
+        {
+          "resource": "manage-schedule",
+          "actions": [
+            "read"
+          ]
+        },
+        {
+          "resource": "manage-whitelist",
+          "actions": [
+            "read"
+          ]
+        }
+      ],
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "rbac_roles": [
+    {
+      "id": "role-sysadmin",
+      "name": "系統管理員",
+      "organizationId": "org-sys",
+      "loginRoute": "/dashboard",
+      "hasBackendAccess": true,
+      "permissionGroupIds": [
+        "pg-all"
+      ],
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "role-kx-admin",
+      "name": "凱旋航運管理員",
+      "organizationId": "org-kx",
+      "loginRoute": "/dashboard",
+      "hasBackendAccess": true,
+      "permissionGroupIds": [
+        "pg-kx-admin"
+      ],
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "role-kx-ticket",
+      "name": "凱旋航運售票員",
+      "organizationId": "org-kx",
+      "loginRoute": "/create-order",
+      "hasBackendAccess": true,
+      "permissionGroupIds": [
+        "pg-ticket-agent"
+      ],
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "role-jx-admin",
+      "name": "金星航運管理員",
+      "organizationId": "org-jx",
+      "loginRoute": "/dashboard",
+      "hasBackendAccess": true,
+      "permissionGroupIds": [
+        "pg-jx-admin"
+      ],
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "role-jx-ticket",
+      "name": "金星航運售票員",
+      "organizationId": "org-jx",
+      "loginRoute": "/create-order",
+      "hasBackendAccess": true,
+      "permissionGroupIds": [
+        "pg-ticket-agent"
+      ],
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "rbac_accounts": [
+    {
+      "id": "acc-sysadmin",
+      "username": "admin",
+      "name": "系統管理員",
+      "contactPerson": "系統管理員",
+      "contactPhone": "089-000000",
+      "organizationId": "org-sys",
+      "roleId": "role-sysadmin",
+      "verified": true,
+      "availableTicketTypes": [
+        "tt-tt-gi-adult",
+        "tt-tt-gi-child",
+        "tt-tt-gi-resident",
+        "tt-gi-tt-adult",
+        "tt-gi-tt-child",
+        "tt-gi-tt-resident",
+        "tt-tt-ly-adult",
+        "tt-tt-ly-child",
+        "tt-tt-ly-resident",
+        "tt-ly-tt-adult",
+        "tt-ly-tt-child",
+        "tt-ly-tt-resident",
+        "tt-hbh-ly-adult",
+        "tt-hbh-ly-child",
+        "tt-hbh-ly-resident",
+        "tt-ly-hbh-adult",
+        "tt-ly-hbh-child",
+        "tt-ly-hbh-resident",
+        "tt-gi-ly-adult",
+        "tt-gi-ly-child",
+        "tt-ly-gi-adult",
+        "tt-ly-gi-child"
+      ],
+      "ticketPriceSettings": [],
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "acc-kx-admin",
+      "username": "kx-admin",
+      "name": "凱旋航運管理員",
+      "contactPerson": "凱旋管理部",
+      "contactPhone": "089-281702",
+      "organizationId": "org-kx",
+      "roleId": "role-kx-admin",
+      "verified": true,
+      "availableTicketTypes": [
+        "tt-tt-gi-adult",
+        "tt-tt-gi-child",
+        "tt-tt-gi-resident",
+        "tt-gi-tt-adult",
+        "tt-gi-tt-child",
+        "tt-gi-tt-resident",
+        "tt-gi-ly-adult",
+        "tt-gi-ly-child",
+        "tt-ly-gi-adult",
+        "tt-ly-gi-child"
+      ],
+      "ticketPriceSettings": [],
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "acc-kx-ticket1",
+      "username": "kx-ticket1",
+      "name": "凱旋售票員 01",
+      "contactPerson": "王大明",
+      "contactPhone": "089-281702",
+      "organizationId": "org-kx",
+      "roleId": "role-kx-ticket",
+      "verified": true,
+      "availableTicketTypes": [
+        "tt-tt-gi-adult",
+        "tt-tt-gi-child",
+        "tt-tt-gi-resident",
+        "tt-gi-tt-adult",
+        "tt-gi-tt-child",
+        "tt-gi-tt-resident"
+      ],
+      "ticketPriceSettings": [],
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "acc-kx-ticket2",
+      "username": "kx-ticket2",
+      "name": "凱旋售票員 02",
+      "contactPerson": "陳小芬",
+      "contactPhone": "089-281702",
+      "organizationId": "org-kx",
+      "roleId": "role-kx-ticket",
+      "verified": true,
+      "availableTicketTypes": [
+        "tt-tt-gi-adult",
+        "tt-tt-gi-child",
+        "tt-tt-gi-resident",
+        "tt-gi-tt-adult",
+        "tt-gi-tt-child",
+        "tt-gi-tt-resident"
+      ],
+      "ticketPriceSettings": [],
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "acc-jx-admin",
+      "username": "jx-admin",
+      "name": "金星航運管理員",
+      "contactPerson": "金星管理部",
+      "contactPhone": "089-282078",
+      "organizationId": "org-jx",
+      "roleId": "role-jx-admin",
+      "verified": true,
+      "availableTicketTypes": [
+        "tt-tt-ly-adult",
+        "tt-tt-ly-child",
+        "tt-tt-ly-resident",
+        "tt-ly-tt-adult",
+        "tt-ly-tt-child",
+        "tt-ly-tt-resident",
+        "tt-hbh-ly-adult",
+        "tt-hbh-ly-child",
+        "tt-hbh-ly-resident",
+        "tt-ly-hbh-adult",
+        "tt-ly-hbh-child",
+        "tt-ly-hbh-resident"
+      ],
+      "ticketPriceSettings": [],
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "acc-jx-ticket1",
+      "username": "jx-ticket1",
+      "name": "金星售票員 01",
+      "contactPerson": "林志豪",
+      "contactPhone": "089-282078",
+      "organizationId": "org-jx",
+      "roleId": "role-jx-ticket",
+      "verified": true,
+      "availableTicketTypes": [
+        "tt-tt-ly-adult",
+        "tt-tt-ly-child",
+        "tt-tt-ly-resident",
+        "tt-ly-tt-adult",
+        "tt-ly-tt-child",
+        "tt-ly-tt-resident",
+        "tt-hbh-ly-adult",
+        "tt-hbh-ly-child",
+        "tt-hbh-ly-resident",
+        "tt-ly-hbh-adult",
+        "tt-ly-hbh-child",
+        "tt-ly-hbh-resident"
+      ],
+      "ticketPriceSettings": [],
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "acc-jx-ticket2",
+      "username": "jx-ticket2",
+      "name": "金星售票員 02",
+      "contactPerson": "張美玲",
+      "contactPhone": "089-282078",
+      "organizationId": "org-jx",
+      "roleId": "role-jx-ticket",
+      "verified": true,
+      "availableTicketTypes": [
+        "tt-tt-ly-adult",
+        "tt-tt-ly-child",
+        "tt-tt-ly-resident",
+        "tt-ly-tt-adult",
+        "tt-ly-tt-child",
+        "tt-ly-tt-resident"
+      ],
+      "ticketPriceSettings": [],
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    }
+  ]
+}

@@ -4,6 +4,8 @@ import { useRbacStore } from '@/stores/rbac'
 import { useTicketStore } from '@/stores/ticket'
 import { useSidebar } from '@/composables/useSidebar'
 import { useTheme } from '@/composables/useTheme'
+import { useAuth } from '@/composables/useAuth'
+import { useAuditLog } from '@/composables/useAuditLog'
 import Navbar from '@/components/Navbar.vue'
 import Sidebar from '@/components/Sidebar.vue'
 import PageContainer from '@/components/ui/PageContainer.vue'
@@ -19,13 +21,29 @@ import {
   PencilIcon,
   TrashIcon,
   CheckIcon,
-  XMarkIcon
+  XMarkIcon,
+  KeyIcon,
+  ClipboardDocumentIcon
 } from '@heroicons/vue/24/outline'
 
 const rbacStore = useRbacStore()
 const ticketStore = useTicketStore()
 const { isCollapsed } = useSidebar()
 const { theme } = useTheme()
+const { resetUserPassword } = useAuth()
+const { createLog, generateChanges } = useAuditLog()
+
+// 當前操作者（實際應該從登入狀態獲取）
+const currentOperator = {
+  id: 'admin-001',
+  name: '管理員'
+}
+
+// 密碼重置相關狀態
+const showPasswordResetModal = ref(false)
+const resetPasswordUsername = ref('')
+const resetPasswordAccountName = ref('')
+const newGeneratedPassword = ref('')
 
 // 篩選條件
 const searchKeyword = ref('')
@@ -95,7 +113,7 @@ function getTicketTypeName(ticketTypeId: string): string {
 function getTicketDefaultPrice(ticketTypeId: string): number {
   const ticket = ticketStore.ticketTypes.find((t) => t.id === ticketTypeId)
   if (!ticket) return 0
-  return calculateSalePrice(ticket.basePrice, ticket.discount)
+  return calculateSalePrice(ticket.facePrice, ticket.discount)
 }
 
 // 重置表單
@@ -190,8 +208,11 @@ function saveAccount() {
   }
 
   if (isEditMode.value && rbacStore.selectedAccountId) {
+    // 獲取舊資料用於記錄變更
+    const oldAccount = rbacStore.accounts.find(a => a.id === rbacStore.selectedAccountId)
+
     // 更新現有帳號
-    rbacStore.updateAccount(rbacStore.selectedAccountId, {
+    const updatedData = {
       username: formData.value.username!,
       name: formData.value.name!,
       contactPerson: formData.value.contactPerson!,
@@ -201,11 +222,38 @@ function saveAccount() {
       verified: formData.value.verified!,
       availableTicketTypes: formData.value.availableTicketTypes || [],
       ticketPriceSettings: formData.value.ticketPriceSettings || []
-    })
+    }
+
+    rbacStore.updateAccount(rbacStore.selectedAccountId, updatedData)
+
+    // 記錄操作日誌
+    if (oldAccount) {
+      const changes = generateChanges(oldAccount, { ...oldAccount, ...updatedData }, {
+        username: '使用者名稱',
+        name: '帳號名稱',
+        contactPerson: '聯絡人',
+        contactPhone: '聯絡電話',
+        roleId: '角色',
+        verified: '驗證狀態',
+        availableTicketTypes: '可販售票種',
+        ticketPriceSettings: '票價設定'
+      })
+
+      createLog({
+        entityType: 'account',
+        entityId: rbacStore.selectedAccountId,
+        entityName: formData.value.name!,
+        action: 'update',
+        operatorId: currentOperator.id,
+        operatorName: currentOperator.name,
+        changes
+      })
+    }
+
     alert('帳號更新成功')
   } else {
     // 創建新帳號
-    rbacStore.createAccount({
+    const newAccount = rbacStore.createAccount({
       username: formData.value.username!,
       name: formData.value.name!,
       contactPerson: formData.value.contactPerson!,
@@ -216,6 +264,18 @@ function saveAccount() {
       availableTicketTypes: formData.value.availableTicketTypes || [],
       ticketPriceSettings: formData.value.ticketPriceSettings || []
     })
+
+    // 記錄操作日誌
+    createLog({
+      entityType: 'account',
+      entityId: newAccount.id,
+      entityName: formData.value.name!,
+      action: 'create',
+      operatorId: currentOperator.id,
+      operatorName: currentOperator.name,
+      note: `創建新帳號：${formData.value.name}`
+    })
+
     alert('帳號創建成功')
   }
   resetForm()
@@ -223,8 +283,23 @@ function saveAccount() {
 
 // 刪除帳號
 function deleteAccount(accountId: string) {
+  const account = rbacStore.accounts.find(a => a.id === accountId)
+  if (!account) return
+
   if (confirm('確定要刪除此帳號嗎？')) {
     rbacStore.deleteAccount(accountId)
+
+    // 記錄操作日誌
+    createLog({
+      entityType: 'account',
+      entityId: accountId,
+      entityName: account.name,
+      action: 'delete',
+      operatorId: currentOperator.id,
+      operatorName: currentOperator.name,
+      note: `刪除帳號：${account.name} (${account.username})`
+    })
+
     alert('帳號已刪除')
     if (rbacStore.selectedAccountId === accountId) {
       resetForm()
@@ -330,6 +405,60 @@ function removePriceSetting(priceSettingId: string) {
   if (index !== -1) {
     formData.value.ticketPriceSettings.splice(index, 1)
   }
+}
+
+// 開啟密碼重置對話框
+function openPasswordResetModal(account: Account) {
+  resetPasswordUsername.value = account.username
+  resetPasswordAccountName.value = account.name
+  newGeneratedPassword.value = ''
+  showPasswordResetModal.value = true
+}
+
+// 執行密碼重置
+function executePasswordReset() {
+  const result = resetUserPassword(resetPasswordUsername.value, currentOperator.name)
+
+  if (result.success && result.newPassword) {
+    newGeneratedPassword.value = result.newPassword
+
+    // 記錄操作日誌
+    const account = rbacStore.accounts.find(a => a.username === resetPasswordUsername.value)
+    if (account) {
+      createLog({
+        entityType: 'account',
+        entityId: account.id,
+        entityName: account.name,
+        action: 'password_reset',
+        operatorId: currentOperator.id,
+        operatorName: currentOperator.name,
+        note: `管理員重置密碼：${account.name} (${account.username})`
+      })
+    }
+
+    alert(result.message)
+  } else {
+    alert(result.message)
+    showPasswordResetModal.value = false
+  }
+}
+
+// 複製密碼到剪貼簿
+async function copyPasswordToClipboard() {
+  try {
+    await navigator.clipboard.writeText(newGeneratedPassword.value)
+    alert('密碼已複製到剪貼簿')
+  } catch {
+    alert('複製失敗，請手動複製密碼')
+  }
+}
+
+// 關閉密碼重置對話框
+function closePasswordResetModal() {
+  showPasswordResetModal.value = false
+  resetPasswordUsername.value = ''
+  resetPasswordAccountName.value = ''
+  newGeneratedPassword.value = ''
 }
 </script>
 
@@ -562,7 +691,7 @@ function removePriceSetting(priceSettingId: string) {
                       </span>
                     </td>
                     <td class="px-6 py-4 text-sm">
-                      <div class="flex gap-2">
+                      <div class="flex flex-wrap gap-2">
                         <button
                           @click="editAccount(account)"
                           :class="[
@@ -574,6 +703,19 @@ function removePriceSetting(priceSettingId: string) {
                         >
                           <PencilIcon class="w-4 h-4" />
                           編輯
+                        </button>
+                        <button
+                          @click="openPasswordResetModal(account)"
+                          :class="[
+                            'flex items-center gap-1 transition-colors',
+                            theme === 'dark'
+                              ? 'text-amber-400 hover:text-amber-300'
+                              : 'text-amber-600 hover:text-amber-800'
+                          ]"
+                          title="重置密碼"
+                        >
+                          <KeyIcon class="w-4 h-4" />
+                          重置密碼
                         </button>
                         <button
                           @click="deleteAccount(account.id)"
@@ -802,7 +944,7 @@ function removePriceSetting(priceSettingId: string) {
                             theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'
                           ]"
                         >
-                          (預設售價: NT$ {{ calculateSalePrice(ticket.basePrice, ticket.discount) }})
+                          (預設售價: NT$ {{ calculateSalePrice(ticket.facePrice, ticket.discount) }})
                         </span>
                       </label>
                     </div>
@@ -967,6 +1109,164 @@ function removePriceSetting(priceSettingId: string) {
             class="ml-auto"
           >
             {{ isEditMode ? '更新並儲存' : '創建帳號' }}
+          </BaseButton>
+        </div>
+      </div>
+    </div>
+
+    <!-- 密碼重置 Modal -->
+    <div
+      v-if="showPasswordResetModal"
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      @click.self="closePasswordResetModal"
+    >
+      <div
+        :class="[
+          'rounded-lg shadow-xl max-w-md w-full',
+          theme === 'dark' ? 'bg-secondary-900' : 'bg-white'
+        ]"
+      >
+        <!-- Modal Header -->
+        <div
+          :class="[
+            'p-6 border-b flex items-center justify-between',
+            theme === 'dark' ? 'border-secondary-800' : 'border-neutral-200'
+          ]"
+        >
+          <h2
+            class="text-xl font-semibold flex items-center gap-2"
+            :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'"
+          >
+            <KeyIcon class="w-6 h-6 text-amber-500" />
+            重置密碼
+          </h2>
+          <button
+            @click="closePasswordResetModal"
+            :class="[
+              'p-2 rounded-lg transition-colors',
+              theme === 'dark'
+                ? 'hover:bg-secondary-800 text-neutral-400'
+                : 'hover:bg-neutral-100 text-neutral-600'
+            ]"
+          >
+            <XMarkIcon class="w-5 h-5" />
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6">
+          <div class="space-y-4">
+            <div>
+              <label
+                class="block text-sm font-medium mb-2"
+                :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+              >
+                帳號
+              </label>
+              <p
+                class="text-lg font-semibold"
+                :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'"
+              >
+                {{ resetPasswordAccountName }} ({{ resetPasswordUsername }})
+              </p>
+            </div>
+
+            <div
+              v-if="!newGeneratedPassword"
+              :class="[
+                'p-4 rounded-lg border',
+                theme === 'dark'
+                  ? 'bg-amber-950/30 border-amber-900 text-amber-400'
+                  : 'bg-amber-50 border-amber-200 text-amber-700'
+              ]"
+            >
+              <p class="text-sm">
+                確定要重置此帳號的密碼嗎？系統將生成一組隨機密碼，請務必妥善保管並通知使用者。
+              </p>
+            </div>
+
+            <div
+              v-if="newGeneratedPassword"
+              class="space-y-3"
+            >
+              <div
+                :class="[
+                  'p-4 rounded-lg border',
+                  theme === 'dark'
+                    ? 'bg-green-950/30 border-green-900 text-green-400'
+                    : 'bg-green-50 border-green-200 text-green-700'
+                ]"
+              >
+                <p class="text-sm font-medium mb-2">密碼已重置成功！</p>
+                <p class="text-xs">請將以下密碼提供給使用者，並要求其首次登入後立即更改密碼。</p>
+              </div>
+
+              <div>
+                <label
+                  class="block text-sm font-medium mb-2"
+                  :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                >
+                  新密碼
+                </label>
+                <div class="flex gap-2">
+                  <input
+                    :value="newGeneratedPassword"
+                    readonly
+                    class="flex-1 px-4 py-3 rounded-lg border font-mono text-lg select-all"
+                    :class="
+                      theme === 'dark'
+                        ? 'bg-secondary-800 border-secondary-700 text-white'
+                        : 'bg-neutral-50 border-neutral-300 text-neutral-900'
+                    "
+                  />
+                  <BaseButton
+                    variant="outline"
+                    :icon="ClipboardDocumentIcon"
+                    @click="copyPasswordToClipboard"
+                    title="複製密碼"
+                  >
+                    複製
+                  </BaseButton>
+                </div>
+              </div>
+
+              <div
+                :class="[
+                  'p-3 rounded-lg border text-xs',
+                  theme === 'dark'
+                    ? 'bg-red-950/30 border-red-900 text-red-400'
+                    : 'bg-red-50 border-red-200 text-red-700'
+                ]"
+              >
+                <p class="font-medium mb-1">⚠️ 重要提醒</p>
+                <p>此密碼僅會顯示一次，請務必複製並妥善保管。關閉此視窗後將無法再次查看。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div
+          :class="[
+            'p-6 border-t flex gap-3',
+            theme === 'dark' ? 'border-secondary-800' : 'border-neutral-200'
+          ]"
+        >
+          <BaseButton
+            variant="secondary"
+            @click="closePasswordResetModal"
+            class="flex-1"
+          >
+            {{ newGeneratedPassword ? '關閉' : '取消' }}
+          </BaseButton>
+          <BaseButton
+            v-if="!newGeneratedPassword"
+            variant="primary"
+            :icon="KeyIcon"
+            @click="executePasswordReset"
+            class="flex-1"
+          >
+            確認重置
           </BaseButton>
         </div>
       </div>

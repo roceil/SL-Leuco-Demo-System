@@ -396,7 +396,7 @@ const getBoardingStatusColor = (status: typeof BoardingStatus[keyof typeof Board
                     :key="schedule.id"
                     :value="schedule.id"
                   >
-                    {{ schedule.departureTime }} - {{ schedule.shipName }} ({{ getRouteName(schedule.route) }})
+                    {{ schedule.departureTime }} - {{ schedule.shipName }} ({{ getRouteName(schedule.routeSegmentId) }})
                   </option>
                 </select>
               </div>

@@ -1,42 +1,25 @@
 import { defineStore } from 'pinia'
-import { ref, computed, watch } from 'vue'
-import type { TicketType } from '@/types/ticket'
-import { getFromStorage, saveToStorage, STORAGE_KEYS } from '@/composables/useLocalStorage'
-
-// Mock 資料
-const MOCK_TICKET_TYPES: TicketType[] = [
-  {
-    id: 'ticket-1',
-    name: '全票',
-    basePrice: 230,
-    discount: 0,
-    createdAt: '2024-01-10T00:00:00.000Z',
-    updatedAt: '2024-01-10T00:00:00.000Z'
-  },
-  {
-    id: 'ticket-2',
-    name: '半票',
-    basePrice: 230,
-    discount: 115,
-    createdAt: '2024-01-10T00:00:00.000Z',
-    updatedAt: '2024-01-10T00:00:00.000Z'
-  },
-  {
-    id: 'ticket-3',
-    name: '優待票',
-    basePrice: 230,
-    discount: 45,
-    createdAt: '2024-01-10T00:00:00.000Z',
-    updatedAt: '2024-01-10T00:00:00.000Z'
-  }
-]
+import { ref, computed } from 'vue'
+import type { TicketType, TicketPriceHistory } from '@/types/ticket'
+import { apiGet, apiPut } from '@/composables/useLocalStorage'
 
 export const useTicketStore = defineStore('ticket', () => {
-  // State - 從 localStorage 讀取，如果沒有則使用 MOCK 資料
-  const ticketTypes = ref<TicketType[]>(
-    getFromStorage(STORAGE_KEYS.TICKET_TYPES, [...MOCK_TICKET_TYPES])
-  )
+  const isLoading = ref(false)
+  const ticketTypes = ref<TicketType[]>([])
+  const priceHistory = ref<TicketPriceHistory[]>([])
   const selectedTicketTypeId = ref<string | null>(null)
+
+  async function init() {
+    isLoading.value = true
+    try {
+      ;[ticketTypes.value, priceHistory.value] = await Promise.all([
+        apiGet<TicketType[]>('ticket_types'),
+        apiGet<TicketPriceHistory[]>('ticket_price_history')
+      ])
+    } finally {
+      isLoading.value = false
+    }
+  }
 
   // Getters
   const selectedTicketType = computed(() => {
@@ -44,13 +27,36 @@ export const useTicketStore = defineStore('ticket', () => {
     return ticketTypes.value.find((t) => t.id === selectedTicketTypeId.value) || null
   })
 
-  // Actions
+  function getTicketsByRoute(fromPortId: string, toPortId: string): TicketType[] {
+    return ticketTypes.value.filter(
+      (t) => t.route.from === fromPortId && t.route.to === toPortId
+    )
+  }
+
+  function getPriceHistory(ticketTypeId: string): TicketPriceHistory[] {
+    return priceHistory.value
+      .filter((h) => h.ticketTypeId === ticketTypeId)
+      .sort((a, b) => new Date(b.effectiveDate).getTime() - new Date(a.effectiveDate).getTime())
+  }
+
+  function getEffectivePrice(ticketTypeId: string, date: Date): TicketPriceHistory | null {
+    const history = priceHistory.value
+      .filter((h) => h.ticketTypeId === ticketTypeId)
+      .filter((h) => new Date(h.effectiveDate) <= date)
+      .sort((a, b) => new Date(b.effectiveDate).getTime() - new Date(a.effectiveDate).getTime())
+
+    return history[0] || null
+  }
+
+  // Actions - TicketType
   function selectTicketType(ticketTypeId: string | null) {
     selectedTicketTypeId.value = ticketTypeId
   }
 
   function createTicketType(
-    ticketType: Omit<TicketType, 'id' | 'createdAt' | 'updatedAt'>
+    ticketType: Omit<TicketType, 'id' | 'createdAt' | 'updatedAt'>,
+    createHistory: boolean = true,
+    createdBy?: string
   ): TicketType {
     const newTicketType: TicketType = {
       ...ticketType,
@@ -59,20 +65,54 @@ export const useTicketStore = defineStore('ticket', () => {
       updatedAt: new Date().toISOString()
     }
     ticketTypes.value.push(newTicketType)
+    apiPut('ticket_types', ticketTypes.value)
+
+    if (createHistory && createdBy) {
+      createPriceHistory({
+        ticketTypeId: newTicketType.id,
+        facePrice: ticketType.facePrice,
+        segmentDiscounts: ticketType.segmentDiscounts,
+        effectiveDate: new Date().toISOString(),
+        createdBy,
+        note: '建立票種'
+      })
+    }
+
     return newTicketType
   }
 
   function updateTicketType(
     ticketTypeId: string,
-    updates: Partial<Omit<TicketType, 'id' | 'createdAt'>>
+    updates: Partial<Omit<TicketType, 'id' | 'createdAt'>>,
+    createHistory: boolean = false,
+    updatedBy?: string
   ) {
     const index = ticketTypes.value.findIndex((t) => t.id === ticketTypeId)
     if (index !== -1) {
+      const oldTicket = ticketTypes.value[index]
+
       ticketTypes.value[index] = {
-        ...ticketTypes.value[index],
+        ...oldTicket,
         ...updates,
         updatedAt: new Date().toISOString()
       } as TicketType
+      apiPut('ticket_types', ticketTypes.value)
+
+      const updatedTicket = ticketTypes.value[index]
+      const priceChanged =
+        (updates.facePrice !== undefined && updates.facePrice !== oldTicket.facePrice) ||
+        updates.segmentDiscounts !== undefined
+
+      if (createHistory && priceChanged && updatedBy) {
+        createPriceHistory({
+          ticketTypeId,
+          facePrice: updatedTicket.facePrice,
+          segmentDiscounts: updatedTicket.segmentDiscounts,
+          effectiveDate: new Date().toISOString(),
+          createdBy: updatedBy,
+          note: '更新票價'
+        })
+      }
     }
   }
 
@@ -80,33 +120,46 @@ export const useTicketStore = defineStore('ticket', () => {
     const index = ticketTypes.value.findIndex((t) => t.id === ticketTypeId)
     if (index !== -1) {
       ticketTypes.value.splice(index, 1)
-      if (selectedTicketTypeId.value === ticketTypeId) {
-        selectedTicketTypeId.value = null
-      }
+      if (selectedTicketTypeId.value === ticketTypeId) selectedTicketTypeId.value = null
+      priceHistory.value = priceHistory.value.filter((h) => h.ticketTypeId !== ticketTypeId)
+      apiPut('ticket_types', ticketTypes.value)
+      apiPut('ticket_price_history', priceHistory.value)
     }
   }
 
-  // 自動持久化：監聽資料變化並儲存到 localStorage
-  watch(
-    ticketTypes,
-    (newTicketTypes) => {
-      saveToStorage(STORAGE_KEYS.TICKET_TYPES, newTicketTypes)
-    },
-    { deep: true }
-  )
+  // Actions - PriceHistory
+  function createPriceHistory(
+    history: Omit<TicketPriceHistory, 'id' | 'createdAt'>
+  ): TicketPriceHistory {
+    const newHistory: TicketPriceHistory = {
+      ...history,
+      id: `price-history-${Date.now()}`,
+      createdAt: new Date().toISOString()
+    }
+    priceHistory.value.push(newHistory)
+    apiPut('ticket_price_history', priceHistory.value)
+    return newHistory
+  }
 
   return {
     // State
+    isLoading,
     ticketTypes,
+    priceHistory,
     selectedTicketTypeId,
 
     // Getters
     selectedTicketType,
+    getTicketsByRoute,
+    getPriceHistory,
+    getEffectivePrice,
 
     // Actions
+    init,
     selectTicketType,
     createTicketType,
     updateTicketType,
-    deleteTicketType
+    deleteTicketType,
+    createPriceHistory
   }
 })

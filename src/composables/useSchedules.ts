@@ -1,13 +1,22 @@
 import { ref, computed } from 'vue'
 import type { Schedule, ScheduleFormData, ScheduleStatistics } from '@/types/schedule'
-import { ScheduleType, ScheduleStatus, RouteDirection } from '@/types/schedule'
-import { mockSchedules } from '@/constants/mockSchedules'
+import { ScheduleType, ScheduleStatus } from '@/types/schedule'
 import { useShips } from './useShips'
+import { useRouteStore } from '@/stores/route'
+import { apiGet, apiPut } from './useLocalStorage'
 
-const schedules = ref<Schedule[]>([...mockSchedules])
+// 模組級別共享狀態
+const schedules = ref<Schedule[]>([])
+
+/** 從 /api/schedules 初始化船班資料 */
+export async function initSchedules(): Promise<void> {
+  const data = await apiGet<Schedule[]>('schedules')
+  schedules.value = data
+}
 
 export function useSchedules() {
   const { getShipById } = useShips()
+  const routeStore = useRouteStore()
 
   // 取得所有船班
   const getAllSchedules = computed(() => schedules.value)
@@ -49,7 +58,7 @@ export function useSchedules() {
       type: formData.type,
       shipId: formData.shipId,
       shipName: ship.name,
-      route: formData.route,
+      routeSegmentId: formData.routeSegmentId,
       departureTime: formData.departureTime,
       date: formData.date,
       isDaily: formData.isDaily,
@@ -62,6 +71,7 @@ export function useSchedules() {
     }
 
     schedules.value.push(newSchedule)
+    apiPut('schedules', schedules.value)
     return newSchedule
   }
 
@@ -81,7 +91,7 @@ export function useSchedules() {
       type: formData.type,
       shipId: formData.shipId,
       shipName: ship.name,
-      route: formData.route,
+      routeSegmentId: formData.routeSegmentId,
       departureTime: formData.departureTime,
       date: formData.date,
       isDaily: formData.isDaily,
@@ -92,6 +102,7 @@ export function useSchedules() {
       description: formData.description,
       updatedAt: new Date().toISOString()
     }
+    apiPut('schedules', schedules.value)
     return true
   }
 
@@ -101,6 +112,7 @@ export function useSchedules() {
     if (index === -1) return false
 
     schedules.value.splice(index, 1)
+    apiPut('schedules', schedules.value)
     return true
   }
 
@@ -111,6 +123,7 @@ export function useSchedules() {
 
     schedule.status = status
     schedule.updatedAt = new Date().toISOString()
+    apiPut('schedules', schedules.value)
     return true
   }
 
@@ -126,9 +139,16 @@ export function useSchedules() {
     }
   })
 
-  // 取得航線名稱
-  const getRouteName = (route: RouteDirection): string => {
-    return route === RouteDirection.TO_ISLAND ? '東港 → 小琉球' : '小琉球 → 東港'
+  // 取得航段名稱
+  const getRouteName = (routeSegmentId: string): string => {
+    const segment = routeStore.getRouteSegmentWithPorts(routeSegmentId)
+    if (!segment) return '未知航段'
+    return `${segment.fromPort.name} → ${segment.toPort.name}`
+  }
+
+  // 取得航段資訊
+  const getRouteSegment = (routeSegmentId: string) => {
+    return routeStore.getRouteSegmentWithPorts(routeSegmentId)
   }
 
   return {
@@ -143,7 +163,7 @@ export function useSchedules() {
     deleteSchedule,
     updateScheduleStatus,
     getRouteName,
-    RouteDirection,
+    getRouteSegment,
     ScheduleType,
     ScheduleStatus
   }

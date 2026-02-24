@@ -19,7 +19,7 @@ export interface WhitelistEntry {
 export interface SpecialTicketType {
   id: string
   name: string
-  basePrice: number
+  facePrice: number
   discount: number
   description?: string // 票種說明
   isSpecial: boolean // 是否為特殊票種

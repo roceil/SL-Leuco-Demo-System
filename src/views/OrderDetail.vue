@@ -1,431 +1,270 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import QRCode from 'qrcode'
+import { useOrderStore } from '@/stores/order'
+import { useTicketStore } from '@/stores/ticket'
+import { useAuthStore } from '@/stores/auth'
+import { usePayment } from '@/composables/usePayment'
+import { useSidebar } from '@/composables/useSidebar'
+import { useTheme } from '@/composables/useTheme'
 import Navbar from '@/components/Navbar.vue'
 import Sidebar from '@/components/Sidebar.vue'
 import PageContainer from '@/components/ui/PageContainer.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
-import { useSidebar } from '@/composables/useSidebar'
-import { useTheme } from '@/composables/useTheme'
-import { useOrders } from '@/composables/useOrders'
-import type { SavedOrder, TicketPassenger, TicketStatus } from '@/constants/mockOrders'
+import BaseInput from '@/components/ui/BaseInput.vue'
+import type { InvoiceInfo, PassengerInfo, PaymentMethod } from '@/types/order'
+import { validateIssueTicket } from '@/types/order'
 import {
   DocumentTextIcon,
   ArrowLeftIcon,
-  PencilIcon,
-  TrashIcon,
-  CheckIcon,
-  XMarkIcon,
+  TicketIcon,
   PrinterIcon,
-  QrCodeIcon
+  XCircleIcon,
+  PlusIcon,
+  TrashIcon
 } from '@heroicons/vue/24/outline'
 
-const { isCollapsed } = useSidebar()
-const { theme } = useTheme()
 const route = useRoute()
 const router = useRouter()
-const qrCodeDataUrl = ref<string>('')
-const { getOrderByNumber, updateOrder } = useOrders()
+const orderStore = useOrderStore()
+const ticketStore = useTicketStore()
+const authStore = useAuthStore()
+const payment = usePayment()
+const { isCollapsed } = useSidebar()
+const { theme } = useTheme()
 
-interface Ticket {
-  id: string
-  type: 'full' | 'half'
-  price: number
-  status: '未取票' | '已取票' | '已登船' | '已取消'
-  passengerName: string
-  passengerId: string
-  isEditing: boolean
-}
-
-const order = ref<SavedOrder | null>(null)
-const tickets = ref<Ticket[]>([])
+// 訂單資料
+const orderId = ref<string>('')
 const orderNotFound = ref(false)
 
-// 從訂單數據生成票券列表
-const generateTickets = (orderData: SavedOrder): Ticket[] => {
-  const ticketList: Ticket[] = []
-  const fullTicketPrice = 250
-  const halfTicketPrice = 125
-  const ticketPassengers = orderData.ticketPassengers || []
-  const ticketStatuses = orderData.ticketStatuses || []
+// 付款表單
+const showPaymentForm = ref(false)
+const paymentAmount = ref(0)
+const paymentMethod = ref<PaymentMethod>('cash')
+const paymentNote = ref('')
 
-  // 生成全票
-  for (let i = 0; i < orderData.tickets.full; i++) {
-    const ticketId = `${orderData.orderNumber}-F${i + 1}`
-    const passengerInfo = ticketPassengers.find(p => p.ticketId === ticketId)
-    const statusInfo = ticketStatuses.find(s => s.ticketId === ticketId)
+// 發票表單
+const showInvoiceForm = ref(false)
+const invoiceFormData = ref<InvoiceInfo>({
+  type: '二聯式'
+})
 
-    ticketList.push({
-      id: ticketId,
-      type: 'full',
-      price: fullTicketPrice,
-      status: statusInfo?.status || '未取票',
-      passengerName: passengerInfo?.passengerName || '',
-      passengerId: passengerInfo?.passengerId || '',
-      isEditing: false
-    })
-  }
+// 乘客表單
+const showPassengerForm = ref(false)
+const passengerFormData = ref<Partial<PassengerInfo>>({
+  name: '',
+  idNumber: '',
+  phone: '',
+  isResident: false,
+  ticketTypeId: '',
+  hasBoarded: false
+})
 
-  // 生成半票
-  for (let i = 0; i < orderData.tickets.half; i++) {
-    const ticketId = `${orderData.orderNumber}-H${i + 1}`
-    const passengerInfo = ticketPassengers.find(p => p.ticketId === ticketId)
-    const statusInfo = ticketStatuses.find(s => s.ticketId === ticketId)
+const currentOrder = computed(() => orderStore.selectedOrder)
 
-    ticketList.push({
-      id: ticketId,
-      type: 'half',
-      price: halfTicketPrice,
-      status: statusInfo?.status || '未取票',
-      passengerName: passengerInfo?.passengerName || '',
-      passengerId: passengerInfo?.passengerId || '',
-      isEditing: false
-    })
-  }
-
-  return ticketList
-}
-
-// 載入訂單詳細資訊
-const loadOrderDetail = () => {
+// 載入訂單
+function loadOrder() {
   const orderNumber = route.params.orderNumber as string
-  const foundOrder = getOrderByNumber(orderNumber)
+  const order = orderStore.getOrderByNumber(orderNumber)
 
-  if (foundOrder) {
-    order.value = foundOrder
-    tickets.value = generateTickets(foundOrder)
-    generateQRCode(foundOrder)
+  if (order) {
+    orderId.value = order.id
+    orderStore.selectOrder(order.id)
+    orderNotFound.value = false
   } else {
     orderNotFound.value = true
   }
 }
 
-// 生成 QR Code
-const generateQRCode = async (orderData: SavedOrder) => {
-  try {
-    const qrData = JSON.stringify({
-      orderNumber: orderData.orderNumber,
-      distributor: orderData.distributor || orderData.orderOwnerName,
-      bookerName: orderData.bookerName,
-      outboundDate: orderData.outboundDate,
-      outboundTime: orderData.outboundTime,
-      tickets: {
-        full: orderData.tickets.full,
-        half: orderData.tickets.half
-      },
-      status: orderData.status
-    })
-
-    const dataUrl = await QRCode.toDataURL(qrData, {
-      width: 200,
-      margin: 2,
-      color: {
-        dark: '#000000',
-        light: '#FFFFFF'
-      }
-    })
-
-    qrCodeDataUrl.value = dataUrl
-  } catch (error) {
-    console.error('生成 QR Code 失敗:', error)
-  }
+// 返回列表
+function goBack() {
+  router.push('/order-management')
 }
 
-// 計算統計數據
-const ticketStats = computed(() => {
-  const activeTickets = tickets.value.filter(t => t.status !== '已取消')
-  const cancelledTickets = tickets.value.filter(t => t.status === '已取消')
+// ============ 付款功能 ============
 
-  const activeFull = activeTickets.filter(t => t.type === 'full').length
-  const activeHalf = activeTickets.filter(t => t.type === 'half').length
-  const cancelledFull = cancelledTickets.filter(t => t.type === 'full').length
-  const cancelledHalf = cancelledTickets.filter(t => t.type === 'half').length
-
-  const activeTotal = activeTickets.reduce((sum, t) => sum + t.price, 0)
-  const cancelledTotal = cancelledTickets.reduce((sum, t) => sum + t.price, 0)
-
-  const ticketsWithPassenger = activeTickets.filter(t => t.passengerName && t.passengerId).length
-
-  return {
-    activeFull,
-    activeHalf,
-    cancelledFull,
-    cancelledHalf,
-    activeTotal,
-    cancelledTotal,
-    totalTickets: tickets.value.length,
-    activeCount: activeTickets.length,
-    cancelledCount: cancelledTickets.length,
-    ticketsWithPassenger,
-    ticketsWithoutPassenger: activeTickets.length - ticketsWithPassenger
-  }
-})
-
-// 檢查是否有任何票券正在編輯
-const hasEditingTicket = computed(() => {
-  return tickets.value.some(t => t.isEditing)
-})
-
-// 開始編輯單張票券
-const startEditTicket = (ticketId: string) => {
-  const ticket = tickets.value.find(t => t.id === ticketId)
-  if (ticket) {
-    ticket.isEditing = true
-  }
+function openPaymentForm() {
+  if (!currentOrder.value) return
+  paymentAmount.value = currentOrder.value.paymentInfo.remainingAmount
+  paymentMethod.value = currentOrder.value.paymentInfo.paymentMethod
+  paymentNote.value = ''
+  showPaymentForm.value = true
 }
 
-// 取消編輯單張票券
-const cancelEditTicket = (ticketId: string) => {
-  const ticket = tickets.value.find(t => t.id === ticketId)
-  if (!ticket) return
+function savePayment() {
+  if (!currentOrder.value) return
 
-  const orderNumber = route.params.orderNumber as string
-  const foundOrder = getOrderByNumber(orderNumber)
-  if (foundOrder && foundOrder.ticketPassengers) {
-    const passengerInfo = foundOrder.ticketPassengers.find(p => p.ticketId === ticketId)
-    if (passengerInfo) {
-      ticket.passengerName = passengerInfo.passengerName
-      ticket.passengerId = passengerInfo.passengerId
-    } else {
-      ticket.passengerName = ''
-      ticket.passengerId = ''
-    }
-  }
+  const validation = payment.validatePaymentAmount(
+    paymentAmount.value,
+    currentOrder.value.paymentInfo.remainingAmount
+  )
 
-  ticket.isEditing = false
-}
-
-// 保存單張票券編輯
-const saveEditTicket = (ticketId: string) => {
-  const ticket = tickets.value.find(t => t.id === ticketId)
-  if (!ticket) return
-
-  if (!ticket.passengerName.trim() || !ticket.passengerId.trim()) {
-    alert('請填寫乘客姓名和身分證字號')
+  if (!validation.isValid) {
+    alert(validation.error)
     return
   }
 
-  const idPattern = /^[A-Z][12]\d{8}$/
-  if (!idPattern.test(ticket.passengerId.toUpperCase())) {
-    alert('身分證字號格式不正確')
-    return
+  const record = payment.createPaymentRecord(
+    paymentAmount.value,
+    paymentMethod.value,
+    authStore.currentUser?.id || 'system',
+    paymentNote.value
+  )
+
+  const success = orderStore.addPayment(currentOrder.value.id, record)
+
+  if (success) {
+    alert('付款記錄新增成功')
+    showPaymentForm.value = false
+  } else {
+    alert('付款記錄新增失敗')
   }
-
-  ticket.isEditing = false
-  savePassengerInfoToLocalStorage()
-  alert('乘客資訊已保存')
 }
 
-// 全部編輯
-const editAllTickets = () => {
-  const activeTickets = tickets.value.filter(t => t.status !== '已取消')
-  activeTickets.forEach(ticket => {
-    ticket.isEditing = true
-  })
+// ============ 發票功能 ============
+
+function openInvoiceForm() {
+  if (!currentOrder.value?.invoiceInfo) {
+    invoiceFormData.value = { type: '二聯式' }
+  } else {
+    invoiceFormData.value = { ...currentOrder.value.invoiceInfo }
+  }
+  showInvoiceForm.value = true
 }
 
-// 保存全部編輯
-const saveAllTickets = () => {
-  const editingTickets = tickets.value.filter(t => t.isEditing)
+function saveInvoice() {
+  if (!currentOrder.value) return
 
-  for (const ticket of editingTickets) {
-    if (!ticket.passengerName.trim() || !ticket.passengerId.trim()) {
-      alert(`票券 ${ticket.id} 的乘客資訊未完整填寫`)
-      return
-    }
-
-    const idPattern = /^[A-Z][12]\d{8}$/
-    if (!idPattern.test(ticket.passengerId.toUpperCase())) {
-      alert(`票券 ${ticket.id} 的身分證字號格式不正確`)
+  // 驗證三聯式必填欄位
+  if (invoiceFormData.value.type === '三聯式') {
+    if (!invoiceFormData.value.taxId || !invoiceFormData.value.companyName) {
+      alert('三聯式發票需要填寫統一編號和公司名稱')
       return
     }
   }
 
-  editingTickets.forEach(ticket => {
-    ticket.isEditing = false
-  })
+  orderStore.updateInvoiceInfo(
+    currentOrder.value.id,
+    invoiceFormData.value,
+    authStore.currentUser?.id || 'system'
+  )
 
-  savePassengerInfoToLocalStorage()
-  alert('所有乘客資訊已保存')
+  alert('發票資訊已更新')
+  showInvoiceForm.value = false
 }
 
-// 取消編輯狀態
-const cancelAllEdits = () => {
-  const confirmed = confirm('確定要取消編輯嗎？未保存的變更將會遺失。')
-  if (!confirmed) return
+// ============ 乘客功能 ============
 
-  const orderNumber = route.params.orderNumber as string
-  const foundOrder = getOrderByNumber(orderNumber)
-  if (foundOrder) {
-    tickets.value = generateTickets(foundOrder)
+function openPassengerForm() {
+  passengerFormData.value = {
+    name: '',
+    idNumber: '',
+    phone: '',
+    isResident: false,
+    ticketTypeId: '',
+    hasBoarded: false
   }
+  showPassengerForm.value = true
 }
 
-// 取消全部票券
-const cancelAllTickets = () => {
-  const activeTickets = tickets.value.filter(t => t.status !== '已取消')
+function savePassenger() {
+  if (!currentOrder.value) return
 
-  if (activeTickets.length === 0) {
-    alert('沒有有效的票券可以取消')
+  if (!passengerFormData.value.name) {
+    alert('請輸入乘客姓名')
     return
   }
 
-  const confirmed = confirm(`確定要取消所有 ${activeTickets.length} 張有效票券嗎？此操作無法復原。`)
-  if (!confirmed) return
+  if (!passengerFormData.value.ticketTypeId) {
+    alert('請選擇票種')
+    return
+  }
 
-  activeTickets.forEach(ticket => {
-    ticket.status = '已取消'
-    ticket.isEditing = false
-  })
+  orderStore.addPassenger(
+    currentOrder.value.id,
+    passengerFormData.value as Omit<PassengerInfo, 'id'>,
+    authStore.currentUser?.id || 'system'
+  )
 
-  saveTicketStatusesToLocalStorage()
-  updateOrderInLocalStorage()
-  alert(`已取消 ${activeTickets.length} 張票券`)
+  alert('乘客已新增')
+  showPassengerForm.value = false
 }
 
-// 保存票券狀態到 localStorage
-const saveTicketStatusesToLocalStorage = () => {
-  if (!order.value) return
+function removePassenger(passengerId: string) {
+  if (!currentOrder.value) return
 
-  const ticketStatuses: TicketStatus[] = tickets.value.map(t => ({
-    ticketId: t.id,
-    status: t.status
-  }))
-
-  order.value.ticketStatuses = ticketStatuses
-  updateOrder(order.value.orderNumber, order.value)
-}
-
-// 保存乘客資訊到 localStorage
-const savePassengerInfoToLocalStorage = () => {
-  if (!order.value) return
-
-  const ticketPassengers: TicketPassenger[] = tickets.value
-    .filter(t => t.passengerName || t.passengerId)
-    .map(t => ({
-      ticketId: t.id,
-      passengerName: t.passengerName,
-      passengerId: t.passengerId
-    }))
-
-  order.value.ticketPassengers = ticketPassengers
-  updateOrder(order.value.orderNumber, order.value)
-}
-
-// 取消單張票券
-const cancelTicket = (ticketId: string) => {
-  const ticket = tickets.value.find(t => t.id === ticketId)
-  if (!ticket) return
-
-  const ticketType = ticket.type === 'full' ? '全票' : '半票'
-  const confirmed = confirm(`確定要取消此 ${ticketType} 嗎？\n票券編號: ${ticketId}`)
-
-  if (confirmed) {
-    ticket.status = '已取消'
-    ticket.isEditing = false
-    saveTicketStatusesToLocalStorage()
-    updateOrderInLocalStorage()
-    alert(`${ticketType} 已取消`)
+  if (confirm('確定要移除此乘客嗎？')) {
+    orderStore.removePassenger(
+      currentOrder.value.id,
+      passengerId,
+      authStore.currentUser?.id || 'system'
+    )
   }
 }
 
-// 更新 localStorage 中的訂單
-const updateOrderInLocalStorage = () => {
-  if (!order.value) return
+function getTicketName(ticketTypeId: string): string {
+  const ticket = ticketStore.ticketTypes.find(t => t.id === ticketTypeId)
+  return ticket?.name || ticketTypeId
+}
 
-  const activeTickets = tickets.value.filter(t => t.status !== '已取消')
-  const activeFull = activeTickets.filter(t => t.type === 'full').length
-  const activeHalf = activeTickets.filter(t => t.type === 'half').length
+// ============ 出票功能 ============
 
-  order.value.tickets.full = activeFull
-  order.value.tickets.half = activeHalf
+function issueTicket() {
+  if (!currentOrder.value) return
 
-  if (activeTickets.length === 0) {
-    order.value.status = '已取消'
+  const validation = validateIssueTicket(currentOrder.value)
+
+  if (!validation.isValid) {
+    alert('無法出票：\n' + validation.errors.join('\n'))
+    return
   }
 
-  updateOrder(order.value.orderNumber, order.value)
-}
-
-// 返回訂單列表
-const goBack = () => {
-  if (hasEditingTicket.value) {
-    const confirmed = confirm('有未保存的編輯內容，確定要離開嗎？')
-    if (!confirmed) return
+  if (!confirm('確定要出票嗎？出票後將無法修改乘客資訊。')) {
+    return
   }
-  router.push('/order-search')
-}
 
-// 列印票券
-const printTickets = () => {
-  window.print()
-}
+  const result = orderStore.issueTicket(
+    currentOrder.value.id,
+    authStore.currentUser?.id || 'system'
+  )
 
-// 取得狀態樣式
-const getStatusClass = (status: string) => {
-  const baseClasses = 'px-3 py-1 rounded-full text-xs font-medium'
-  switch (status) {
-    case '未取票':
-      return `${baseClasses} bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400`
-    case '已取票':
-      return `${baseClasses} bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400`
-    case '已登船':
-      return `${baseClasses} bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400`
-    case '已取消':
-      return `${baseClasses} bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400`
-    default:
-      return `${baseClasses} bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300`
+  if (result.success) {
+    alert('出票成功')
+  } else {
+    alert('出票失敗：' + result.error)
   }
 }
 
-// 取得票券類型標籤樣式
-const getTicketTypeClass = (type: string) => {
-  if (type === 'full') return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
-  if (type === 'half') return 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400'
-  return ''
+// ============ 列印簽單 ============
+
+function printReceipt() {
+  if (!currentOrder.value) return
+  // TODO: 實作列印功能
+  alert('列印功能開發中')
 }
 
 onMounted(() => {
-  loadOrderDetail()
+  loadOrder()
 })
 </script>
 
 <template>
   <div class="min-h-screen flex flex-col">
-    <Navbar username="管理員" />
+    <Navbar :username="authStore.currentUser?.username || '管理員'" />
 
     <div class="flex flex-1">
       <Sidebar :active-route="$route.path.slice(1)" />
 
-      <main
-        :class="[
-          'flex-1 transition-all duration-300',
-          isCollapsed ? 'ml-20' : 'ml-64'
-        ]"
-      >
+      <main :class="['flex-1 transition-all duration-300', isCollapsed ? 'ml-20' : 'ml-64']">
         <!-- 訂單未找到 -->
-        <PageContainer
-          v-if="orderNotFound"
-          title="訂單未找到"
-          subtitle="找不到指定的訂單"
-          :icon="DocumentTextIcon"
-          max-width="lg"
-        >
+        <PageContainer v-if="orderNotFound" title="訂單不存在" :icon="XCircleIcon">
           <BaseCard padding="lg" class="text-center">
-            <DocumentTextIcon class="w-16 h-16 mx-auto mb-4 opacity-30" :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-400'" />
-            <h2 class="text-2xl font-bold mb-4" :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'">
-              訂單未找到
-            </h2>
-            <p class="mb-6" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
-              找不到指定的訂單，請確認訂單編號是否正確
+            <XCircleIcon class="w-24 h-24 mx-auto mb-4 text-red-500" />
+            <p class="text-lg mb-6" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
+              找不到訂單編號：{{ route.params.orderNumber }}
             </p>
-            <BaseButton
-              variant="primary"
-              :icon="ArrowLeftIcon"
-              @click="goBack"
-            >
+            <BaseButton variant="primary" @click="goBack">
               返回訂單列表
             </BaseButton>
           </BaseCard>
@@ -433,359 +272,497 @@ onMounted(() => {
 
         <!-- 訂單詳細 -->
         <PageContainer
-          v-else-if="order"
-          title="訂單詳細"
-          :subtitle="`訂單編號：${order.orderNumber}`"
+          v-else-if="currentOrder"
+          :title="`訂單詳細 - ${currentOrder.orderNumber}`"
           :icon="DocumentTextIcon"
-          max-width="2xl"
         >
           <template #actions>
+            <BaseButton variant="secondary" :icon="ArrowLeftIcon" @click="goBack">
+              返回
+            </BaseButton>
             <BaseButton
-              variant="ghost"
-              :icon="ArrowLeftIcon"
-              @click="goBack"
+              v-if="!currentOrder.ticketIssuedAt"
+              variant="primary"
+              :icon="TicketIcon"
+              @click="issueTicket"
             >
-              返回列表
+              出票
+            </BaseButton>
+            <BaseButton variant="secondary" :icon="PrinterIcon" @click="printReceipt">
+              列印簽單
             </BaseButton>
           </template>
 
-          <!-- 訂單基本資訊 -->
-          <BaseCard title="訂單資訊" padding="lg" class="mb-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div>
-                <label class="block text-sm font-medium mb-1" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
-                  訂單編號
-                </label>
-                <p class="text-lg font-semibold font-mono" :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'">
-                  {{ order.orderNumber }}
-                </p>
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium mb-1" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
-                  訂單狀態
-                </label>
-                <span :class="getStatusClass(order.status)">
-                  {{ order.status }}
-                </span>
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium mb-1" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
-                  訂票單位
-                </label>
-                <p class="text-lg" :class="theme === 'dark' ? 'text-neutral-200' : 'text-neutral-800'">
-                  {{ order.distributor || order.orderOwnerName }}
-                </p>
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium mb-1" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
-                  訂票人姓名
-                </label>
-                <p class="text-lg" :class="theme === 'dark' ? 'text-neutral-200' : 'text-neutral-800'">
-                  {{ order.bookerName }}
-                </p>
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium mb-1" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
-                  訂票人電話
-                </label>
-                <p class="text-lg" :class="theme === 'dark' ? 'text-neutral-200' : 'text-neutral-800'">
-                  {{ order.bookerPhone }}
-                </p>
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium mb-1" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
-                  訂票時間
-                </label>
-                <p class="text-lg" :class="theme === 'dark' ? 'text-neutral-200' : 'text-neutral-800'">
-                  {{ new Date(order.createdAt).toLocaleString('zh-TW') }}
-                </p>
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium mb-1" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
-                  出發地
-                </label>
-                <p class="text-lg" :class="theme === 'dark' ? 'text-neutral-200' : 'text-neutral-800'">
-                  {{ order.departure }}
-                </p>
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium mb-1" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
-                  去程日期時間
-                </label>
-                <p class="text-lg" :class="theme === 'dark' ? 'text-neutral-200' : 'text-neutral-800'">
-                  {{ order.outboundDate }} {{ order.outboundTime }}
-                </p>
-              </div>
-
-              <div v-if="order.returnDate">
-                <label class="block text-sm font-medium mb-1" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
-                  回程日期時間
-                </label>
-                <p class="text-lg" :class="theme === 'dark' ? 'text-neutral-200' : 'text-neutral-800'">
-                  {{ order.returnDate }} {{ order.returnTime }}
-                </p>
-              </div>
-            </div>
-          </BaseCard>
-
-          <!-- 票券列表 -->
-          <BaseCard title="票券明細" padding="lg" class="mb-6">
-            <template #actions>
-              <div class="flex gap-3">
-                <template v-if="!hasEditingTicket">
-                  <BaseButton
-                    variant="outline"
-                    size="sm"
-                    :icon="PencilIcon"
-                    @click="editAllTickets"
-                  >
-                    編輯全部
-                  </BaseButton>
-                  <BaseButton
-                    variant="danger"
-                    size="sm"
-                    :icon="TrashIcon"
-                    @click="cancelAllTickets"
-                  >
-                    取消全部
-                  </BaseButton>
-                </template>
-                <template v-else>
-                  <BaseButton
-                    variant="primary"
-                    size="sm"
-                    :icon="CheckIcon"
-                    @click="saveAllTickets"
-                  >
-                    儲存
-                  </BaseButton>
-                  <BaseButton
-                    variant="ghost"
-                    size="sm"
-                    :icon="XMarkIcon"
-                    @click="cancelAllEdits"
-                  >
-                    取消編輯
-                  </BaseButton>
-                </template>
-              </div>
-            </template>
-
-            <div class="overflow-x-auto">
-              <table
-                class="w-full"
-                :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
-              >
-                <thead
-                  class="text-sm font-medium border-b"
-                  :class="theme === 'dark' ? 'border-secondary-800' : 'border-neutral-200'"
-                >
-                  <tr>
-                    <th class="text-left py-4 px-6">票券編號</th>
-                    <th class="text-left py-4 px-6">票種</th>
-                    <th class="text-left py-4 px-6">票價</th>
-                    <th class="text-left py-4 px-6">乘客姓名</th>
-                    <th class="text-left py-4 px-6">身分證字號</th>
-                    <th class="text-left py-4 px-6">狀態</th>
-                    <th class="text-right py-4 px-6">操作</th>
-                  </tr>
-                </thead>
-                <tbody
-                  v-if="tickets.length > 0"
-                  class="divide-y"
-                  :class="theme === 'dark' ? 'divide-secondary-800' : 'divide-neutral-200'"
-                >
-                  <tr
-                    v-for="ticket in tickets"
-                    :key="ticket.id"
-                    class="transition-colors"
-                    :class="[
-                      ticket.status === '已取消' ? 'opacity-50' : '',
-                      ticket.isEditing
-                        ? theme === 'dark' ? 'bg-primary-950/30' : 'bg-primary-50'
-                        : theme === 'dark' ? 'hover:bg-secondary-800' : 'hover:bg-neutral-50'
-                    ]"
-                  >
-                    <td class="py-4 px-6">
-                      <span class="font-mono text-sm">{{ ticket.id }}</span>
-                    </td>
-                    <td class="py-4 px-6">
-                      <span :class="['text-xs font-medium', getTicketTypeClass(ticket.type)]">
-                        {{ ticket.type === 'full' ? '全票' : '半票' }}
-                      </span>
-                    </td>
-                    <td class="py-4 px-6">
-                      <span class="font-semibold">NT$ {{ ticket.price }}</span>
-                    </td>
-                    <td class="py-4 px-6">
-                      <input
-                        v-if="ticket.isEditing"
-                        v-model="ticket.passengerName"
-                        type="text"
-                        placeholder="請輸入姓名"
-                        class="w-full px-3 py-2 rounded-lg border transition-all outline-none"
-                        :class="
-                          theme === 'dark'
-                            ? 'bg-secondary-800 border-primary-600 text-white focus:border-primary-500'
-                            : 'bg-white border-primary-500 text-neutral-900 focus:border-primary-600'
-                        "
-                      >
-                      <span v-else :class="[ticket.passengerName ? '' : 'text-neutral-400 italic']">
-                        {{ ticket.passengerName || '未填寫' }}
-                      </span>
-                    </td>
-                    <td class="py-4 px-6">
-                      <input
-                        v-if="ticket.isEditing"
-                        v-model="ticket.passengerId"
-                        type="text"
-                        placeholder="A123456789"
-                        maxlength="10"
-                        class="w-full px-3 py-2 rounded-lg border transition-all outline-none font-mono"
-                        :class="
-                          theme === 'dark'
-                            ? 'bg-secondary-800 border-primary-600 text-white focus:border-primary-500'
-                            : 'bg-white border-primary-500 text-neutral-900 focus:border-primary-600'
-                        "
-                      >
-                      <span v-else :class="[ticket.passengerId ? 'font-mono' : 'text-neutral-400 italic']">
-                        {{ ticket.passengerId || '未填寫' }}
-                      </span>
-                    </td>
-                    <td class="py-4 px-6">
-                      <span :class="getStatusClass(ticket.status)">
-                        {{ ticket.status }}
-                      </span>
-                    </td>
-                    <td class="py-4 px-6 text-right">
-                      <div class="flex justify-end gap-2">
-                        <template v-if="ticket.status !== '已取消'">
-                          <template v-if="ticket.isEditing">
-                            <BaseButton
-                              variant="primary"
-                              size="sm"
-                              @click="saveEditTicket(ticket.id)"
-                            >
-                              保存
-                            </BaseButton>
-                            <BaseButton
-                              variant="ghost"
-                              size="sm"
-                              @click="cancelEditTicket(ticket.id)"
-                            >
-                              取消
-                            </BaseButton>
-                          </template>
-                          <template v-else>
-                            <BaseButton
-                              variant="outline"
-                              size="sm"
-                              @click="startEditTicket(ticket.id)"
-                            >
-                              編輯
-                            </BaseButton>
-                            <BaseButton
-                              variant="danger"
-                              size="sm"
-                              @click="cancelTicket(ticket.id)"
-                            >
-                              取消票
-                            </BaseButton>
-                          </template>
-                        </template>
-                        <span v-else class="text-sm" :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-400'">
-                          已取消
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-                <tbody v-else>
-                  <tr>
-                    <td colspan="7" class="py-12 text-center">
-                      <div :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-400'">
-                        <DocumentTextIcon class="w-12 h-12 mx-auto mb-3 opacity-50" />
-                        <p class="text-lg font-medium">沒有票券資料</p>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </BaseCard>
-
-          <!-- 票券摘要與 QR Code -->
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- QR Code -->
-            <BaseCard title="訂單 QR Code" padding="lg">
-              <div class="flex justify-center">
-                <div v-if="qrCodeDataUrl" class="text-center">
-                  <div class="bg-white p-4 rounded-lg inline-block border-2" :class="theme === 'dark' ? 'border-secondary-700' : 'border-neutral-200'">
-                    <img :src="qrCodeDataUrl" alt="訂單 QR Code" class="w-48 h-48">
-                  </div>
-                  <p class="text-xs mt-3" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'">
-                    掃描此 QR Code 查看訂單資訊
+          <div class="space-y-6">
+            <!-- 訂單基本資訊 -->
+            <BaseCard title="訂單資訊" padding="lg">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <span class="text-sm" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
+                    訂單編號
+                  </span>
+                  <p class="font-medium" :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'">
+                    {{ currentOrder.orderNumber }}
                   </p>
                 </div>
-                <div v-else class="w-48 h-48 flex items-center justify-center">
-                  <QrCodeIcon class="w-16 h-16 opacity-30" :class="theme === 'dark' ? 'text-neutral-600' : 'text-neutral-300'" />
+                <div>
+                  <span class="text-sm" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
+                    訂單狀態
+                  </span>
+                  <p class="font-medium">
+                    <span
+                      :class="[
+                        'px-2 py-1 rounded text-sm',
+                        currentOrder.status === 'confirmed'
+                          ? 'bg-green-100 text-green-700'
+                          : currentOrder.status === 'pending'
+                            ? 'bg-amber-100 text-amber-700'
+                            : 'bg-gray-100 text-gray-700'
+                      ]"
+                    >
+                      {{ currentOrder.status === 'confirmed' ? '已確認' : currentOrder.status === 'pending' ? '待確認' : currentOrder.status }}
+                    </span>
+                  </p>
+                </div>
+                <div>
+                  <span class="text-sm" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
+                    客戶姓名
+                  </span>
+                  <p class="font-medium" :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'">
+                    {{ currentOrder.customerName }}
+                  </p>
+                </div>
+                <div>
+                  <span class="text-sm" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
+                    聯絡電話
+                  </span>
+                  <p class="font-medium" :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'">
+                    {{ currentOrder.customerPhone }}
+                  </p>
+                </div>
+                <div>
+                  <span class="text-sm" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
+                    航班
+                  </span>
+                  <p class="font-medium" :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'">
+                    {{ currentOrder.scheduleName }}
+                  </p>
+                </div>
+                <div v-if="currentOrder.ticketIssuedAt">
+                  <span class="text-sm" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
+                    出票時間
+                  </span>
+                  <p class="font-medium text-green-600">
+                    {{ new Date(currentOrder.ticketIssuedAt).toLocaleString('zh-TW') }}
+                  </p>
                 </div>
               </div>
             </BaseCard>
 
-            <!-- 票券統計 -->
-            <BaseCard title="有效票券" padding="lg">
+            <!-- 付款資訊 -->
+            <BaseCard title="付款資訊" padding="lg">
               <template #actions>
                 <BaseButton
-                  variant="outline"
+                  v-if="currentOrder.paymentInfo.remainingAmount > 0"
+                  variant="primary"
                   size="sm"
-                  :icon="PrinterIcon"
-                  @click="printTickets"
+                  :icon="PlusIcon"
+                  @click="openPaymentForm"
                 >
-                  列印
+                  新增付款
                 </BaseButton>
               </template>
 
               <div class="space-y-4">
-                <div class="flex justify-between">
-                  <span :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
-                    全票 x {{ ticketStats.activeFull }}
-                  </span>
-                  <span class="font-semibold" :class="theme === 'dark' ? 'text-neutral-200' : 'text-neutral-800'">
-                    NT$ {{ ticketStats.activeFull * 250 }}
-                  </span>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <span class="text-sm" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
+                      訂金
+                    </span>
+                    <p class="text-lg font-bold" :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'">
+                      NT$ {{ currentOrder.paymentInfo.deposit }}
+                    </p>
+                  </div>
+                  <div>
+                    <span class="text-sm" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
+                      尾款
+                    </span>
+                    <p class="text-lg font-bold" :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'">
+                      NT$ {{ currentOrder.paymentInfo.balance }}
+                    </p>
+                  </div>
+                  <div>
+                    <span class="text-sm" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
+                      折扣
+                    </span>
+                    <p class="text-lg font-bold text-amber-600">
+                      - NT$ {{ currentOrder.paymentInfo.discount }}
+                    </p>
+                  </div>
+                  <div>
+                    <span class="text-sm" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
+                      總金額
+                    </span>
+                    <p class="text-lg font-bold" :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'">
+                      NT$ {{ currentOrder.paymentInfo.totalAmount }}
+                    </p>
+                  </div>
                 </div>
-                <div class="flex justify-between">
-                  <span :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
-                    半票 x {{ ticketStats.activeHalf }}
-                  </span>
-                  <span class="font-semibold" :class="theme === 'dark' ? 'text-neutral-200' : 'text-neutral-800'">
-                    NT$ {{ ticketStats.activeHalf * 125 }}
-                  </span>
+
+                <div :class="['pt-4 border-t', theme === 'dark' ? 'border-secondary-800' : 'border-neutral-200']">
+                  <div class="grid grid-cols-2 gap-4">
+                    <div>
+                      <span class="text-sm" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
+                        已付金額
+                      </span>
+                      <p class="text-xl font-bold text-green-600">
+                        NT$ {{ currentOrder.paymentInfo.paidAmount }}
+                      </p>
+                    </div>
+                    <div>
+                      <span class="text-sm" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
+                        剩餘應付
+                      </span>
+                      <p class="text-xl font-bold text-red-600">
+                        NT$ {{ currentOrder.paymentInfo.remainingAmount }}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div class="flex justify-between">
-                  <span :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
-                    已填寫資訊 / 總票數
-                  </span>
-                  <span class="font-semibold" :class="theme === 'dark' ? 'text-neutral-200' : 'text-neutral-800'">
-                    {{ ticketStats.ticketsWithPassenger }} / {{ ticketStats.activeCount }}
-                  </span>
+
+                <!-- 付款記錄 -->
+                <div
+                  v-if="currentOrder.paymentInfo.paymentRecords.length > 0"
+                  :class="['pt-4 border-t', theme === 'dark' ? 'border-secondary-800' : 'border-neutral-200']"
+                >
+                  <h4 class="text-sm font-medium mb-3" :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'">
+                    付款記錄
+                  </h4>
+                  <div class="space-y-2">
+                    <div
+                      v-for="record in currentOrder.paymentInfo.paymentRecords"
+                      :key="record.id"
+                      :class="[
+                        'p-3 rounded-md flex justify-between items-center',
+                        theme === 'dark' ? 'bg-secondary-800' : 'bg-neutral-50'
+                      ]"
+                    >
+                      <div>
+                        <p class="font-medium" :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'">
+                          NT$ {{ record.amount }}
+                        </p>
+                        <p class="text-xs" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
+                          {{ payment.formatPaymentMethod(record.method) }} ·
+                          {{ new Date(record.paidAt).toLocaleString('zh-TW') }}
+                        </p>
+                        <p v-if="record.note" class="text-xs mt-1" :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-500'">
+                          {{ record.note }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="flex justify-between pt-4 mt-4 border-t" :class="theme === 'dark' ? 'border-secondary-800' : 'border-neutral-200'">
-                  <span class="font-semibold text-lg" :class="theme === 'dark' ? 'text-neutral-200' : 'text-neutral-700'">
-                    小計
-                  </span>
-                  <span class="font-bold text-xl text-green-500">
-                    NT$ {{ ticketStats.activeTotal }}
-                  </span>
+              </div>
+            </BaseCard>
+
+            <!-- 發票資訊 -->
+            <BaseCard title="發票資訊" padding="lg">
+              <template #actions>
+                <BaseButton variant="secondary" size="sm" @click="openInvoiceForm">
+                  {{ currentOrder.invoiceInfo ? '編輯發票' : '填寫發票' }}
+                </BaseButton>
+              </template>
+
+              <div v-if="currentOrder.invoiceInfo">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <span class="text-sm" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
+                      發票類型
+                    </span>
+                    <p class="font-medium" :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'">
+                      {{ currentOrder.invoiceInfo.type }}
+                    </p>
+                  </div>
+                  <div v-if="currentOrder.invoiceInfo.taxId">
+                    <span class="text-sm" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
+                      統一編號
+                    </span>
+                    <p class="font-medium" :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'">
+                      {{ currentOrder.invoiceInfo.taxId }}
+                    </p>
+                  </div>
+                  <div v-if="currentOrder.invoiceInfo.companyName">
+                    <span class="text-sm" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
+                      公司名稱
+                    </span>
+                    <p class="font-medium" :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'">
+                      {{ currentOrder.invoiceInfo.companyName }}
+                    </p>
+                  </div>
+                  <div v-if="currentOrder.invoiceInfo.editedAt">
+                    <span class="text-sm" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
+                      最後編輯時間
+                    </span>
+                    <p class="text-sm" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
+                      {{ new Date(currentOrder.invoiceInfo.editedAt).toLocaleString('zh-TW') }}
+                    </p>
+                  </div>
                 </div>
+              </div>
+              <p v-else :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-400'">
+                尚未填寫發票資訊
+              </p>
+            </BaseCard>
+
+            <!-- 乘客列表 -->
+            <BaseCard title="乘客列表" padding="lg">
+              <template #actions>
+                <BaseButton
+                  v-if="!currentOrder.ticketIssuedAt"
+                  variant="primary"
+                  size="sm"
+                  :icon="PlusIcon"
+                  @click="openPassengerForm"
+                >
+                  新增乘客
+                </BaseButton>
+              </template>
+
+              <div v-if="currentOrder.passengers.length > 0" class="space-y-3">
+                <div
+                  v-for="(passenger, index) in currentOrder.passengers"
+                  :key="passenger.id"
+                  :class="[
+                    'p-4 rounded-md',
+                    theme === 'dark' ? 'bg-secondary-800' : 'bg-neutral-50'
+                  ]"
+                >
+                  <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                      <div class="flex items-center gap-2 mb-2">
+                        <h4 class="font-medium" :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'">
+                          {{ index + 1 }}. {{ passenger.name }}
+                        </h4>
+                        <span
+                          v-if="passenger.isResident"
+                          class="px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-700"
+                        >
+                          居民
+                        </span>
+                      </div>
+                      <div class="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <span :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
+                            票種：
+                          </span>
+                          <span :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'">
+                            {{ getTicketName(passenger.ticketTypeId) }}
+                          </span>
+                        </div>
+                        <div v-if="passenger.phone">
+                          <span :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
+                            電話：
+                          </span>
+                          <span :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'">
+                            {{ passenger.phone }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <BaseButton
+                      v-if="!currentOrder.ticketIssuedAt"
+                      variant="danger"
+                      size="sm"
+                      :icon="TrashIcon"
+                      @click="removePassenger(passenger.id)"
+                    >
+                      移除
+                    </BaseButton>
+                  </div>
+                </div>
+              </div>
+              <p v-else :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-400'">
+                尚未新增乘客
+              </p>
+            </BaseCard>
+          </div>
+
+          <!-- 新增付款表單 Modal -->
+          <div
+            v-if="showPaymentForm"
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            @click.self="showPaymentForm = false"
+          >
+            <BaseCard title="新增付款記錄" padding="lg" class="w-full max-w-md">
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium mb-2" :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'">
+                    付款金額 <span class="text-red-500">*</span>
+                  </label>
+                  <BaseInput v-model.number="paymentAmount" type="number" min="0" :max="currentOrder.paymentInfo.remainingAmount" />
+                  <p class="text-xs mt-1" :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-500'">
+                    剩餘應付：NT$ {{ currentOrder.paymentInfo.remainingAmount }}
+                  </p>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium mb-2" :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'">
+                    付款方式 <span class="text-red-500">*</span>
+                  </label>
+                  <select
+                    v-model="paymentMethod"
+                    :class="[
+                      'w-full px-4 py-2.5 rounded-md border',
+                      theme === 'dark'
+                        ? 'bg-secondary-900 border-secondary-800 text-white'
+                        : 'bg-white border-neutral-200 text-neutral-900'
+                    ]"
+                  >
+                    <option value="cash">現金</option>
+                    <option value="credit_card">信用卡</option>
+                    <option value="transfer">轉帳</option>
+                    <option value="other">其他</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium mb-2" :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'">
+                    備註
+                  </label>
+                  <BaseInput v-model="paymentNote" placeholder="選填" />
+                </div>
+              </div>
+
+              <div class="flex gap-3 mt-6">
+                <BaseButton variant="secondary" @click="showPaymentForm = false" class="flex-1">
+                  取消
+                </BaseButton>
+                <BaseButton variant="primary" @click="savePayment" class="flex-1">
+                  確認新增
+                </BaseButton>
+              </div>
+            </BaseCard>
+          </div>
+
+          <!-- 發票資訊表單 Modal -->
+          <div
+            v-if="showInvoiceForm"
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            @click.self="showInvoiceForm = false"
+          >
+            <BaseCard title="發票資訊" padding="lg" class="w-full max-w-md">
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium mb-2" :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'">
+                    發票類型 <span class="text-red-500">*</span>
+                  </label>
+                  <select
+                    v-model="invoiceFormData.type"
+                    :class="[
+                      'w-full px-4 py-2.5 rounded-md border',
+                      theme === 'dark'
+                        ? 'bg-secondary-900 border-secondary-800 text-white'
+                        : 'bg-white border-neutral-200 text-neutral-900'
+                    ]"
+                  >
+                    <option value="二聯式">二聯式</option>
+                    <option value="三聯式">三聯式</option>
+                    <option value="電子發票">電子發票</option>
+                  </select>
+                </div>
+
+                <div v-if="invoiceFormData.type === '三聯式'">
+                  <label class="block text-sm font-medium mb-2" :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'">
+                    統一編號 <span class="text-red-500">*</span>
+                  </label>
+                  <BaseInput v-model="invoiceFormData.taxId" placeholder="請輸入統一編號" />
+                </div>
+
+                <div v-if="invoiceFormData.type === '三聯式'">
+                  <label class="block text-sm font-medium mb-2" :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'">
+                    公司名稱 <span class="text-red-500">*</span>
+                  </label>
+                  <BaseInput v-model="invoiceFormData.companyName" placeholder="請輸入公司名稱" />
+                </div>
+              </div>
+
+              <div class="flex gap-3 mt-6">
+                <BaseButton variant="secondary" @click="showInvoiceForm = false" class="flex-1">
+                  取消
+                </BaseButton>
+                <BaseButton variant="primary" @click="saveInvoice" class="flex-1">
+                  儲存
+                </BaseButton>
+              </div>
+            </BaseCard>
+          </div>
+
+          <!-- 新增乘客表單 Modal -->
+          <div
+            v-if="showPassengerForm"
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            @click.self="showPassengerForm = false"
+          >
+            <BaseCard title="新增乘客" padding="lg" class="w-full max-w-md">
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium mb-2" :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'">
+                    姓名 <span class="text-red-500">*</span>
+                  </label>
+                  <BaseInput v-model="passengerFormData.name" placeholder="請輸入姓名" />
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium mb-2" :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'">
+                    票種 <span class="text-red-500">*</span>
+                  </label>
+                  <select
+                    v-model="passengerFormData.ticketTypeId"
+                    :class="[
+                      'w-full px-4 py-2.5 rounded-md border',
+                      theme === 'dark'
+                        ? 'bg-secondary-900 border-secondary-800 text-white'
+                        : 'bg-white border-neutral-200 text-neutral-900'
+                    ]"
+                  >
+                    <option value="">請選擇票種</option>
+                    <option v-for="ticket in ticketStore.ticketTypes" :key="ticket.id" :value="ticket.id">
+                      {{ ticket.name }} - NT$ {{ ticket.facePrice }}
+                    </option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium mb-2" :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'">
+                    電話
+                  </label>
+                  <BaseInput v-model="passengerFormData.phone" placeholder="選填" />
+                </div>
+
+                <div class="flex items-center">
+                  <input
+                    v-model="passengerFormData.isResident"
+                    type="checkbox"
+                    :class="[
+                      'w-5 h-5 rounded',
+                      theme === 'dark'
+                        ? 'bg-secondary-900 border-secondary-700'
+                        : 'bg-white border-neutral-300'
+                    ]"
+                  />
+                  <label class="ml-2 text-sm" :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'">
+                    居民
+                  </label>
+                </div>
+              </div>
+
+              <div class="flex gap-3 mt-6">
+                <BaseButton variant="secondary" @click="showPassengerForm = false" class="flex-1">
+                  取消
+                </BaseButton>
+                <BaseButton variant="primary" @click="savePassenger" class="flex-1">
+                  新增
+                </BaseButton>
               </div>
             </BaseCard>
           </div>

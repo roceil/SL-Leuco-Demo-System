@@ -15,19 +15,13 @@ export enum ScheduleStatus {
   COMPLETED = 'completed'  // 已完成
 }
 
-// 航線方向
-export enum RouteDirection {
-  TO_ISLAND = 'to_island',     // 東港 → 小琉球
-  FROM_ISLAND = 'from_island'  // 小琉球 → 東港
-}
-
 // 船班
 export interface Schedule {
   id: string
   type: ScheduleType // 船班類型
   shipId: string // 船隻 ID
   shipName: string // 船隻名稱（冗餘欄位，方便顯示）
-  route: RouteDirection // 航線方向
+  routeSegmentId: string // 航段 ID（關聯到 RouteSegment）
   departureTime: string // 出發時間 (HH:mm 格式)
   date?: string // 日期 (YYYY-MM-DD 格式)，僅機動船班需要
   isDaily?: boolean // 是否每日重複，僅固定船班為 true
@@ -43,7 +37,7 @@ export interface Schedule {
 export interface ScheduleFormData {
   type: ScheduleType
   shipId: string
-  route: RouteDirection
+  routeSegmentId: string // 航段 ID
   departureTime: string
   date?: string // 機動船班必填
   isDaily?: boolean // 固定船班為 true

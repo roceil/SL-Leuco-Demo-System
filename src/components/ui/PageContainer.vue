@@ -30,23 +30,29 @@ const { theme } = useTheme()
     >
       <!-- 頁面標題 -->
       <div v-if="title" class="mb-6">
-        <div class="flex items-center gap-3 mb-2">
-          <component
-            v-if="icon"
-            :is="icon"
-            :class="[
-              'w-8 h-8',
-              theme === 'dark' ? 'text-primary-400' : 'text-primary-600'
-            ]"
-          />
-          <h1
-            :class="[
-              'text-3xl font-bold',
-              theme === 'dark' ? 'text-white' : 'text-secondary-900'
-            ]"
-          >
-            {{ title }}
-          </h1>
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-3">
+            <component
+              v-if="icon"
+              :is="icon"
+              :class="[
+                'w-8 h-8',
+                theme === 'dark' ? 'text-primary-400' : 'text-primary-600'
+              ]"
+            />
+            <h1
+              :class="[
+                'text-3xl font-bold',
+                theme === 'dark' ? 'text-white' : 'text-secondary-900'
+              ]"
+            >
+              {{ title }}
+            </h1>
+          </div>
+          <!-- Actions slot -->
+          <div v-if="$slots.actions">
+            <slot name="actions" />
+          </div>
         </div>
         <p
           v-if="subtitle"

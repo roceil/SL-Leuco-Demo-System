@@ -9,7 +9,7 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import { useSidebar } from '@/composables/useSidebar'
 import { useTheme } from '@/composables/useTheme'
-import { useOrders } from '@/composables/useOrders'
+import { useOrderStore } from '@/stores/order'
 import {
   MagnifyingGlassIcon,
   CalendarIcon,
@@ -22,7 +22,7 @@ import {
 const { isCollapsed } = useSidebar()
 const { theme } = useTheme()
 const router = useRouter()
-const { allOrders: storedOrders } = useOrders()
+const orderStore = useOrderStore()
 
 interface Order {
   shipTime: string
@@ -61,25 +61,31 @@ const setThisMonth = () => {
   dateTo.value = lastDay.toISOString().split('T')[0] as string
 }
 
-// 從 useOrders 讀取訂單並轉換格式
+// 新 Order 狀態對應顯示文字
+const statusDisplayMap: Record<string, string> = {
+  pending: '未取票',
+  confirmed: '已取票',
+  completed: '已登船',
+  cancelled: '已取消'
+}
+
+// 從 orderStore 讀取訂單並轉換格式
 const loadOrdersFromLocalStorage = (): Order[] => {
-  if (!storedOrders.value || storedOrders.value.length === 0) return []
+  if (!orderStore.orders || orderStore.orders.length === 0) return []
 
   try {
-    return storedOrders.value.map((order) => {
-      const ticketParts: string[] = []
-      if (order.tickets.full > 0) ticketParts.push(`全票x${order.tickets.full}`)
-      if (order.tickets.half > 0) ticketParts.push(`半票x${order.tickets.half}`)
-      const ticketsStr = ticketParts.join(', ')
+    return orderStore.orders.map((order) => {
+      // scheduleName 格式：'2026-02-24 台東→綠島 08:00 + ...'，取前10字元為日期
+      const shipTime = order.scheduleName || ''
 
       return {
-        shipTime: `${order.outboundDate} ${order.outboundTime}`,
+        shipTime,
         orderNo: order.orderNumber,
-        distributor: order.distributor || order.orderOwnerName,
-        bookerInfo: `${order.bookerName} / ${order.bookerPhone}`,
+        distributor: order.createdBy || '',
+        bookerInfo: `${order.customerName} / ${order.customerPhone}`,
         bookTime: order.createdAt.split('T')[0] as string,
-        orderStatus: order.status,
-        tickets: ticketsStr
+        orderStatus: statusDisplayMap[order.status] || order.status,
+        tickets: order.notes || `${order.passengers.length} 人`
       }
     })
   } catch (error) {
@@ -101,8 +107,9 @@ const performSearch = (showAlert = true) => {
   }
 
   const filtered = allStoredOrders.filter(order => {
-    const shipDate = order.shipTime.split(' ')[0]
-    if (!shipDate) return false
+    // shipTime 格式：'2026-02-24 台東→綠島 08:00'，取前10字元為日期
+    const shipDate = order.shipTime.substring(0, 10)
+    if (!shipDate || shipDate.length < 10) return false
     return shipDate >= dateFrom.value && shipDate <= dateTo.value
   })
 

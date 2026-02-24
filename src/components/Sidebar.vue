@@ -22,7 +22,8 @@ import {
   CogIcon,
   ArrowRightOnRectangleIcon,
   ChevronRightIcon,
-  Bars3Icon
+  Bars3Icon,
+  MapIcon
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps<{
@@ -69,6 +70,7 @@ const menuItems: MenuItem[] = [
     icon: TicketIcon,
     children: [
       { label: '票種管理', icon: TicketIcon, route: '/ticket-management' },
+      { label: '航點與航段管理', icon: MapIcon, route: '/route-management' },
       { label: '特殊票種白名單', icon: DocumentTextIcon, route: '/special-ticket-whitelist' }
     ]
   },

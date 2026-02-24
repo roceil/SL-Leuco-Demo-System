@@ -24,8 +24,8 @@ const { theme } = useTheme()
 const searchQuery = ref('')
 
 // 計算售價
-const calculateSalePrice = (basePrice: number, discount: number) => {
-  return Math.max(0, basePrice - discount)
+const calculateSalePrice = (facePrice: number, discount: number) => {
+  return Math.max(0, facePrice - discount)
 }
 
 // 搜尋過濾
@@ -142,7 +142,7 @@ const goToWhitelistDetail = (ticketType: SpecialTicketType) => {
                       class="text-xl font-bold"
                       :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'"
                     >
-                      NT$ {{ ticketType.basePrice }}
+                      NT$ {{ ticketType.facePrice }}
                     </p>
                   </div>
                   <div
@@ -167,7 +167,7 @@ const goToWhitelistDetail = (ticketType: SpecialTicketType) => {
                           : 'text-indigo-600'
                       "
                     >
-                      NT$ {{ calculateSalePrice(ticketType.basePrice, ticketType.discount) }}
+                      NT$ {{ calculateSalePrice(ticketType.facePrice, ticketType.discount) }}
                     </p>
                   </div>
                 </div>

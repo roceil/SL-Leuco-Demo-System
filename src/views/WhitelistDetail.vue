@@ -308,7 +308,7 @@ onMounted(() => {
                 <div class="text-right">
                   <p class="mb-1 text-sm opacity-90">優惠價格</p>
                   <p class="text-3xl font-bold">
-                    NT$ {{ Math.max(0, ticketType.basePrice - ticketType.discount) }}
+                    NT$ {{ Math.max(0, ticketType.facePrice - ticketType.discount) }}
                   </p>
                 </div>
               </div>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { useTicketStore } from '@/stores/ticket'
+import { useRouteStore } from '@/stores/route'
 import { useSidebar } from '@/composables/useSidebar'
 import { useTheme } from '@/composables/useTheme'
 import Navbar from '@/components/Navbar.vue'
@@ -9,7 +10,7 @@ import PageContainer from '@/components/ui/PageContainer.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
-import type { TicketType } from '@/types/ticket'
+import type { TicketType, SegmentDiscount } from '@/types/ticket'
 import { calculateSalePrice } from '@/types/ticket'
 import {
   TicketIcon,
@@ -20,26 +21,89 @@ import {
 } from '@heroicons/vue/24/outline'
 
 const ticketStore = useTicketStore()
+const routeStore = useRouteStore()
 const { isCollapsed } = useSidebar()
 const { theme } = useTheme()
 
 // 表單資料
 const formData = ref<Partial<TicketType>>({
   name: '',
-  basePrice: 0,
-  discount: 0
+  facePrice: 0,
+  segmentDiscounts: [
+    { segmentCount: 1, discountAmount: 0 }
+  ],
+  route: {
+    from: '',
+    to: ''
+  },
+  isSpecial: false
 })
+
+// 選中的航段 ID（用於下拉選單）
+const selectedRouteSegmentId = ref<string>('')
 
 // 是否顯示表單
 const showForm = ref(false)
 const isEditMode = ref(false)
 
+// 新增航段折扣
+function addSegmentDiscount() {
+  if (!formData.value.segmentDiscounts) {
+    formData.value.segmentDiscounts = []
+  }
+
+  // 找出下一個航段數量（最大值 + 1）
+  const maxSegmentCount = formData.value.segmentDiscounts.length > 0
+    ? Math.max(...formData.value.segmentDiscounts.map((d) => d.segmentCount))
+    : 0
+
+  formData.value.segmentDiscounts.push({
+    segmentCount: maxSegmentCount + 1,
+    discountAmount: 0
+  })
+}
+
+// 刪除航段折扣
+function removeSegmentDiscount(index: number) {
+  if (formData.value.segmentDiscounts && formData.value.segmentDiscounts.length > 1) {
+    formData.value.segmentDiscounts.splice(index, 1)
+  } else {
+    alert('至少需要保留一個航段折扣設定')
+  }
+}
+
 // 計算售價
-const salePrice = computed(() => {
-  const base = formData.value.basePrice || 0
-  const disc = formData.value.discount || 0
-  return calculateSalePrice(base, disc)
-})
+function calculateDiscountSalePrice(discount: SegmentDiscount): number {
+  const face = formData.value.facePrice || 0
+  return calculateSalePrice(face, discount.discountAmount)
+}
+
+// 取得航點名稱
+function getPortName(portId: string): string {
+  const port = routeStore.getPortById(portId)
+  return port ? port.name : portId
+}
+
+// 當選擇航段時，更新 formData.route
+function onRouteSegmentChange() {
+  const segment = routeStore.activeRouteSegments.find(
+    (s) => s.id === selectedRouteSegmentId.value
+  )
+  if (segment) {
+    formData.value.route = {
+      from: segment.fromPortId,
+      to: segment.toPortId
+    }
+  }
+}
+
+// 根據 route 找到對應的航段 ID
+function findRouteSegmentId(route: { from: string; to: string }): string {
+  const segment = routeStore.activeRouteSegments.find(
+    (s) => s.fromPortId === route.from && s.toPortId === route.to
+  )
+  return segment ? segment.id : ''
+}
 
 // 監聽選中的票種變化，更新表單資料
 watch(
@@ -48,9 +112,13 @@ watch(
     if (newTicketType) {
       formData.value = {
         name: newTicketType.name,
-        basePrice: newTicketType.basePrice,
-        discount: newTicketType.discount
+        facePrice: newTicketType.facePrice,
+        segmentDiscounts: [...newTicketType.segmentDiscounts],
+        route: { ...newTicketType.route },
+        isSpecial: newTicketType.isSpecial
       }
+      // 找到對應的航段 ID
+      selectedRouteSegmentId.value = findRouteSegmentId(newTicketType.route)
       isEditMode.value = true
       showForm.value = true
     }
@@ -61,9 +129,17 @@ watch(
 function resetForm() {
   formData.value = {
     name: '',
-    basePrice: 0,
-    discount: 0
+    facePrice: 0,
+    segmentDiscounts: [
+      { segmentCount: 1, discountAmount: 0 }
+    ],
+    route: {
+      from: '',
+      to: ''
+    },
+    isSpecial: false
   }
+  selectedRouteSegmentId.value = ''
   isEditMode.value = false
   showForm.value = false
   ticketStore.selectTicketType(null)
@@ -84,38 +160,64 @@ function saveTicket() {
     return
   }
 
-  if (formData.value.basePrice === undefined || formData.value.basePrice < 0) {
-    alert('請輸入有效的定價')
+  if (!formData.value.route?.from || !formData.value.route?.to) {
+    alert('請選擇航段')
     return
   }
 
-  if (formData.value.discount === undefined || formData.value.discount < 0) {
-    alert('請輸入有效的折扣金額')
+  if (formData.value.facePrice === undefined || formData.value.facePrice < 0) {
+    alert('請輸入有效的票面價')
     return
   }
 
-  // 驗證折扣最多小數點後一位
-  const discountStr = formData.value.discount.toString()
-  const decimalPart = discountStr.split('.')[1]
-  if (decimalPart && decimalPart.length > 1) {
-    alert('折扣金額最多只能有小數點後一位')
+  // 驗證折扣設定
+  const segmentDiscounts = formData.value.segmentDiscounts
+  if (!segmentDiscounts || segmentDiscounts.length === 0) {
+    alert('請至少設定一個航段折扣')
     return
   }
+
+  // 驗證折扣金額和航段數量
+  for (const discount of segmentDiscounts) {
+    if (discount.segmentCount < 1) {
+      alert('航段數量必須大於 0')
+      return
+    }
+    if (discount.discountAmount < 0) {
+      alert('折扣金額不能為負數')
+      return
+    }
+  }
+
+  // 檢查是否有重複的航段數量
+  const segmentCounts = segmentDiscounts.map((d) => d.segmentCount)
+  const uniqueCounts = new Set(segmentCounts)
+  if (segmentCounts.length !== uniqueCounts.size) {
+    alert('航段數量不能重複')
+    return
+  }
+
+  // 排序航段折扣（按航段數量由小到大）
+  const sortedDiscounts = [...segmentDiscounts].sort((a, b) => a.segmentCount - b.segmentCount)
 
   if (isEditMode.value && ticketStore.selectedTicketTypeId) {
     // 更新現有票種
     ticketStore.updateTicketType(ticketStore.selectedTicketTypeId, {
       name: formData.value.name!,
-      basePrice: formData.value.basePrice!,
-      discount: formData.value.discount!
+      facePrice: formData.value.facePrice!,
+      segmentDiscounts: sortedDiscounts,
+      route: formData.value.route!,
+      isSpecial: formData.value.isSpecial || false
     })
     alert('票種更新成功')
   } else {
     // 創建新票種
     ticketStore.createTicketType({
       name: formData.value.name!,
-      basePrice: formData.value.basePrice || 0,
-      discount: formData.value.discount || 0
+      facePrice: formData.value.facePrice || 0,
+      segmentDiscounts: sortedDiscounts,
+      route: formData.value.route!,
+      isSpecial: formData.value.isSpecial || false
     })
     alert('票種創建成功')
   }
@@ -132,26 +234,6 @@ function deleteTicket(ticketTypeId: string) {
 
 function cancelEdit() {
   resetForm()
-}
-
-// 限制折扣輸入為最多一位小數
-function validateDiscountInput(event: Event) {
-  const input = event.target as HTMLInputElement
-  const value = input.value
-
-  // 允許空字串或數字
-  if (value === '') {
-    formData.value.discount = 0
-    return
-  }
-
-  // 檢查小數位數
-  const parts = value.split('.')
-  if (parts.length === 2 && parts[1]!.length > 1) {
-    // 限制為一位小數
-    input.value = parseFloat(value).toFixed(1)
-    formData.value.discount = parseFloat(input.value)
-  }
 }
 </script>
 
@@ -202,72 +284,178 @@ function validateDiscountInput(event: Event) {
                 </label>
                 <BaseInput
                   v-model="formData.name"
-                  placeholder="請輸入票種名稱"
+                  placeholder="例如：現場全票、現場半票"
                 />
               </div>
 
-              <!-- 定價 -->
+              <!-- 航段選擇 -->
               <div>
                 <label
                   class="block text-sm font-medium mb-2"
                   :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
                 >
-                  定價 <span class="text-red-500">*</span>
+                  航段 <span class="text-red-500">*</span>
+                </label>
+                <select
+                  v-model="selectedRouteSegmentId"
+                  @change="onRouteSegmentChange"
+                  :class="[
+                    'w-full px-4 py-2.5 rounded-md border',
+                    theme === 'dark'
+                      ? 'bg-secondary-900 border-secondary-800 text-white'
+                      : 'bg-white border-neutral-200 text-neutral-900'
+                  ]"
+                >
+                  <option value="">請選擇航段</option>
+                  <option
+                    v-for="segment in routeStore.activeRouteSegments"
+                    :key="segment.id"
+                    :value="segment.id"
+                  >
+                    {{ getPortName(segment.fromPortId) }} → {{ getPortName(segment.toPortId) }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- 票面價（原價） -->
+              <div class="md:col-span-2">
+                <label
+                  class="block text-sm font-medium mb-2"
+                  :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                >
+                  票面價（原價） <span class="text-red-500">*</span>
                 </label>
                 <BaseInput
-                  v-model.number="formData.basePrice"
+                  v-model.number="formData.facePrice"
                   type="number"
                   min="0"
                   step="1"
-                  placeholder="請輸入定價"
+                  placeholder="請輸入票面價"
                 />
               </div>
 
-              <!-- 折扣金額 -->
-              <div>
-                <label
-                  class="block text-sm font-medium mb-2"
-                  :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
-                >
-                  折扣金額
-                  <span
-                    class="text-xs ml-1"
-                    :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-500'"
+              <!-- 航段折扣設定區域 -->
+              <div class="md:col-span-2">
+                <div class="flex justify-between items-center mb-3">
+                  <label
+                    class="text-sm font-medium"
+                    :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
                   >
-                    (最多小數點後一位)
+                    航段折扣設定
+                  </label>
+                  <BaseButton
+                    variant="secondary"
+                    :icon="PlusIcon"
+                    @click="addSegmentDiscount"
+                    class="!py-1 !px-3 !text-xs"
+                  >
+                    新增航段
+                  </BaseButton>
+                </div>
+
+                <!-- 航段折扣列表 -->
+                <div class="space-y-3">
+                  <div
+                    v-for="(discount, index) in formData.segmentDiscounts"
+                    :key="index"
+                    :class="[
+                      'grid grid-cols-12 gap-3 p-3 rounded-md',
+                      theme === 'dark' ? 'bg-secondary-900/50' : 'bg-neutral-50'
+                    ]"
+                  >
+                    <!-- 航段數量 -->
+                    <div class="col-span-3">
+                      <label
+                        class="block text-xs font-medium mb-1"
+                        :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
+                      >
+                        航段數
+                      </label>
+                      <BaseInput
+                        v-model.number="discount.segmentCount"
+                        type="number"
+                        min="1"
+                        step="1"
+                        placeholder="1"
+                      />
+                    </div>
+
+                    <!-- 折扣金額 -->
+                    <div class="col-span-3">
+                      <label
+                        class="block text-xs font-medium mb-1"
+                        :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
+                      >
+                        折扣金額
+                      </label>
+                      <BaseInput
+                        v-model.number="discount.discountAmount"
+                        type="number"
+                        min="0"
+                        step="1"
+                        placeholder="0"
+                      />
+                    </div>
+
+                    <!-- 售價（自動計算） -->
+                    <div class="col-span-3">
+                      <label
+                        class="block text-xs font-medium mb-1"
+                        :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
+                      >
+                        售價
+                      </label>
+                      <input
+                        :value="calculateDiscountSalePrice(discount)"
+                        type="number"
+                        readonly
+                        disabled
+                        :class="[
+                          'w-full px-3 py-2 text-sm rounded-md cursor-not-allowed',
+                          theme === 'dark'
+                            ? 'bg-secondary-950 border-secondary-800 text-neutral-400'
+                            : 'bg-neutral-100 border-neutral-200 text-neutral-600',
+                          'border'
+                        ]"
+                      />
+                    </div>
+
+                    <!-- 刪除按鈕 -->
+                    <div class="col-span-3 flex items-end">
+                      <BaseButton
+                        variant="danger"
+                        :icon="TrashIcon"
+                        @click="removeSegmentDiscount(index)"
+                        class="!py-2 !px-3 w-full"
+                        :disabled="formData.segmentDiscounts!.length === 1"
+                      >
+                        刪除
+                      </BaseButton>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 是否為特殊票種 -->
+              <div class="flex items-center">
+                <label class="flex items-center cursor-pointer">
+                  <input
+                    v-model="formData.isSpecial"
+                    type="checkbox"
+                    :class="[
+                      'w-5 h-5 rounded',
+                      theme === 'dark'
+                        ? 'bg-secondary-900 border-secondary-800'
+                        : 'bg-white border-neutral-300'
+                    ]"
+                  />
+                  <span
+                    class="ml-2 text-sm font-medium"
+                    :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                  >
+                    特殊票種
                   </span>
                 </label>
-                <BaseInput
-                  v-model.number="formData.discount"
-                  type="number"
-                  min="0"
-                  step="0.1"
-                  placeholder="請輸入折扣金額"
-                  @input="validateDiscountInput"
-                />
-              </div>
-
-              <!-- 售價（唯讀） -->
-              <div>
-                <label
-                  class="block text-sm font-medium mb-2"
-                  :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
-                >
-                  售價
-                </label>
-                <input
-                  :value="salePrice"
-                  type="number"
-                  readonly
-                  disabled
-                  :class="[
-                    'w-full px-4 py-2.5 rounded-md cursor-not-allowed',
-                    theme === 'dark'
-                      ? 'bg-secondary-900 border-secondary-800 text-neutral-400'
-                      : 'bg-neutral-100 border-neutral-200 text-neutral-600',
-                    'border'
-                  ]"
-                />
               </div>
             </div>
 
@@ -330,14 +518,30 @@ function validateDiscountInput(event: Event) {
                 <span
                   :class="[
                     'px-2 py-1 text-xs font-medium rounded flex items-center gap-1',
-                    theme === 'dark'
-                      ? 'bg-primary-900/30 text-primary-400'
-                      : 'bg-primary-100 text-primary-700'
+                    ticket.isSpecial
+                      ? theme === 'dark'
+                        ? 'bg-amber-900/30 text-amber-400'
+                        : 'bg-amber-100 text-amber-700'
+                      : theme === 'dark'
+                        ? 'bg-primary-900/30 text-primary-400'
+                        : 'bg-primary-100 text-primary-700'
                   ]"
                 >
                   <TagIcon class="w-3 h-3" />
-                  票種
+                  {{ ticket.isSpecial ? '特殊票種' : '票種' }}
                 </span>
+              </div>
+
+              <!-- 航段資訊 -->
+              <div
+                :class="[
+                  'mb-3 px-3 py-2 rounded-md text-sm font-medium',
+                  theme === 'dark'
+                    ? 'bg-secondary-900/50 text-neutral-300'
+                    : 'bg-neutral-100 text-neutral-700'
+                ]"
+              >
+                {{ getPortName(ticket.route.from) }} → {{ getPortName(ticket.route.to) }}
               </div>
 
               <div class="space-y-3">
@@ -346,25 +550,13 @@ function validateDiscountInput(event: Event) {
                     class="text-sm"
                     :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
                   >
-                    定價
+                    票面價
                   </span>
                   <span
                     class="text-base font-medium"
                     :class="theme === 'dark' ? 'text-neutral-200' : 'text-neutral-900'"
                   >
-                    NT$ {{ ticket.basePrice }}
-                  </span>
-                </div>
-
-                <div class="flex justify-between items-center">
-                  <span
-                    class="text-sm"
-                    :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
-                  >
-                    折扣金額
-                  </span>
-                  <span class="text-base font-medium text-amber-600">
-                    - NT$ {{ ticket.discount }}
+                    NT$ {{ ticket.facePrice }}
                   </span>
                 </div>
 
@@ -374,15 +566,21 @@ function validateDiscountInput(event: Event) {
                     theme === 'dark' ? 'border-secondary-800' : 'border-neutral-200'
                   ]"
                 >
-                  <div class="flex justify-between items-center">
+                  <!-- 動態顯示所有航段折扣 -->
+                  <div
+                    v-for="(discount, idx) in ticket.segmentDiscounts"
+                    :key="idx"
+                    class="flex justify-between items-center"
+                    :class="{ 'mb-2': idx < ticket.segmentDiscounts.length - 1 }"
+                  >
                     <span
-                      class="text-sm font-medium"
-                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                      class="text-xs"
+                      :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
                     >
-                      售價
+                      {{ discount.segmentCount }}航段 (折扣 -NT$ {{ discount.discountAmount }})
                     </span>
-                    <span class="text-xl font-bold text-green-600">
-                      NT$ {{ calculateSalePrice(ticket.basePrice, ticket.discount) }}
+                    <span class="text-sm font-semibold text-green-600">
+                      NT$ {{ ticket.facePrice - discount.discountAmount }}
                     </span>
                   </div>
                 </div>
