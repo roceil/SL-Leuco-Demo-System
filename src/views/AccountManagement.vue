@@ -229,13 +229,15 @@ function saveAccount() {
     return
   }
 
-  // 驗證每個選中的票種都至少有一個價格設定
+  // 驗證每個選中的票種都至少有一個價格設定（忽略已不存在的孤立 ID）
   const availableTypes = formData.value.availableTicketTypes || []
   for (const ticketTypeId of availableTypes) {
+    const ticketExists = ticketStore.ticketTypes.some(t => t.id === ticketTypeId)
+    if (!ticketExists) continue
     const priceSettings = getTicketPriceSettings(ticketTypeId)
     if (priceSettings.length === 0) {
       const ticketName = getTicketTypeName(ticketTypeId)
-      alert(`請為 "${ticketName}" 設定至少一個價格`)
+      alert(`請為「${ticketName}」設定至少一個價格`)
       return
     }
   }
@@ -1041,14 +1043,35 @@ function closePasswordResetModal() {
                       <label
                         :for="`ticket-${ticket.id}`"
                         :class="[
-                          'flex-1 text-sm font-medium',
+                          'flex-1 text-sm font-medium flex flex-wrap items-center gap-2',
                           theme === 'dark' ? 'text-white' : 'text-neutral-900'
                         ]"
                       >
                         {{ ticket.name }}
                         <span
                           :class="[
-                            'font-normal ml-2',
+                            'inline-block px-1.5 py-0.5 rounded text-xs font-normal',
+                            theme === 'dark'
+                              ? 'bg-secondary-700 text-neutral-300'
+                              : 'bg-neutral-100 text-neutral-500'
+                          ]"
+                        >
+                          {{ (routeStore.getPortById(ticket.route.from)?.name ?? ticket.route.from) }} → {{ (routeStore.getPortById(ticket.route.to)?.name ?? ticket.route.to) }}
+                        </span>
+                        <span
+                          v-if="ticket.organizationId"
+                          :class="[
+                            'inline-block px-1.5 py-0.5 rounded text-xs font-normal',
+                            theme === 'dark'
+                              ? 'bg-primary-900/40 text-primary-300'
+                              : 'bg-primary-50 text-primary-700'
+                          ]"
+                        >
+                          {{ rbacStore.organizations.find(o => o.id === ticket.organizationId)?.name ?? ticket.organizationId }}
+                        </span>
+                        <span
+                          :class="[
+                            'font-normal',
                             theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'
                           ]"
                         >

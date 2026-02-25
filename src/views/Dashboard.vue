@@ -10,6 +10,7 @@ import BaseInput from '@/components/ui/BaseInput.vue'
 import { useSidebar } from '@/composables/useSidebar'
 import { useTheme } from '@/composables/useTheme'
 import { useSchedules } from '@/composables/useSchedules'
+import { useShips } from '@/composables/useShips'
 import { useRouteStore } from '@/stores/route'
 import { useTicketStore } from '@/stores/ticket'
 import { useOrderStore } from '@/stores/order'
@@ -31,6 +32,7 @@ const router = useRouter()
 const { isCollapsed } = useSidebar()
 const { theme } = useTheme()
 const { schedules } = useSchedules()
+const { ships } = useShips()
 const routeStore = useRouteStore()
 const ticketStore = useTicketStore()
 const orderStore = useOrderStore()
@@ -285,20 +287,27 @@ const availableTickets = computed(() => {
   const firstRouteSegment = routeStore.getRouteSegmentWithPorts(validSegments[0]!.routeSegmentId)
   if (!firstRouteSegment) return []
 
-  // 第一航段的所有票種
+  // 取得第一航段的運行航商
+  const firstSegOrgId = getOrgIdForSegment(0)
+
+  // 第一航段的所有票種（依航商篩選）
   const firstSegTickets = ticketStore.ticketTypes.filter(t =>
     t.route.from === firstRouteSegment.fromPortId &&
-    t.route.to === firstRouteSegment.toPortId
+    t.route.to === firstRouteSegment.toPortId &&
+    (firstSegOrgId ? (t.organizationId === firstSegOrgId) : !t.organizationId)
   )
 
-  // 保留在所有後續航段都有對應 passengerType 的票種
+  // 保留在所有後續航段都有對應 passengerType 的票種（同樣需符合各段航商）
   const tickets = firstSegTickets.filter(firstTicket =>
-    validSegments.slice(1).every(seg => {
+    validSegments.slice(1).every((seg, i) => {
       const rs = routeStore.getRouteSegmentWithPorts(seg.routeSegmentId)
-      return rs && ticketStore.ticketTypes.some(t =>
+      if (!rs) return false
+      const segOrgId = getOrgIdForSegment(i + 1)
+      return ticketStore.ticketTypes.some(t =>
         t.passengerType === firstTicket.passengerType &&
         t.route.from === rs.fromPortId &&
-        t.route.to === rs.toPortId
+        t.route.to === rs.toPortId &&
+        (segOrgId ? (t.organizationId === segOrgId) : !t.organizationId)
       )
     })
   )
@@ -308,14 +317,16 @@ const availableTickets = computed(() => {
     tickets.filter(firstTicket => {
       // 第一航段的票種必須在允許清單內
       if (!allowedTypes.includes(firstTicket.id)) return false
-      // 後續每個航段對應的票種也必須在允許清單內
-      return validSegments.slice(1).every(seg => {
+      // 後續每個航段對應的票種也必須在允許清單內（同時須符合該段運行航商）
+      return validSegments.slice(1).every((seg, i) => {
         const rs = routeStore.getRouteSegmentWithPorts(seg.routeSegmentId)
         if (!rs) return false
+        const segOrgId = getOrgIdForSegment(i + 1)
         const segTicket = ticketStore.ticketTypes.find(t =>
           t.passengerType === firstTicket.passengerType &&
           t.route.from === rs.fromPortId &&
-          t.route.to === rs.toPortId
+          t.route.to === rs.toPortId &&
+          (segOrgId ? (t.organizationId === segOrgId) : !t.organizationId)
         )
         return segTicket ? allowedTypes.includes(segTicket.id) : false
       })
@@ -354,6 +365,15 @@ const setTicketQuantity = (passengerType: string, quantity: number) => {
   }
 }
 
+// 根據選定的班次時間，取得該航段運行船隻的所屬航商 ID
+const getOrgIdForSegment = (segmentIndex: number): string | null => {
+  const segment = segments.value[segmentIndex]
+  if (!segment?.time) return null
+  const schedule = getAvailableSchedules(segmentIndex).find(s => s.departureTime === segment.time)
+  if (!schedule?.shipId) return null
+  return ships.value.find(s => s.id === schedule.shipId)?.organizationId ?? null
+}
+
 // 根據乘客類型和航段，取得該航段的票種價格
 const getTicketPriceForSegment = (passengerType: string, segmentIndex: number): number => {
   const segment = segments.value[segmentIndex]
@@ -362,11 +382,13 @@ const getTicketPriceForSegment = (passengerType: string, segmentIndex: number): 
   const routeSegment = routeStore.getRouteSegmentWithPorts(segment.routeSegmentId)
   if (!routeSegment) return 0
 
-  // 找到該航段對應的票種（以 passengerType 比對）
+  // 找到該航段對應的票種（以 passengerType + 路線 + 航商比對）
+  const orgId = getOrgIdForSegment(segmentIndex)
   const ticket = ticketStore.ticketTypes.find(t =>
     t.passengerType === passengerType &&
     t.route.from === routeSegment.fromPortId &&
-    t.route.to === routeSegment.toPortId
+    t.route.to === routeSegment.toPortId &&
+    (orgId ? (t.organizationId === orgId) : !t.organizationId)
   )
 
   if (!ticket) return 0
@@ -534,12 +556,13 @@ const handleSubmit = () => {
     })
 
   // 構建航段陣列
-  const scheduleSegments = segments.value.map(seg => {
+  const scheduleSegments = segments.value.map((seg, i) => {
     const routeSegment = routeStore.getRouteSegmentWithPorts(seg.routeSegmentId)
     return {
       date: seg.date,
       time: seg.time,
-      route: routeSegment ? `${routeSegment.fromPort.name}→${routeSegment.toPort.name}` : ''
+      route: routeSegment ? `${routeSegment.fromPort.name}→${routeSegment.toPort.name}` : '',
+      organizationId: getOrgIdForSegment(i) ?? undefined
     }
   })
 

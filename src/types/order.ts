@@ -77,6 +77,7 @@ export interface ScheduleSegment {
   date: string  // 'YYYY-MM-DD'
   time: string  // 'HH:MM'
   route: string // '台東→綠島'
+  organizationId?: string // 運行航商 ID
 }
 
 // 訂單

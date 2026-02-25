@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useOrderStore } from '@/stores/order'
 import { useTicketStore } from '@/stores/ticket'
 import { useAuthStore } from '@/stores/auth'
+import { useRbacStore } from '@/stores/rbac'
 import { usePayment } from '@/composables/usePayment'
 import { useSidebar } from '@/composables/useSidebar'
 import { useTheme } from '@/composables/useTheme'
@@ -33,6 +34,7 @@ const router = useRouter()
 const orderStore = useOrderStore()
 const ticketStore = useTicketStore()
 const authStore = useAuthStore()
+const rbacStore = useRbacStore()
 const payment = usePayment()
 const { isCollapsed } = useSidebar()
 const { theme } = useTheme()
@@ -475,12 +477,56 @@ onMounted(() => {
                     {{ currentOrder.customerPhone }}
                   </p>
                 </div>
-                <div>
-                  <span class="text-sm" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
-                    航班
+                <div class="md:col-span-2">
+                  <span class="text-sm block mb-2" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
+                    航班 / 運行航商
                   </span>
-                  <div class="font-medium" :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'">
-                    <div v-for="(line, i) in formatShipTime(currentOrder.scheduleSegments)" :key="i">{{ line }}</div>
+                  <div
+                    :class="[
+                      'rounded-lg overflow-hidden border',
+                      theme === 'dark' ? 'border-secondary-700' : 'border-neutral-200'
+                    ]"
+                  >
+                    <table class="w-full text-sm">
+                      <thead>
+                        <tr
+                          :class="[
+                            'text-xs font-medium uppercase tracking-wide',
+                            theme === 'dark'
+                              ? 'bg-secondary-800 text-neutral-400'
+                              : 'bg-neutral-100 text-neutral-500'
+                          ]"
+                        >
+                          <th class="text-left px-4 py-2">日期</th>
+                          <th class="text-left px-4 py-2">時間</th>
+                          <th class="text-left px-4 py-2">航段</th>
+                          <th class="text-left px-4 py-2">運行航商</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr
+                          v-for="(seg, i) in currentOrder.scheduleSegments"
+                          :key="i"
+                          :class="[
+                            'border-t',
+                            theme === 'dark'
+                              ? 'border-secondary-700 bg-secondary-900 text-white'
+                              : 'border-neutral-100 bg-white text-neutral-900'
+                          ]"
+                        >
+                          <td class="px-4 py-2.5 font-medium">{{ seg.date }}</td>
+                          <td class="px-4 py-2.5 font-medium">{{ seg.time }}</td>
+                          <td class="px-4 py-2.5">{{ seg.route }}</td>
+                          <td class="px-4 py-2.5">
+                            {{
+                              rbacStore.organizations.find(
+                                o => o.id === (seg.organizationId ?? currentOrder.organizationId)
+                              )?.name ?? '—'
+                            }}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
                 <div v-if="currentOrder.ticketIssuedAt">

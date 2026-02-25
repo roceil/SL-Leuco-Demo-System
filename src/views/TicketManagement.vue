@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { useTicketStore } from '@/stores/ticket'
 import { useRouteStore } from '@/stores/route'
+import { useRbacStore } from '@/stores/rbac'
 import { useSidebar } from '@/composables/useSidebar'
 import { useTheme } from '@/composables/useTheme'
 import Navbar from '@/components/Navbar.vue'
@@ -22,6 +23,7 @@ import {
 
 const ticketStore = useTicketStore()
 const routeStore = useRouteStore()
+const rbacStore = useRbacStore()
 const { isCollapsed } = useSidebar()
 const { theme } = useTheme()
 
@@ -29,6 +31,7 @@ const { theme } = useTheme()
 const formData = ref<Partial<TicketType>>({
   name: '',
   passengerType: '',
+  organizationId: '',
   facePrice: 0,
   segmentDiscounts: [
     { segmentCount: 1, discountAmount: 0 }
@@ -127,6 +130,7 @@ watch(
       formData.value = {
         name: newTicketType.name,
         passengerType: newTicketType.passengerType,
+        organizationId: newTicketType.organizationId ?? '',
         facePrice: newTicketType.facePrice,
         segmentDiscounts: [...newTicketType.segmentDiscounts],
         route: { ...newTicketType.route },
@@ -226,6 +230,7 @@ function saveTicket() {
     ticketStore.updateTicketType(ticketStore.selectedTicketTypeId, {
       name: formData.value.name!,
       passengerType: formData.value.passengerType!,
+      organizationId: formData.value.organizationId || undefined,
       facePrice: formData.value.facePrice!,
       segmentDiscounts: sortedDiscounts,
       route: formData.value.route!,
@@ -237,6 +242,7 @@ function saveTicket() {
     ticketStore.createTicketType({
       name: formData.value.name!,
       passengerType: formData.value.passengerType!,
+      organizationId: formData.value.organizationId || undefined,
       facePrice: formData.value.facePrice || 0,
       segmentDiscounts: sortedDiscounts,
       route: formData.value.route!,
@@ -311,31 +317,16 @@ function cancelEdit() {
                 />
               </div>
 
-              <!-- 乘客類型 -->
+              <!-- 票種類型 -->
               <div>
                 <label
                   class="block text-sm font-medium mb-2"
                   :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
                 >
-                  乘客類型 <span class="text-red-500">*</span>
-                </label>
-                <BaseInput
-                  v-model="formData.passengerType"
-                  placeholder="例如：全票、半票、居民票"
-                />
-              </div>
-
-              <!-- 航段選擇 -->
-              <div>
-                <label
-                  class="block text-sm font-medium mb-2"
-                  :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
-                >
-                  航段 <span class="text-red-500">*</span>
+                  票種類型 <span class="text-red-500">*</span>
                 </label>
                 <select
-                  v-model="selectedRouteSegmentId"
-                  @change="onRouteSegmentChange"
+                  v-model="formData.passengerType"
                   :class="[
                     'w-full px-4 py-2.5 rounded-md border',
                     theme === 'dark'
@@ -343,15 +334,72 @@ function cancelEdit() {
                       : 'bg-white border-neutral-200 text-neutral-900'
                   ]"
                 >
-                  <option value="">請選擇航段</option>
-                  <option
-                    v-for="segment in routeStore.activeRouteSegments"
-                    :key="segment.id"
-                    :value="segment.id"
-                  >
-                    {{ getPortName(segment.fromPortId) }} → {{ getPortName(segment.toPortId) }}
-                  </option>
+                  <option value="">請選擇票種類型</option>
+                  <option value="全票">全票</option>
+                  <option value="半票">半票</option>
+                  <option value="居民票">居民票</option>
+                  <option value="優惠票">優惠票</option>
                 </select>
+              </div>
+
+              <!-- 航段 + 運行航商（並排） -->
+              <div class="md:col-span-2 flex gap-6">
+                <!-- 航段選擇 -->
+                <div class="flex-1">
+                  <label
+                    class="block text-sm font-medium mb-2"
+                    :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                  >
+                    航段 <span class="text-red-500">*</span>
+                  </label>
+                  <select
+                    v-model="selectedRouteSegmentId"
+                    @change="onRouteSegmentChange"
+                    :class="[
+                      'w-full px-4 py-2.5 rounded-md border',
+                      theme === 'dark'
+                        ? 'bg-secondary-900 border-secondary-800 text-white'
+                        : 'bg-white border-neutral-200 text-neutral-900'
+                    ]"
+                  >
+                    <option value="">請選擇航段</option>
+                    <option
+                      v-for="segment in routeStore.activeRouteSegments"
+                      :key="segment.id"
+                      :value="segment.id"
+                    >
+                      {{ getPortName(segment.fromPortId) }} → {{ getPortName(segment.toPortId) }}
+                    </option>
+                  </select>
+                </div>
+
+                <!-- 運行航商 -->
+                <div class="flex-1">
+                  <label
+                    class="block text-sm font-medium mb-2"
+                    :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                  >
+                    運行航商 <span class="text-red-500">*</span>
+                  </label>
+                  <select
+                    v-model="formData.organizationId"
+                    :class="[
+                      'w-full px-4 py-2.5 rounded-md border',
+                      theme === 'dark'
+                        ? 'bg-secondary-900 border-secondary-800 text-white'
+                        : 'bg-white border-neutral-200 text-neutral-900'
+                    ]"
+                  >
+                    <option value="">請選擇航商</option>
+                    <option
+                      v-for="org in rbacStore.organizations.filter(o => o.id !== 'org-sys')"
+                      :key="org.id"
+                      :value="org.id"
+                    >
+                      {{ org.name }}
+                    </option>
+                  </select>
+                </div>
               </div>
 
               <!-- 票面價（原價） -->
@@ -616,16 +664,29 @@ function cancelEdit() {
                 </span>
               </div>
 
-              <!-- 乘客類型標籤 -->
-              <div
-                :class="[
-                  'mb-2 inline-block px-2 py-0.5 rounded text-xs font-medium',
-                  theme === 'dark'
-                    ? 'bg-secondary-700 text-neutral-300'
-                    : 'bg-neutral-200 text-neutral-600'
-                ]"
-              >
-                {{ ticket.passengerType }}
+              <!-- 乘客類型 + 所屬航商標籤 -->
+              <div class="mb-2 flex flex-wrap gap-1">
+                <span
+                  :class="[
+                    'inline-block px-2 py-0.5 rounded text-xs font-medium',
+                    theme === 'dark'
+                      ? 'bg-secondary-700 text-neutral-300'
+                      : 'bg-neutral-200 text-neutral-600'
+                  ]"
+                >
+                  {{ ticket.passengerType }}
+                </span>
+                <span
+                  v-if="ticket.organizationId"
+                  :class="[
+                    'inline-block px-2 py-0.5 rounded text-xs font-medium',
+                    theme === 'dark'
+                      ? 'bg-primary-900/40 text-primary-300'
+                      : 'bg-primary-50 text-primary-700'
+                  ]"
+                >
+                  {{ rbacStore.organizations.find(o => o.id === ticket.organizationId)?.name ?? ticket.organizationId }}
+                </span>
               </div>
 
               <!-- 航段資訊 -->
