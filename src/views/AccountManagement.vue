@@ -2,10 +2,12 @@
 import { ref, computed } from 'vue'
 import { useRbacStore } from '@/stores/rbac'
 import { useTicketStore } from '@/stores/ticket'
+import { useRouteStore } from '@/stores/route'
 import { useSidebar } from '@/composables/useSidebar'
 import { useTheme } from '@/composables/useTheme'
 import { useAuth } from '@/composables/useAuth'
 import { useAuditLog } from '@/composables/useAuditLog'
+import { PermissionAction } from '@/types/rbac'
 import Navbar from '@/components/Navbar.vue'
 import Sidebar from '@/components/Sidebar.vue'
 import PageContainer from '@/components/ui/PageContainer.vue'
@@ -13,7 +15,7 @@ import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import type { Account, TicketPriceSetting } from '@/types/rbac'
-import { calculateSalePrice } from '@/types/ticket'
+import { calculateSalePrice, getDiscountBySegmentCount } from '@/types/ticket'
 import {
   UsersIcon,
   MagnifyingGlassIcon,
@@ -28,16 +30,28 @@ import {
 
 const rbacStore = useRbacStore()
 const ticketStore = useTicketStore()
+const routeStore = useRouteStore()
 const { isCollapsed } = useSidebar()
 const { theme } = useTheme()
-const { resetUserPassword } = useAuth()
+const { currentUser, resetUserPassword } = useAuth()
 const { createLog, generateChanges } = useAuditLog()
 
-// 當前操作者（實際應該從登入狀態獲取）
-const currentOperator = {
-  id: 'admin-001',
-  name: '管理員'
-}
+// 當前登入帳號
+const currentAccount = computed(() => {
+  if (!currentUser.value) return null
+  return rbacStore.accounts.find(a => a.username === currentUser.value) ?? null
+})
+
+const currentAccountId = computed(() => currentAccount.value?.id ?? 'admin-001')
+const currentAccountName = computed(() => currentAccount.value?.name ?? '管理員')
+const isCurrentSuperAdmin = computed(() => rbacStore.isSuperAdmin(currentAccountId.value))
+const currentOrgId = computed(() => currentAccount.value?.organizationId ?? null)
+
+// 當前操作者
+const currentOperator = computed(() => ({
+  id: currentAccountId.value,
+  name: currentAccountName.value
+}))
 
 // 密碼重置相關狀態
 const showPasswordResetModal = ref(false)
@@ -67,9 +81,20 @@ const formData = ref<Partial<Account>>({
   ticketPriceSettings: []
 })
 
+// 可見的角色列表（非 super_admin 只看到本組織角色）
+const visibleRoles = computed(() => {
+  if (isCurrentSuperAdmin.value) return rbacStore.roles
+  return rbacStore.roles.filter(r => r.organizationId === currentOrgId.value)
+})
+
 // 篩選後的帳號列表
 const filteredAccounts = computed(() => {
   let result = rbacStore.accounts
+
+  // 組織過濾：非 super_admin 只看到本組織的帳號
+  if (!isCurrentSuperAdmin.value && currentOrgId.value) {
+    result = result.filter(acc => acc.organizationId === currentOrgId.value)
+  }
 
   // 關鍵字搜尋（帳號、使用者名稱、聯絡人、聯絡電話）
   if (searchKeyword.value) {
@@ -109,11 +134,12 @@ function getTicketTypeName(ticketTypeId: string): string {
   return ticket?.name || '未知票種'
 }
 
-// 獲取票種的預設售價
+// 獲取票種的預設售價（以單航段折扣計算）
 function getTicketDefaultPrice(ticketTypeId: string): number {
   const ticket = ticketStore.ticketTypes.find((t) => t.id === ticketTypeId)
   if (!ticket) return 0
-  return calculateSalePrice(ticket.facePrice, ticket.discount)
+  const discount = getDiscountBySegmentCount(ticket.segmentDiscounts, 1)
+  return calculateSalePrice(ticket.facePrice, discount)
 }
 
 // 重置表單
@@ -244,21 +270,25 @@ function saveAccount() {
         entityId: rbacStore.selectedAccountId,
         entityName: formData.value.name!,
         action: 'update',
-        operatorId: currentOperator.id,
-        operatorName: currentOperator.name,
+        operatorId: currentOperator.value.id,
+        operatorName: currentOperator.value.name,
         changes
       })
     }
 
     alert('帳號更新成功')
   } else {
-    // 創建新帳號
+    // 創建新帳號（自動帶入當前操作者所屬組織）
+    const defaultOrgId = isCurrentSuperAdmin.value
+      ? (formData.value.organizationId || 'org-sys')
+      : (currentOrgId.value || 'org-sys')
+
     const newAccount = rbacStore.createAccount({
       username: formData.value.username!,
       name: formData.value.name!,
       contactPerson: formData.value.contactPerson!,
       contactPhone: formData.value.contactPhone!,
-      organizationId: formData.value.organizationId || 'org-1',
+      organizationId: defaultOrgId,
       roleId: formData.value.roleId!,
       verified: formData.value.verified ?? true,
       availableTicketTypes: formData.value.availableTicketTypes || [],
@@ -271,8 +301,8 @@ function saveAccount() {
       entityId: newAccount.id,
       entityName: formData.value.name!,
       action: 'create',
-      operatorId: currentOperator.id,
-      operatorName: currentOperator.name,
+      operatorId: currentOperator.value.id,
+      operatorName: currentOperator.value.name,
       note: `創建新帳號：${formData.value.name}`
     })
 
@@ -295,8 +325,8 @@ function deleteAccount(accountId: string) {
       entityId: accountId,
       entityName: account.name,
       action: 'delete',
-      operatorId: currentOperator.id,
-      operatorName: currentOperator.name,
+      operatorId: currentOperator.value.id,
+      operatorName: currentOperator.value.name,
       note: `刪除帳號：${account.name} (${account.username})`
     })
 
@@ -344,6 +374,52 @@ function toggleTicketType(ticketTypeId: string) {
     // 清除暫存狀態
     delete newPriceSettings.value[ticketTypeId]
   }
+}
+
+// 彈窗內票種篩選（依航段）
+const filterTicketRoute = ref('')
+
+// 從所有票種中萃取不重複的航段（以 "from→to" 為 key）
+const availableRouteOptions = computed(() => {
+  const seen = new Set<string>()
+  const options: { key: string; label: string }[] = []
+  for (const ticket of ticketStore.ticketTypes) {
+    const key = `${ticket.route.from}→${ticket.route.to}`
+    if (!seen.has(key)) {
+      seen.add(key)
+      const fromName = routeStore.getPortById(ticket.route.from)?.name ?? ticket.route.from
+      const toName = routeStore.getPortById(ticket.route.to)?.name ?? ticket.route.to
+      options.push({ key, label: `${fromName} → ${toName}` })
+    }
+  }
+  return options
+})
+
+// 依篩選航段過濾的票種列表
+const filteredTicketTypes = computed(() => {
+  if (!filterTicketRoute.value) return ticketStore.ticketTypes
+  const [from, to] = filterTicketRoute.value.split('→')
+  return ticketStore.ticketTypes.filter(
+    (t) => t.route.from === from && t.route.to === to
+  )
+})
+
+// 全部選取
+function selectAllTicketTypes() {
+  ticketStore.ticketTypes.forEach((ticket) => {
+    if (!isTicketTypeSelected(ticket.id)) {
+      toggleTicketType(ticket.id)
+    }
+  })
+}
+
+// 全部取消
+function deselectAllTicketTypes() {
+  ticketStore.ticketTypes.forEach((ticket) => {
+    if (isTicketTypeSelected(ticket.id)) {
+      toggleTicketType(ticket.id)
+    }
+  })
 }
 
 // 檢查票種是否被選中
@@ -417,7 +493,7 @@ function openPasswordResetModal(account: Account) {
 
 // 執行密碼重置
 function executePasswordReset() {
-  const result = resetUserPassword(resetPasswordUsername.value, currentOperator.name)
+  const result = resetUserPassword(resetPasswordUsername.value, currentOperator.value.name)
 
   if (result.success && result.newPassword) {
     newGeneratedPassword.value = result.newPassword
@@ -430,8 +506,8 @@ function executePasswordReset() {
         entityId: account.id,
         entityName: account.name,
         action: 'password_reset',
-        operatorId: currentOperator.id,
-        operatorName: currentOperator.name,
+        operatorId: currentOperator.value.id,
+        operatorName: currentOperator.value.name,
         note: `管理員重置密碼：${account.name} (${account.username})`
       })
     }
@@ -517,7 +593,7 @@ function closePasswordResetModal() {
                   ]"
                 >
                   <option value="">全部</option>
-                  <option v-for="role in rbacStore.roles" :key="role.id" :value="role.id">
+                  <option v-for="role in visibleRoles" :key="role.id" :value="role.id">
                     {{ role.name }}
                   </option>
                 </select>
@@ -600,12 +676,6 @@ function closePasswordResetModal() {
                       class="px-6 py-3 text-left text-xs font-medium uppercase"
                       :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
                     >
-                      可販售票種
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium uppercase"
-                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
-                    >
                       狀態
                     </th>
                     <th
@@ -654,25 +724,6 @@ function closePasswordResetModal() {
                       :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'"
                     >
                       {{ getRoleName(account.roleId) }}
-                    </td>
-                    <td
-                      class="px-6 py-4 text-sm"
-                      :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-600'"
-                    >
-                      <div class="flex flex-wrap gap-1">
-                        <span
-                          v-for="ticketId in account.availableTicketTypes"
-                          :key="ticketId"
-                          :class="[
-                            'px-2 py-1 text-xs rounded',
-                            theme === 'dark'
-                              ? 'bg-primary-900/30 text-primary-400'
-                              : 'bg-primary-100 text-primary-700'
-                          ]"
-                        >
-                          {{ getTicketTypeName(ticketId) }}
-                        </span>
-                      </div>
                     </td>
                     <td class="px-6 py-4 text-sm">
                       <span
@@ -896,12 +947,37 @@ function closePasswordResetModal() {
                 theme === 'dark' ? 'border-secondary-800' : 'border-neutral-200'
               ]"
             >
-              <label
-                class="block text-sm font-medium mb-3"
-                :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
-              >
-                可販售票種及價格設定
-              </label>
+              <div class="flex items-center justify-between mb-3">
+                <label
+                  class="text-sm font-medium"
+                  :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                >
+                  可販售票種及價格設定
+                </label>
+                <div class="flex items-center gap-2">
+                  <!-- 航段篩選 -->
+                  <select
+                    v-model="filterTicketRoute"
+                    :class="[
+                      'text-sm px-2 py-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500',
+                      theme === 'dark'
+                        ? 'bg-secondary-900 border-secondary-700 text-white'
+                        : 'bg-white border-neutral-300 text-neutral-900'
+                    ]"
+                  >
+                    <option value="">全部航段</option>
+                    <option v-for="opt in availableRouteOptions" :key="opt.key" :value="opt.key">
+                      {{ opt.label }}
+                    </option>
+                  </select>
+                  <BaseButton variant="outline" size="sm" @click="selectAllTicketTypes">
+                    全部選取
+                  </BaseButton>
+                  <BaseButton variant="outline" size="sm" @click="deselectAllTicketTypes">
+                    全部取消
+                  </BaseButton>
+                </div>
+              </div>
               <div
                 :class="[
                   'border rounded-md p-4',
@@ -912,7 +988,7 @@ function closePasswordResetModal() {
               >
                 <div class="space-y-4">
                   <div
-                    v-for="ticket in ticketStore.ticketTypes"
+                    v-for="ticket in filteredTicketTypes"
                     :key="ticket.id"
                     :class="[
                       'border rounded-lg p-4',
@@ -944,7 +1020,7 @@ function closePasswordResetModal() {
                             theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'
                           ]"
                         >
-                          (預設售價: NT$ {{ calculateSalePrice(ticket.facePrice, ticket.discount) }})
+                          (預設售價: NT$ {{ calculateSalePrice(ticket.facePrice, getDiscountBySegmentCount(ticket.segmentDiscounts, 1)) }})
                         </span>
                       </label>
                     </div>

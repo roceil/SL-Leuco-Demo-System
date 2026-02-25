@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, type Component } from 'vue'
+import { ref, computed, watch, onMounted, type Component } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useSidebar } from '../composables/useSidebar'
 import { useTheme } from '../composables/useTheme'
+import { useAuth } from '../composables/useAuth'
+import { useRbacStore } from '../stores/rbac'
+import { PermissionAction } from '../types/rbac'
 import {
   TicketIcon,
   PlusCircleIcon,
@@ -23,7 +26,8 @@ import {
   ArrowRightOnRectangleIcon,
   ChevronRightIcon,
   Bars3Icon,
-  MapIcon
+  MapIcon,
+  BuildingOfficeIcon
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps<{
@@ -32,11 +36,24 @@ const props = defineProps<{
 
 const { isCollapsed, toggleSidebar } = useSidebar()
 const { theme } = useTheme()
+const { currentUser } = useAuth()
+const rbacStore = useRbacStore()
+
+const currentAccountId = computed(() => {
+  if (!currentUser.value) return null
+  return rbacStore.accounts.find(a => a.username === currentUser.value)?.id ?? null
+})
+
+function canView(resource: string, action: PermissionAction = PermissionAction.READ): boolean {
+  if (!currentAccountId.value) return false
+  return rbacStore.hasPermission(currentAccountId.value, resource, action)
+}
 
 interface MenuItem {
   label: string
   icon: Component
   route?: string
+  permission?: { resource: string; action?: PermissionAction }
   children?: MenuItem[]
 }
 
@@ -45,64 +62,96 @@ const menuItems: MenuItem[] = [
     label: '售票作業',
     icon: TicketIcon,
     children: [
-      { label: '建立訂單', icon: PlusCircleIcon, route: '/create-order' },
-      { label: '訂單管理', icon: ClipboardDocumentListIcon, route: '/order-search' },
-      { label: '網單查詢', icon: MagnifyingGlassIcon, route: '/order-management' }
+      { label: '建立訂單', icon: PlusCircleIcon, route: '/create-order', permission: { resource: 'dashboard' } },
+      { label: '訂單管理', icon: ClipboardDocumentListIcon, route: '/order-search', permission: { resource: 'order-search' } },
+      { label: '網單查詢', icon: MagnifyingGlassIcon, route: '/order-management', permission: { resource: 'order-management' } }
     ]
+  },
+  {
+    label: '組織管理',
+    icon: BuildingOfficeIcon,
+    route: '/organization-management',
+    permission: { resource: 'organization-management' }
   },
   {
     label: '帳號管理',
     icon: UserIcon,
-    route: '/account-management'
+    route: '/account-management',
+    permission: { resource: 'account-management' }
   },
   {
     label: '角色管理',
     icon: UsersIcon,
-    route: '/role-management'
+    route: '/role-management',
+    permission: { resource: 'role-management' }
   },
   {
     label: '權限管理',
     icon: LockClosedIcon,
-    route: '/permission-management'
+    route: '/permission-management',
+    permission: { resource: 'permission-management' }
   },
   {
     label: '票務管理',
     icon: TicketIcon,
     children: [
-      { label: '票種管理', icon: TicketIcon, route: '/ticket-management' },
-      { label: '航點與航段管理', icon: MapIcon, route: '/route-management' },
-      { label: '特殊票種白名單', icon: DocumentTextIcon, route: '/special-ticket-whitelist' }
+      { label: '票種管理', icon: TicketIcon, route: '/ticket-management', permission: { resource: 'ticket-management' } },
+      { label: '航點與航段管理', icon: MapIcon, route: '/route-management', permission: { resource: 'route-management' } },
+      { label: '特殊票種白名單', icon: DocumentTextIcon, route: '/special-ticket-whitelist', permission: { resource: 'special-ticket-whitelist' } }
     ]
   },
   {
     label: '報表管理',
     icon: ChartBarIcon,
     children: [
-      { label: '報表總覽', icon: ChartPieIcon, route: '/report' },
-      { label: '票口現金報表', icon: CurrencyDollarIcon, route: '/cash-report' },
-      { label: '經銷商報表', icon: BuildingStorefrontIcon, route: '/dealer-report' }
+      { label: '報表總覽', icon: ChartPieIcon, route: '/report', permission: { resource: 'report' } },
+      { label: '票口現金報表', icon: CurrencyDollarIcon, route: '/cash-report', permission: { resource: 'cash-report' } },
+      { label: '經銷商報表', icon: BuildingStorefrontIcon, route: '/dealer-report', permission: { resource: 'dealer-report' } }
     ]
   },
   {
     label: '船務管理',
     icon: TruckIcon,
     children: [
-      { label: '載運分析', icon: ChartBarIcon, route: '/transport-analysis' },
-      { label: '船隻管理', icon: TruckIcon, route: '/ship-management' },
-      { label: '船班管理', icon: CalendarDaysIcon, route: '/schedule-management' }
+      { label: '載運分析', icon: ChartBarIcon, route: '/transport-analysis', permission: { resource: 'transport-analysis' } },
+      { label: '船隻管理', icon: TruckIcon, route: '/ship-management', permission: { resource: 'ship-management' } },
+      { label: '船班管理', icon: CalendarDaysIcon, route: '/schedule-management', permission: { resource: 'schedule-management' } }
     ]
   },
   {
     label: '乘客清單',
     icon: UserGroupIcon,
-    route: '/passenger-list'
+    route: '/passenger-list',
+    permission: { resource: 'passenger-list' }
   },
   {
     label: '個人帳號設定',
     icon: CogIcon,
-    route: '/account-settings'
+    route: '/account-settings',
+    permission: { resource: 'account-settings' }
   }
 ]
+
+// 判斷單一選單項目是否可見（不含子項目邏輯）
+function isItemVisible(item: MenuItem): boolean {
+  if (!item.permission) return true
+  const action = item.permission.action ?? PermissionAction.READ
+  return canView(item.permission.resource, action)
+}
+
+// 過濾後的選單（含子項目過濾、父群組空子則隱藏）
+const visibleMenuItems = computed(() => {
+  return menuItems
+    .map(item => {
+      if (item.children) {
+        const visibleChildren = item.children.filter(child => isItemVisible(child))
+        if (visibleChildren.length === 0) return null
+        return { ...item, children: visibleChildren }
+      }
+      return isItemVisible(item) ? item : null
+    })
+    .filter((item): item is MenuItem => item !== null)
+})
 
 // 儲存展開狀態，使用選單 label 作為 key
 const expandedMenus = ref<Record<string, boolean>>({})
@@ -125,29 +174,18 @@ const isChildActive = (item: MenuItem) => {
 const updateExpandedMenus = () => {
   const currentRoute = `/${props.activeRoute}`
 
-  // 遍歷所有選單項目
-  menuItems.forEach(item => {
+  visibleMenuItems.value.forEach(item => {
     if (item.children) {
-      // 檢查當前路由是否屬於這個父選單
       const isCurrentMenuActive = item.children.some(child => child.route === currentRoute)
-
-      if (isCurrentMenuActive) {
-        // 如果當前路由屬於這個父選單，展開它
-        expandedMenus.value[item.label] = true
-      } else {
-        // 如果當前路由不屬於這個父選單，折疊它
-        expandedMenus.value[item.label] = false
-      }
+      expandedMenus.value[item.label] = isCurrentMenuActive
     }
   })
 }
 
-// 初始化時自動展開
 onMounted(() => {
   updateExpandedMenus()
 })
 
-// 監聽路由變化，自動更新展開狀態
 watch(() => props.activeRoute, () => {
   updateExpandedMenus()
 })
@@ -162,7 +200,7 @@ watch(() => props.activeRoute, () => {
       : 'bg-white border-neutral-200'
   ]">
     <ul class="list-none space-y-1 flex-1 overflow-y-auto px-2">
-      <li v-for="item in menuItems" :key="item.label">
+      <li v-for="item in visibleMenuItems" :key="item.label">
         <!-- 有子選單的項目 -->
         <template v-if="item.children">
           <button

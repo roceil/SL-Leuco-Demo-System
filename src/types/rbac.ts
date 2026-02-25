@@ -30,6 +30,7 @@ export interface Role {
   id: string
   name: string // 如 "東琉聯營處管理者"
   organizationId: string // 所屬機構
+  roleTemplate: RoleTemplate // 角色範本類型
   loginRoute: string // 登入預設路徑，如 "/dashboard"
   hasBackendAccess: boolean // 是否可登入後台
   permissionGroupIds: string[] // 包含的權限組 ID 列表
@@ -37,10 +38,17 @@ export interface Role {
   updatedAt: string
 }
 
+// 角色範本類型
+export type RoleTemplate = 'super_admin' | 'operator_admin' | 'maritime_staff' | 'ticket_staff' | 'partner'
+
 // 機構
 export interface Organization {
   id: string
   name: string // 如 "東琉聯營處"
+  contactEmail?: string   // 聯絡信箱
+  contactPhone?: string   // 聯絡電話
+  createdAt: string
+  updatedAt: string
 }
 
 // 票種價格設定（針對特定帳號）

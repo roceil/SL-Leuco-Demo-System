@@ -19,6 +19,7 @@ export enum ScheduleStatus {
 export interface Schedule {
   id: string
   type: ScheduleType // 船班類型
+  organizationId?: string // 所屬航商 ID（標示由哪個航商建立）
   shipId: string // 船隻 ID
   shipName: string // 船隻名稱（冗餘欄位，方便顯示）
   routeSegmentId: string // 航段 ID（關聯到 RouteSegment）

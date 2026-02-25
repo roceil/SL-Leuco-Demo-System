@@ -15,6 +15,9 @@ import { useTicketStore } from '@/stores/ticket'
 import { useOrderStore } from '@/stores/order'
 import { useAuthStore } from '@/stores/auth'
 import { usePayment } from '@/composables/usePayment'
+import { useRbacStore } from '@/stores/rbac'
+import { useAuth } from '@/composables/useAuth'
+import { getPriceForDate } from '@/types/rbac'
 import {
   TicketIcon,
   MinusIcon,
@@ -32,6 +35,12 @@ const ticketStore = useTicketStore()
 const orderStore = useOrderStore()
 const authStore = useAuthStore()
 const { initializePaymentInfo } = usePayment()
+const rbacStore = useRbacStore()
+const { currentUser } = useAuth()
+
+// 代訂相關狀態
+const isProxyBooking = ref(false)
+const selectedAgentAccountId = ref<string | null>(null)
 
 // 票種數量（使用乘客類型作為 key，跨航段統一分組）
 interface TicketQuantity {
@@ -52,6 +61,17 @@ interface PassengerFormInfo {
 }
 
 const passengersByType = ref<Record<string, PassengerFormInfo[]>>({})
+
+// 切換代訂模式時，清空已選票種（可用票種可能改變）
+watch(isProxyBooking, (val) => {
+  if (!val) selectedAgentAccountId.value = null
+  ticketQuantities.value = []
+})
+
+// 切換代訂帳號時，清空已選票種（可用票種可能改變）
+watch(selectedAgentAccountId, () => {
+  ticketQuantities.value = []
+})
 
 // 監聽票種數量變化，同步各票種的乘客欄位數量
 watch(ticketQuantities, (newQuantities) => {
@@ -202,6 +222,60 @@ const getSeatStatus = (remainingSeats: number, maxCapacity: number) => {
   }
 }
 
+// 當前登入帳號的 RBAC 資料
+const currentAccount = computed(() =>
+  rbacStore.accounts.find(a => a.username === currentUser.value) ?? null
+)
+
+// 票種區塊為空時的提示文字
+const noTicketHint = computed(() => {
+  const hasSegment = segments.value.some(s => s.routeSegmentId)
+  if (!hasSegment) return '請先選擇航段以顯示可用票種'
+  if (isProxyBooking.value && !selectedAgentAccount.value) return '請先選擇代訂帳號以顯示可用票種'
+
+  const account = isProxyBooking.value ? selectedAgentAccount.value : currentAccount.value
+  if (!account) return '此帳號目前無可販售的票種'
+
+  // 找出哪些航段在該帳號下完全沒有可販售的票種
+  const allowedTypes = account.availableTicketTypes
+  const blockedSegmentNames = segments.value
+    .filter(s => s.routeSegmentId)
+    .filter(seg => {
+      const rs = routeStore.getRouteSegmentWithPorts(seg.routeSegmentId)
+      if (!rs) return false
+      return !ticketStore.ticketTypes.some(t =>
+        t.route.from === rs.fromPortId &&
+        t.route.to === rs.toPortId &&
+        allowedTypes.includes(t.id)
+      )
+    })
+    .map(seg => {
+      const rs = routeStore.getRouteSegmentWithPorts(seg.routeSegmentId)
+      const from = routeStore.getPortById(rs?.fromPortId ?? '')
+      const to = routeStore.getPortById(rs?.toPortId ?? '')
+      return from && to ? `${from.name}→${to.name}` : seg.label
+    })
+
+  if (blockedSegmentNames.length > 0) {
+    return `此帳號在以下航段無可販售票種：${blockedSegmentNames.join('、')}`
+  }
+  return '此帳號目前無可販售的票種'
+})
+
+// 所有 partner 角色帳號
+const allPartnerAccounts = computed(() => {
+  return rbacStore.accounts.filter(acc => {
+    const role = rbacStore.roles.find(r => r.id === acc.roleId)
+    return role?.roleTemplate === 'partner' && acc.verified
+  })
+})
+
+// 選中的代訂帳號物件
+const selectedAgentAccount = computed(() => {
+  if (!selectedAgentAccountId.value) return null
+  return rbacStore.accounts.find(a => a.id === selectedAgentAccountId.value) ?? null
+})
+
 // 取得所有已選航段共同具備的乘客類型票種（交集）
 const availableTickets = computed(() => {
   const validSegments = segments.value.filter(s => s.routeSegmentId)
@@ -217,7 +291,7 @@ const availableTickets = computed(() => {
   )
 
   // 保留在所有後續航段都有對應 passengerType 的票種
-  return firstSegTickets.filter(firstTicket =>
+  const tickets = firstSegTickets.filter(firstTicket =>
     validSegments.slice(1).every(seg => {
       const rs = routeStore.getRouteSegmentWithPorts(seg.routeSegmentId)
       return rs && ticketStore.ticketTypes.some(t =>
@@ -227,6 +301,37 @@ const availableTickets = computed(() => {
       )
     })
   )
+
+  // 依帳號的 availableTicketTypes 過濾：每個航段對應的票種都必須被允許
+  const filterByAllowedTypes = (allowedTypes: string[]) =>
+    tickets.filter(firstTicket => {
+      // 第一航段的票種必須在允許清單內
+      if (!allowedTypes.includes(firstTicket.id)) return false
+      // 後續每個航段對應的票種也必須在允許清單內
+      return validSegments.slice(1).every(seg => {
+        const rs = routeStore.getRouteSegmentWithPorts(seg.routeSegmentId)
+        if (!rs) return false
+        const segTicket = ticketStore.ticketTypes.find(t =>
+          t.passengerType === firstTicket.passengerType &&
+          t.route.from === rs.fromPortId &&
+          t.route.to === rs.toPortId
+        )
+        return segTicket ? allowedTypes.includes(segTicket.id) : false
+      })
+    })
+
+  // 代訂模式：票種以代訂帳號的 availableTicketTypes 為準
+  if (isProxyBooking.value) {
+    if (!selectedAgentAccount.value) return [] // 未選代訂帳號時不顯示任何票種
+    return filterByAllowedTypes(selectedAgentAccount.value.availableTicketTypes)
+  }
+
+  // 非代訂模式：以當前登入帳號的 availableTicketTypes 為準
+  if (currentAccount.value) {
+    return filterByAllowedTypes(currentAccount.value.availableTicketTypes)
+  }
+
+  return tickets
 })
 
 // 取得票種數量
@@ -263,7 +368,21 @@ const getTicketPriceForSegment = (passengerType: string, segmentIndex: number): 
     t.route.to === routeSegment.toPortId
   )
 
-  return ticket ? ticket.facePrice : 0
+  if (!ticket) return 0
+
+  // 若有代訂帳號，查詢其 ticketPriceSettings
+  if (selectedAgentAccount.value) {
+    const agentSettings = selectedAgentAccount.value.ticketPriceSettings.filter(
+      s => s.ticketTypeId === ticket.id
+    )
+    const today = new Date().toISOString().split('T')[0]!
+    const priceSetting = getPriceForDate(agentSettings, today)
+    if (priceSetting?.customPrice !== undefined) {
+      return priceSetting.customPrice
+    }
+  }
+
+  return ticket.facePrice
 }
 
 // 計算某個乘客類型在所有航段的總價
@@ -460,7 +579,11 @@ const handleSubmit = () => {
       status: 'pending',
       ticketBreakdown,
       notes: ticketsSummary.join('、'),
-      createdBy: userId
+      createdBy: userId,
+      agentAccountId: selectedAgentAccount.value?.id || undefined,
+      agentAccountName: selectedAgentAccount.value?.name || undefined,
+      organizationId: selectedAgentAccount.value?.organizationId
+        ?? rbacStore.accounts.find(a => a.username === currentUser.value)?.organizationId
     },
     userId
   )
@@ -496,6 +619,8 @@ const resetForm = () => {
   bookerName.value = ''
   bookerPhone.value = ''
   passengersByType.value = {}
+  isProxyBooking.value = false
+  selectedAgentAccountId.value = null
 
   // 重置航段為預設一個（支援單程票）
   const today = new Date()
@@ -529,6 +654,88 @@ const resetForm = () => {
           :icon="TicketIcon"
           max-width="2xl"
         >
+          <!-- 0. 代訂設定 -->
+          <BaseCard
+            title="代訂設定"
+            padding="lg"
+            class="mb-6"
+          >
+            <!-- 代訂模式開關 -->
+            <label class="flex items-center gap-3 cursor-pointer select-none">
+              <!-- Switch track -->
+              <div class="relative">
+                <input type="checkbox" v-model="isProxyBooking" class="sr-only" />
+                <div
+                  class="w-11 h-6 rounded-full transition-colors duration-200"
+                  :class="isProxyBooking ? 'bg-secondary-500' : 'bg-neutral-300'"
+                />
+                <!-- Switch thumb -->
+                <div
+                  class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200"
+                  :class="isProxyBooking ? 'translate-x-5' : 'translate-x-0'"
+                />
+              </div>
+              <span
+                class="text-sm font-medium"
+                :class="theme === 'dark' ? 'text-neutral-200' : 'text-neutral-700'"
+              >
+                代訂模式（以 partner 帳號名義建立訂單）
+              </span>
+            </label>
+
+            <!-- 選擇代訂帳號 -->
+            <div v-if="isProxyBooking" class="mt-4 space-y-3">
+              <div>
+                <label
+                  class="block text-xs font-medium mb-1"
+                  :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
+                >
+                  代訂帳號 <span class="text-red-500">*</span>
+                </label>
+                <select
+                  v-model="selectedAgentAccountId"
+                  class="w-full px-3 py-2 rounded-lg border transition-all outline-none"
+                  :class="theme === 'dark'
+                    ? 'bg-secondary-800 border-secondary-700 text-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/50'
+                    : 'bg-white border-neutral-300 text-neutral-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/50'
+                  "
+                >
+                  <option :value="null">請選擇代訂帳號</option>
+                  <option
+                    v-for="acc in allPartnerAccounts"
+                    :key="acc.id"
+                    :value="acc.id"
+                  >
+                    {{ acc.name }}（{{ acc.contactPerson }} / {{ acc.contactPhone }}）
+                  </option>
+                </select>
+              </div>
+
+              <!-- 選中帳號資訊提示 -->
+              <div
+                v-if="selectedAgentAccount"
+                class="rounded-md p-3"
+                :class="theme === 'dark'
+                  ? 'bg-primary-900/20 border border-primary-700'
+                  : 'bg-primary-50 border border-primary-200'
+                "
+              >
+                <p
+                  class="text-sm"
+                  :class="theme === 'dark' ? 'text-primary-300' : 'text-primary-800'"
+                >
+                  代訂對象：<strong>{{ selectedAgentAccount.name }}</strong>
+                </p>
+                <p
+                  class="text-xs mt-1"
+                  :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'"
+                >
+                  可販售 {{ selectedAgentAccount.availableTicketTypes.length }} 種票種，票價以代訂帳號設定為準
+                </p>
+              </div>
+            </div>
+          </BaseCard>
+
           <!-- 1. 航段設定 -->
           <BaseCard
             title="航段設定"
@@ -735,7 +942,7 @@ const resetForm = () => {
               title="票種與數量"
               padding="lg"
             >
-              <!-- 提示訊息：未選擇航段 -->
+              <!-- 提示訊息：無可用票種 -->
               <div
                 v-if="availableTickets.length === 0"
                 class="text-center py-8"
@@ -748,7 +955,7 @@ const resetForm = () => {
                   class="text-sm"
                   :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'"
                 >
-                  請先選擇航段以顯示可用票種
+                  {{ noTicketHint }}
                 </p>
               </div>
 

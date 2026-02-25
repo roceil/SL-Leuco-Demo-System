@@ -83,6 +83,9 @@ export interface ScheduleSegment {
 export interface Order {
   id: string
   orderNumber: string // 訂單編號
+  organizationId?: string // 所屬航商 ID
+  agentAccountId?: string // 代訂帳號 ID（partner 帳號）
+  agentAccountName?: string // 代訂帳號名稱
   customerId?: string // 客戶 ID（如有客戶系統）
   customerName: string // 客戶姓名
   customerPhone: string // 客戶電話

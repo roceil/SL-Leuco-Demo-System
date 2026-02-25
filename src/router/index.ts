@@ -125,6 +125,11 @@ const router = createRouter({
       component: () => import('../views/RouteManagement.vue'),
     },
     {
+      path: '/organization-management',
+      name: 'organization-management',
+      component: () => import('../views/OrganizationManagement.vue'),
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('../views/NotFound.vue'),

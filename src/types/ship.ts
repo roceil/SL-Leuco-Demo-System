@@ -14,6 +14,7 @@ export interface Ship {
   id: string
   name: string // 船隻名稱
   registrationNumber: string // 船籍編號
+  organizationId: string // 所屬航商 ID
   maxCapacity: number // 最大載運人數
   currentCapacity?: number // 當前載運人數（可選）
   status: ShipStatus // 船隻狀態
@@ -26,6 +27,7 @@ export interface Ship {
 export interface ShipFormData {
   name: string
   registrationNumber: string
+  organizationId: string
   maxCapacity: number
   status: ShipStatus
   description?: string

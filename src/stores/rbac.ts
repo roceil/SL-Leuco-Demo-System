@@ -199,6 +199,93 @@ export const useRbacStore = defineStore('rbac', () => {
     }))
   }
 
+  // Actions - 組織管理
+  async function createOrganization(
+    data: Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<Organization> {
+    const newOrg: Organization = {
+      ...data,
+      id: `org-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+    organizations.value.push(newOrg)
+    await apiPut('rbac_organizations', organizations.value)
+    return newOrg
+  }
+
+  async function updateOrganization(
+    id: string,
+    data: Partial<Omit<Organization, 'id' | 'createdAt'>>
+  ): Promise<void> {
+    const index = organizations.value.findIndex((o) => o.id === id)
+    if (index !== -1) {
+      organizations.value[index] = {
+        ...organizations.value[index],
+        ...data,
+        updatedAt: new Date().toISOString()
+      } as Organization
+      await apiPut('rbac_organizations', organizations.value)
+    }
+  }
+
+  async function deleteOrganization(id: string): Promise<void> {
+    const hasAccounts = accounts.value.some((a) => a.organizationId === id)
+    if (hasAccounts) {
+      throw new Error('此航商仍有關聯帳號，無法刪除')
+    }
+    const index = organizations.value.findIndex((o) => o.id === id)
+    if (index !== -1) {
+      organizations.value.splice(index, 1)
+      await apiPut('rbac_organizations', organizations.value)
+    }
+  }
+
+  /**
+   * 判斷某個帳號是否可對特定資源（含組織歸屬）執行操作
+   * manage-schedule 的 READ 為唯一允許跨組織的資源
+   */
+  function canAccessResource(
+    accountId: string,
+    resource: string,
+    action: PermissionAction,
+    resourceOrgId?: string
+  ): boolean {
+    if (!hasPermission(accountId, resource, action)) return false
+    if (!resourceOrgId) return true
+
+    const account = accounts.value.find((a) => a.id === accountId)
+    if (!account) return false
+
+    // manage-schedule 的 READ 允許跨組織
+    if (resource === 'manage-schedule' && action === PermissionAction.READ) return true
+
+    // super_admin 無組織限制
+    const role = roles.value.find((r) => r.id === account.roleId)
+    if (role?.roleTemplate === 'super_admin') return true
+
+    // 其他角色只能存取本組織資源
+    return account.organizationId === resourceOrgId
+  }
+
+  /**
+   * 判斷帳號是否為 super_admin
+   */
+  function isSuperAdmin(accountId: string): boolean {
+    const account = accounts.value.find((a) => a.id === accountId)
+    if (!account) return false
+    const role = roles.value.find((r) => r.id === account.roleId)
+    return role?.roleTemplate === 'super_admin'
+  }
+
+  /**
+   * 取得帳號所屬組織 ID
+   */
+  function getAccountOrgId(accountId: string): string | null {
+    const account = accounts.value.find((a) => a.id === accountId)
+    return account?.organizationId ?? null
+  }
+
   // Actions - 帳號管理
   function selectAccount(accountId: string | null) {
     selectedAccountId.value = accountId
@@ -264,11 +351,17 @@ export const useRbacStore = defineStore('rbac', () => {
     createPermissionGroup,
     updatePermissionGroup,
     deletePermissionGroup,
+    createOrganization,
+    updateOrganization,
+    deleteOrganization,
     selectAccount,
     createAccount,
     updateAccount,
     deleteAccount,
     hasPermission,
+    canAccessResource,
+    isSuperAdmin,
+    getAccountOrgId,
     getAccountPermissions
   }
 })

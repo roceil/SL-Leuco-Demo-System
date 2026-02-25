@@ -50,6 +50,7 @@ export function useShips() {
     ships.value[index] = {
       id: existingShip.id,
       ...formData,
+      organizationId: formData.organizationId || existingShip.organizationId,
       currentCapacity: existingShip.currentCapacity,
       createdAt: existingShip.createdAt,
       updatedAt: new Date().toISOString()

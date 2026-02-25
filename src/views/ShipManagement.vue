@@ -3,6 +3,8 @@ import { ref, computed } from 'vue'
 import { useSidebar } from '@/composables/useSidebar'
 import { useTheme } from '@/composables/useTheme'
 import { useShips } from '@/composables/useShips'
+import { useAuth } from '@/composables/useAuth'
+import { useRbacStore } from '@/stores/rbac'
 import { ShipStatus, type ShipFormData } from '@/types/ship'
 import Navbar from '@/components/Navbar.vue'
 import Sidebar from '@/components/Sidebar.vue'
@@ -21,6 +23,16 @@ import {
 const { isCollapsed } = useSidebar()
 const { theme } = useTheme()
 const { ships, addShip, updateShip, deleteShip, updateShipStatus } = useShips()
+const { currentUser } = useAuth()
+const rbacStore = useRbacStore()
+
+// 當前登入帳號資訊
+const currentAccount = computed(() => {
+  if (!currentUser.value) return null
+  return rbacStore.accounts.find(a => a.username === currentUser.value) ?? null
+})
+const isCurrentSuperAdmin = computed(() => rbacStore.isSuperAdmin(currentAccount.value?.id ?? ''))
+const currentOrgId = computed(() => currentAccount.value?.organizationId ?? 'org-kx')
 
 // Modal 控制
 const showModal = ref(false)
@@ -31,6 +43,7 @@ const currentShipId = ref<string | null>(null)
 const formData = ref<ShipFormData>({
   name: '',
   registrationNumber: '',
+  organizationId: '',
   maxCapacity: 100,
   status: ShipStatus.ACTIVE,
   description: ''
@@ -51,6 +64,11 @@ const statusOptions = [
 // 篩選後的船隻列表
 const filteredShips = computed(() => {
   let result = ships.value
+
+  // 組織過濾：非 super_admin 只看到本組織的船隻
+  if (!isCurrentSuperAdmin.value && currentOrgId.value) {
+    result = result.filter(ship => ship.organizationId === currentOrgId.value)
+  }
 
   // 狀態篩選
   if (statusFilter.value !== 'all') {
@@ -105,6 +123,7 @@ const resetForm = () => {
   formData.value = {
     name: '',
     registrationNumber: '',
+    organizationId: currentOrgId.value,
     maxCapacity: 100,
     status: ShipStatus.ACTIVE,
     description: ''
@@ -127,6 +146,7 @@ const openEditModal = (shipId: string) => {
   formData.value = {
     name: ship.name,
     registrationNumber: ship.registrationNumber,
+    organizationId: ship.organizationId,
     maxCapacity: ship.maxCapacity,
     status: ship.status,
     description: ship.description || ''

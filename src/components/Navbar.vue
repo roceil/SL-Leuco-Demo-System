@@ -1,12 +1,25 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { UserCircleIcon, SunIcon, MoonIcon } from '@heroicons/vue/24/outline'
 import { useTheme } from '../composables/useTheme'
+import { useAuth } from '../composables/useAuth'
+import { useRbacStore } from '../stores/rbac'
 
+// username prop 保留向後相容，但優先使用登入狀態
 defineProps<{
   username?: string
 }>()
 
 const { theme, toggleTheme } = useTheme()
+const { currentUser } = useAuth()
+const rbacStore = useRbacStore()
+
+// 顯示帳號的完整名稱（name 欄位），若找不到則顯示 username
+const displayName = computed(() => {
+  if (!currentUser.value) return ''
+  const account = rbacStore.accounts.find(a => a.username === currentUser.value)
+  return account?.name || currentUser.value
+})
 </script>
 
 <template>
@@ -59,7 +72,7 @@ const { theme, toggleTheme } = useTheme()
       >
         <UserCircleIcon class="w-5 h-5" :class="theme === 'dark' ? 'text-primary-400' : 'text-primary-600'" />
         <span class="text-sm font-medium" :class="theme === 'dark' ? 'text-white' : 'text-neutral-700'">
-          {{ username || '管理員_測試帳號' }}
+          {{ displayName || username || '未登入' }}
         </span>
       </div>
     </div>

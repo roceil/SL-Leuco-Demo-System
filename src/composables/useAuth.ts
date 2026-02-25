@@ -7,6 +7,11 @@ let loginRecords: LoginRecord[] = []
 let accountLocks: AccountLockInfo[] = []
 let loadInitiated = false
 
+// 全域共享的登入狀態（singleton），從 localStorage 恢復以支援頁面重整
+const _storedUser = localStorage.getItem('currentUser')
+const currentUser = ref<string | null>(_storedUser)
+const isAuthenticated = ref(_storedUser !== null)
+
 /** 從 /api/login_records 和 /api/account_locks 初始化資料 */
 async function init(): Promise<void> {
   if (loadInitiated) return
@@ -30,9 +35,6 @@ const defaultConfig: LoginConfig = {
 }
 
 export function useAuth() {
-  const currentUser = ref<string | null>(null)
-  const isAuthenticated = ref(false)
-
   // 觸發懶加載（非阻塞）
   init()
 
@@ -176,6 +178,7 @@ export function useAuth() {
 
     currentUser.value = username
     isAuthenticated.value = true
+    localStorage.setItem('currentUser', username)
   }
 
   /**
@@ -252,6 +255,7 @@ export function useAuth() {
   const logout = () => {
     currentUser.value = null
     isAuthenticated.value = false
+    localStorage.removeItem('currentUser')
   }
 
   /**

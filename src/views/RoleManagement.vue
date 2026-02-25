@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useRbacStore } from '@/stores/rbac'
 import { useSidebar } from '@/composables/useSidebar'
 import { useTheme } from '@/composables/useTheme'
+import { useAuth } from '@/composables/useAuth'
 import Navbar from '@/components/Navbar.vue'
 import Sidebar from '@/components/Sidebar.vue'
 import PageContainer from '@/components/ui/PageContainer.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
-import type { Role } from '@/types/rbac'
+import type { Role, RoleTemplate } from '@/types/rbac'
 import {
   UserGroupIcon,
   PlusIcon,
@@ -20,11 +21,36 @@ import {
 const rbacStore = useRbacStore()
 const { isCollapsed } = useSidebar()
 const { theme } = useTheme()
+const { currentUser } = useAuth()
+
+// 當前登入帳號資訊
+const currentAccount = computed(() => {
+  if (!currentUser.value) return null
+  return rbacStore.accounts.find(a => a.username === currentUser.value) ?? null
+})
+const isCurrentSuperAdmin = computed(() => rbacStore.isSuperAdmin(currentAccount.value?.id ?? ''))
+const currentOrgId = computed(() => currentAccount.value?.organizationId ?? null)
+
+// 可見的角色列表（非 super_admin 只看到本組織角色）
+const visibleRoles = computed(() => {
+  if (isCurrentSuperAdmin.value) return rbacStore.roles
+  return rbacStore.roles.filter(r => r.organizationId === currentOrgId.value)
+})
+
+// 角色範本選項
+const roleTemplateOptions: { value: RoleTemplate; label: string }[] = [
+  { value: 'super_admin', label: '系統超管' },
+  { value: 'operator_admin', label: '航商管理員' },
+  { value: 'maritime_staff', label: '船務人員' },
+  { value: 'ticket_staff', label: '票口人員' },
+  { value: 'partner', label: '合作廠商' }
+]
 
 // 表單資料
 const formData = ref<Partial<Role>>({
   name: '',
-  organizationId: 'org-1',
+  organizationId: 'org-sys',
+  roleTemplate: 'ticket_staff',
   loginRoute: '',
   hasBackendAccess: true,
   permissionGroupIds: []
@@ -38,6 +64,7 @@ watch(
       formData.value = {
         name: newRole.name,
         organizationId: newRole.organizationId,
+        roleTemplate: newRole.roleTemplate,
         loginRoute: newRole.loginRoute,
         hasBackendAccess: newRole.hasBackendAccess,
         permissionGroupIds: [...newRole.permissionGroupIds]
@@ -50,9 +77,11 @@ watch(
 )
 
 function resetForm() {
+  const defaultOrgId = isCurrentSuperAdmin.value ? 'org-sys' : (currentOrgId.value ?? 'org-sys')
   formData.value = {
     name: '',
-    organizationId: 'org-1',
+    organizationId: defaultOrgId,
+    roleTemplate: 'ticket_staff',
     loginRoute: '',
     hasBackendAccess: true,
     permissionGroupIds: []
@@ -79,16 +108,22 @@ function saveRole() {
     rbacStore.updateRole(rbacStore.selectedRoleId, {
       name: formData.value.name!,
       organizationId: formData.value.organizationId!,
+      roleTemplate: formData.value.roleTemplate!,
       loginRoute: formData.value.loginRoute!,
       hasBackendAccess: formData.value.hasBackendAccess!,
       permissionGroupIds: formData.value.permissionGroupIds!
     })
     alert('角色更新成功')
   } else {
-    // 創建新角色
+    // 創建新角色（非 super_admin 只能在本組織建立角色）
+    const targetOrgId = isCurrentSuperAdmin.value
+      ? (formData.value.organizationId || 'org-sys')
+      : (currentOrgId.value || 'org-sys')
+
     const newRole = rbacStore.createRole({
       name: formData.value.name!,
-      organizationId: formData.value.organizationId || 'org-1',
+      organizationId: targetOrgId,
+      roleTemplate: formData.value.roleTemplate || 'ticket_staff',
       loginRoute: formData.value.loginRoute || '/create-order',
       hasBackendAccess: formData.value.hasBackendAccess ?? true,
       permissionGroupIds: formData.value.permissionGroupIds || []
@@ -165,7 +200,7 @@ function isPermissionGroupChecked(groupId: string): boolean {
                   </h5>
                   <div class="space-y-1">
                     <button
-                      v-for="role in rbacStore.roles"
+                      v-for="role in visibleRoles"
                       :key="role.id"
                       @click="selectRole(role.id)"
                       :class="[
@@ -206,6 +241,30 @@ function isPermissionGroupChecked(groupId: string): boolean {
                         v-model="formData.name"
                         placeholder="請輸入角色名稱"
                       />
+                    </div>
+
+                    <!-- 角色範本 -->
+                    <div>
+                      <label
+                        class="block text-sm font-medium mb-2"
+                        :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                      >
+                        角色範本
+                      </label>
+                      <select
+                        v-model="formData.roleTemplate"
+                        :class="[
+                          'w-full px-4 py-2.5 rounded-md border transition-colors',
+                          theme === 'dark'
+                            ? 'bg-secondary-900 border-secondary-800 text-white'
+                            : 'bg-white border-neutral-300 text-neutral-900',
+                          'focus:outline-none focus:ring-2 focus:ring-primary-500'
+                        ]"
+                      >
+                        <option v-for="opt in roleTemplateOptions" :key="opt.value" :value="opt.value">
+                          {{ opt.label }}
+                        </option>
+                      </select>
                     </div>
 
                     <!-- 登入預設路徑 -->
