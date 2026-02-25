@@ -5,6 +5,9 @@
 // 付款方式
 export type PaymentMethod = 'cash' | 'credit_card' | 'transfer' | 'other'
 
+// 付款類型
+export type PaymentType = 'deposit' | 'balance'
+
 // 付款狀態
 export type PaymentStatus = 'unpaid' | 'partial' | 'paid' | 'refunded'
 
@@ -18,6 +21,7 @@ export type CarrierType = 'mobile' | 'natural_person' | 'none'
 export interface PaymentRecord {
   id: string
   amount: number // 付款金額
+  paymentType: PaymentType // 付款類型（訂金/尾款）
   method: PaymentMethod // 付款方式
   paidAt: string // 付款時間（ISO 8601 格式）
   paidBy: string // 收款者帳號 ID

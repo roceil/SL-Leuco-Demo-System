@@ -7,7 +7,8 @@ import type {
   PaymentInfo,
   PaymentRecord,
   PaymentMethod,
-  PaymentStatus
+  PaymentStatus,
+  PaymentType
 } from '@/types/order'
 import { calculatePaymentAmounts, getPaymentStatus } from '@/types/order'
 
@@ -19,11 +20,13 @@ export function usePayment() {
     amount: number,
     method: PaymentMethod,
     paidBy: string,
-    note?: string
+    note?: string,
+    paymentType: PaymentType = 'deposit'
   ): PaymentRecord {
     return {
       id: `payment-${Date.now()}`,
       amount,
+      paymentType,
       method,
       paidAt: new Date().toISOString(),
       paidBy,
@@ -160,6 +163,17 @@ export function usePayment() {
   }
 
   /**
+   * 格式化付款類型顯示文字
+   */
+  function formatPaymentType(type: PaymentType): string {
+    const typeMap: Record<PaymentType, string> = {
+      deposit: '訂金',
+      balance: '尾款'
+    }
+    return typeMap[type] || type
+  }
+
+  /**
    * 格式化付款方式顯示文字
    */
   function formatPaymentMethod(method: PaymentMethod): string {
@@ -217,6 +231,7 @@ export function usePayment() {
     updatePaymentInfo,
 
     // 格式化與顯示
+    formatPaymentType,
     formatPaymentMethod,
     formatPaymentStatus,
     getPaymentStatusColor

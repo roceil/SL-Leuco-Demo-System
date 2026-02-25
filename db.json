@@ -1863,13 +1863,41 @@
       "paymentInfo": {
         "deposit": 0,
         "balance": 8150,
-        "discount": 0,
-        "totalAmount": 8150,
-        "paidAmount": 0,
-        "remainingAmount": 8150,
+        "discount": 500,
+        "totalAmount": 7650,
+        "paidAmount": 7650,
+        "remainingAmount": 0,
         "paymentMethod": "cash",
-        "paymentStatus": "unpaid",
-        "paymentRecords": []
+        "paymentStatus": "paid",
+        "paymentRecords": [
+          {
+            "id": "payment-1772007896722",
+            "amount": 2650,
+            "paymentType": "deposit",
+            "method": "cash",
+            "paidAt": "2026-02-25T08:24:56.722Z",
+            "paidBy": "admin",
+            "note": ""
+          },
+          {
+            "id": "payment-1772008126480",
+            "amount": 1000,
+            "paymentType": "balance",
+            "method": "cash",
+            "paidAt": "2026-02-25T08:28:46.480Z",
+            "paidBy": "acc-kx-admin",
+            "note": ""
+          },
+          {
+            "id": "payment-1772008133230",
+            "amount": 4000,
+            "paymentType": "balance",
+            "method": "cash",
+            "paidAt": "2026-02-25T08:28:53.230Z",
+            "paidBy": "acc-kx-admin",
+            "note": ""
+          }
+        ]
       },
       "status": "pending",
       "ticketBreakdown": [
@@ -1890,7 +1918,8 @@
       "id": "order-1772007364315",
       "orderNumber": "20260225-1500",
       "createdAt": "2026-02-25T08:16:04.315Z",
-      "updatedAt": "2026-02-25T08:16:04.315Z"
+      "updatedAt": "2026-02-25T08:29:50.038Z",
+      "updatedBy": "acc-kx-admin"
     }
   ],
   "ports": [

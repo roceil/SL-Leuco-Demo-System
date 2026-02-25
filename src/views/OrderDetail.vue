@@ -5,6 +5,7 @@ import { useOrderStore } from '@/stores/order'
 import { useTicketStore } from '@/stores/ticket'
 import { useAuthStore } from '@/stores/auth'
 import { useRbacStore } from '@/stores/rbac'
+import { useAuth } from '@/composables/useAuth'
 import { usePayment } from '@/composables/usePayment'
 import { useSidebar } from '@/composables/useSidebar'
 import { useTheme } from '@/composables/useTheme'
@@ -38,6 +39,12 @@ const rbacStore = useRbacStore()
 const payment = usePayment()
 const { isCollapsed } = useSidebar()
 const { theme } = useTheme()
+const { currentUser } = useAuth()
+
+const currentAccountId = computed(() => {
+  const account = rbacStore.accounts.find(a => a.username === currentUser.value)
+  return account?.id || currentUser.value || 'system'
+})
 
 // 訂單資料
 const orderId = ref<string>('')
@@ -46,8 +53,13 @@ const orderNotFound = ref(false)
 // 付款表單
 const showPaymentForm = ref(false)
 const paymentAmount = ref(0)
+const paymentType = ref<import('@/types/order').PaymentType>('deposit')
 const paymentMethod = ref<PaymentMethod>('cash')
 const paymentNote = ref('')
+
+// 折扣表單
+const showDiscountForm = ref(false)
+const discountAmount = ref(0)
 
 // 發票表單
 const showInvoiceForm = ref(false)
@@ -105,6 +117,11 @@ function openPaymentForm() {
   paymentAmount.value = currentOrder.value.paymentInfo.remainingAmount
   paymentMethod.value = currentOrder.value.paymentInfo.paymentMethod
   paymentNote.value = ''
+  // 若訂金尚未付清則預設訂金，否則預設尾款
+  paymentType.value =
+    currentOrder.value.paymentInfo.paidAmount < currentOrder.value.paymentInfo.deposit
+      ? 'deposit'
+      : 'balance'
   showPaymentForm.value = true
 }
 
@@ -124,8 +141,9 @@ function savePayment() {
   const record = payment.createPaymentRecord(
     paymentAmount.value,
     paymentMethod.value,
-    authStore.currentUser?.id || 'system',
-    paymentNote.value
+    currentAccountId.value,
+    paymentNote.value,
+    paymentType.value
   )
 
   const success = orderStore.addPayment(currentOrder.value.id, record)
@@ -136,6 +154,33 @@ function savePayment() {
   } else {
     alert('付款記錄新增失敗')
   }
+}
+
+// ============ 折扣功能 ============
+
+function openDiscountForm() {
+  if (!currentOrder.value) return
+  discountAmount.value = currentOrder.value.paymentInfo.discount
+  showDiscountForm.value = true
+}
+
+function saveDiscount() {
+  if (!currentOrder.value) return
+
+  if (discountAmount.value < 0) {
+    alert('折扣金額不能為負數')
+    return
+  }
+
+  const updatedInfo = payment.updatePaymentInfo(currentOrder.value.paymentInfo, {
+    discount: discountAmount.value
+  })
+  orderStore.updatePaymentInfo(
+    currentOrder.value.id,
+    updatedInfo,
+    currentAccountId.value
+  )
+  showDiscountForm.value = false
 }
 
 // ============ 發票功能 ============
@@ -163,7 +208,7 @@ function saveInvoice() {
   orderStore.updateInvoiceInfo(
     currentOrder.value.id,
     invoiceFormData.value,
-    authStore.currentUser?.id || 'system'
+    currentAccountId.value
   )
 
   alert('發票資訊已更新')
@@ -226,7 +271,7 @@ function cancelEditPassengers() {
 async function saveAllPassengers() {
   if (!currentOrder.value) return
 
-  const userId = authStore.currentUser?.id || 'system'
+  const userId = currentAccountId.value
 
   for (const slot of localPassengers.value) {
     if (slot.id) {
@@ -282,7 +327,7 @@ function confirmAddTicket() {
   if (!ticket) return
 
   const order = currentOrder.value
-  const userId = authStore.currentUser?.id || 'system'
+  const userId = currentAccountId.value
 
   // 1. 立即寫入乘客到 db.json
   orderStore.addPassenger(
@@ -320,7 +365,7 @@ function refundPassenger(slot: LocalPassenger, index: number) {
   if (!currentOrder.value) return
 
   const order = currentOrder.value
-  const userId = authStore.currentUser?.id || 'system'
+  const userId = currentAccountId.value
 
   // 1. 更新 ticketBreakdown 與 paymentInfo
   const ticket = ticketStore.ticketTypes.find(t => t.id === slot.ticketTypeId)
@@ -362,7 +407,7 @@ function issueTicket() {
 
   const result = orderStore.issueTicket(
     currentOrder.value.id,
-    authStore.currentUser?.id || 'system'
+    currentAccountId.value
   )
 
   if (result.success) {
@@ -543,15 +588,24 @@ onMounted(() => {
             <!-- 付款資訊 -->
             <BaseCard title="付款資訊" padding="lg">
               <template #actions>
-                <BaseButton
-                  v-if="currentOrder.paymentInfo.remainingAmount > 0"
-                  variant="primary"
-                  size="sm"
-                  :icon="PlusIcon"
-                  @click="openPaymentForm"
-                >
-                  新增付款
-                </BaseButton>
+                <div class="flex gap-2">
+                  <BaseButton
+                    variant="secondary"
+                    size="sm"
+                    @click="openDiscountForm"
+                  >
+                    設定折扣
+                  </BaseButton>
+                  <BaseButton
+                    v-if="currentOrder.paymentInfo.remainingAmount > 0"
+                    variant="primary"
+                    size="sm"
+                    :icon="PlusIcon"
+                    @click="openPaymentForm"
+                  >
+                    新增付款
+                  </BaseButton>
+                </div>
               </template>
 
               <div class="space-y-4">
@@ -629,12 +683,26 @@ onMounted(() => {
                       ]"
                     >
                       <div>
-                        <p class="font-medium" :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'">
-                          NT$ {{ record.amount }}
-                        </p>
+                        <div class="flex items-center gap-2">
+                          <p class="font-medium" :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'">
+                            NT$ {{ record.amount }}
+                          </p>
+                          <span
+                            v-if="record.paymentType"
+                            :class="[
+                              'text-xs px-1.5 py-0.5 rounded font-medium',
+                              record.paymentType === 'deposit'
+                                ? 'bg-blue-100 text-blue-700'
+                                : 'bg-green-100 text-green-700'
+                            ]"
+                          >
+                            {{ payment.formatPaymentType(record.paymentType) }}
+                          </span>
+                        </div>
                         <p class="text-xs" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
                           {{ payment.formatPaymentMethod(record.method) }} ·
-                          {{ new Date(record.paidAt).toLocaleString('zh-TW') }}
+                          {{ new Date(record.paidAt).toLocaleString('zh-TW') }} ·
+                          {{ rbacStore.accounts.find(a => a.id === record.paidBy)?.name || record.paidBy }}
                         </p>
                         <p v-if="record.note" class="text-xs mt-1" :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-500'">
                           {{ record.note }}
@@ -843,6 +911,24 @@ onMounted(() => {
 
                 <div>
                   <label class="block text-sm font-medium mb-2" :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'">
+                    費用類型 <span class="text-red-500">*</span>
+                  </label>
+                  <select
+                    v-model="paymentType"
+                    :class="[
+                      'w-full px-4 py-2.5 rounded-md border',
+                      theme === 'dark'
+                        ? 'bg-secondary-900 border-secondary-800 text-white'
+                        : 'bg-white border-neutral-200 text-neutral-900'
+                    ]"
+                  >
+                    <option value="deposit">訂金</option>
+                    <option value="balance">尾款</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium mb-2" :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'">
                     付款方式 <span class="text-red-500">*</span>
                   </label>
                   <select
@@ -875,6 +961,36 @@ onMounted(() => {
                 </BaseButton>
                 <BaseButton variant="primary" @click="savePayment" class="flex-1">
                   確認新增
+                </BaseButton>
+              </div>
+            </BaseCard>
+          </div>
+
+          <!-- 設定折扣 Modal -->
+          <div
+            v-if="showDiscountForm"
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            @click.self="showDiscountForm = false"
+          >
+            <BaseCard title="設定折扣" padding="lg" class="w-full max-w-sm">
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium mb-2" :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'">
+                    折扣金額
+                  </label>
+                  <BaseInput v-model.number="discountAmount" type="number" min="0" placeholder="0" />
+                  <p class="text-xs mt-1" :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-500'">
+                    訂金 NT$ {{ currentOrder.paymentInfo.deposit }} + 尾款 NT$ {{ currentOrder.paymentInfo.balance }} - 折扣 NT$ {{ discountAmount }} = 總計 NT$ {{ Math.max(0, currentOrder.paymentInfo.deposit + currentOrder.paymentInfo.balance - discountAmount) }}
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex gap-3 mt-6">
+                <BaseButton variant="secondary" @click="showDiscountForm = false" class="flex-1">
+                  取消
+                </BaseButton>
+                <BaseButton variant="primary" @click="saveDiscount" class="flex-1">
+                  確認
                 </BaseButton>
               </div>
             </BaseCard>
