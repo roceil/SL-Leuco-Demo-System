@@ -2,6 +2,8 @@
  * RBAC 系統類型定義
  */
 
+import type { SegmentDiscount } from './ticket'
+
 // 權限操作枚舉
 export enum PermissionAction {
   READ = 'read',
@@ -56,7 +58,7 @@ export interface Organization {
 export interface TicketPriceSetting {
   id: string // 價格設定 ID
   ticketTypeId: string // 票種 ID
-  customPrice?: number // 自訂價格（如果未設定則使用票種的原始售價）
+  segmentDiscounts: SegmentDiscount[] // 每航段數量的折扣金額（與 TicketType.segmentDiscounts 結構相同）
   effectiveDate: string // 價格啟用日期 (ISO date string, e.g., '2026-01-01')
   createdAt: string // 記錄何時建立這個價格設定
 }

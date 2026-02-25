@@ -1165,12 +1165,13 @@
       "toPortId": "port-gi",
       "allowedNextSegments": [
         "rs-gi-ly",
-        "route-1771932990558"
+        "route-1771932990558",
+        "rs-gi-tt"
       ],
       "estimatedDuration": 50,
       "isActive": true,
       "createdAt": "2026-01-01T00:00:00.000Z",
-      "updatedAt": "2026-02-24T11:36:41.073Z"
+      "updatedAt": "2026-02-25T06:17:29.381Z"
     },
     {
       "id": "rs-gi-tt",
@@ -1485,6 +1486,22 @@
       "createdAt": "2026-02-24T11:43:01.489Z",
       "updatedAt": "2026-02-24T11:43:01.489Z",
       "organizationId": "org-jx"
+    },
+    {
+      "id": "SCH015",
+      "type": "flexible",
+      "shipId": "ship-jx1",
+      "shipName": "金星 1 號",
+      "routeSegmentId": "rs-tt-gi",
+      "departureTime": "07:00",
+      "date": "2026-02-25",
+      "isDaily": false,
+      "currentPassengers": 0,
+      "maxCapacity": 350,
+      "status": "active",
+      "description": "",
+      "createdAt": "2026-02-25T06:16:48.256Z",
+      "updatedAt": "2026-02-25T06:16:48.256Z"
     }
   ],
   "ticket_types": [
@@ -2989,161 +3006,300 @@
         {
           "id": "price-1771990229230-yde8z3sfw",
           "ticketTypeId": "tt-tt-gi-adult",
-          "customPrice": 550,
+          "segmentDiscounts": [
+            {
+              "segmentCount": 1,
+              "discountAmount": 0
+            },
+            {
+              "segmentCount": 2,
+              "discountAmount": 0
+            }
+          ],
           "effectiveDate": "2026-02-25",
           "createdAt": "2026-02-25T03:30:29.230Z"
         },
         {
           "id": "price-1771990230288-vcjucngb5",
           "ticketTypeId": "tt-tt-gi-child",
-          "customPrice": 275,
+          "segmentDiscounts": [
+            {
+              "segmentCount": 1,
+              "discountAmount": 0
+            },
+            {
+              "segmentCount": 2,
+              "discountAmount": 0
+            }
+          ],
           "effectiveDate": "2026-02-25",
           "createdAt": "2026-02-25T03:30:30.288Z"
         },
         {
           "id": "price-1771990231330-oxx15k1da",
           "ticketTypeId": "tt-tt-gi-resident",
-          "customPrice": 200,
+          "segmentDiscounts": [
+            {
+              "segmentCount": 1,
+              "discountAmount": 0
+            }
+          ],
           "effectiveDate": "2026-02-25",
           "createdAt": "2026-02-25T03:30:31.330Z"
         },
         {
           "id": "price-1771991083465-1w12eoaxv",
           "ticketTypeId": "tt-gi-tt-adult",
-          "customPrice": 550,
+          "segmentDiscounts": [
+            {
+              "segmentCount": 1,
+              "discountAmount": 0
+            },
+            {
+              "segmentCount": 2,
+              "discountAmount": 0
+            }
+          ],
           "effectiveDate": "2026-02-25",
           "createdAt": "2026-02-25T03:44:43.465Z"
         },
         {
           "id": "price-1771991084698-ko2pzfd7n",
           "ticketTypeId": "tt-gi-tt-child",
-          "customPrice": 275,
+          "segmentDiscounts": [
+            {
+              "segmentCount": 1,
+              "discountAmount": 0
+            },
+            {
+              "segmentCount": 2,
+              "discountAmount": 0
+            }
+          ],
           "effectiveDate": "2026-02-25",
           "createdAt": "2026-02-25T03:44:44.698Z"
         },
         {
           "id": "price-1771991085881-kqsmenc3m",
           "ticketTypeId": "tt-gi-tt-resident",
-          "customPrice": 200,
+          "segmentDiscounts": [
+            {
+              "segmentCount": 1,
+              "discountAmount": 0
+            }
+          ],
           "effectiveDate": "2026-02-25",
           "createdAt": "2026-02-25T03:44:45.881Z"
         },
         {
           "id": "price-1771991087606-2aq4xol7d",
           "ticketTypeId": "tt-tt-ly-adult",
-          "customPrice": 1000,
+          "segmentDiscounts": [
+            {
+              "segmentCount": 1,
+              "discountAmount": 0
+            }
+          ],
           "effectiveDate": "2026-02-25",
           "createdAt": "2026-02-25T03:44:47.606Z"
         },
         {
           "id": "price-1771991088689-fj3h2zfy7",
           "ticketTypeId": "tt-tt-ly-child",
-          "customPrice": 500,
+          "segmentDiscounts": [
+            {
+              "segmentCount": 1,
+              "discountAmount": 0
+            }
+          ],
           "effectiveDate": "2026-02-25",
           "createdAt": "2026-02-25T03:44:48.689Z"
         },
         {
           "id": "price-1771991089764-d1cpg3pu7",
           "ticketTypeId": "tt-tt-ly-resident",
-          "customPrice": 400,
+          "segmentDiscounts": [
+            {
+              "segmentCount": 1,
+              "discountAmount": 0
+            }
+          ],
           "effectiveDate": "2026-02-25",
           "createdAt": "2026-02-25T03:44:49.764Z"
         },
         {
           "id": "price-1771991090756-dwydr2y5t",
           "ticketTypeId": "tt-ly-tt-adult",
-          "customPrice": 1000,
+          "segmentDiscounts": [
+            {
+              "segmentCount": 1,
+              "discountAmount": 0
+            }
+          ],
           "effectiveDate": "2026-02-25",
           "createdAt": "2026-02-25T03:44:50.756Z"
         },
         {
           "id": "price-1771991091640-q8agen9g1",
           "ticketTypeId": "tt-ly-tt-child",
-          "customPrice": 500,
+          "segmentDiscounts": [
+            {
+              "segmentCount": 1,
+              "discountAmount": 0
+            }
+          ],
           "effectiveDate": "2026-02-25",
           "createdAt": "2026-02-25T03:44:51.640Z"
         },
         {
           "id": "price-1771991092889-krdx5425l",
           "ticketTypeId": "tt-ly-tt-resident",
-          "customPrice": 400,
+          "segmentDiscounts": [
+            {
+              "segmentCount": 1,
+              "discountAmount": 0
+            }
+          ],
           "effectiveDate": "2026-02-25",
           "createdAt": "2026-02-25T03:44:52.889Z"
         },
         {
           "id": "price-1771991094256-48nr9fzel",
           "ticketTypeId": "tt-hbh-ly-adult",
-          "customPrice": 1000,
+          "segmentDiscounts": [
+            {
+              "segmentCount": 1,
+              "discountAmount": 0
+            }
+          ],
           "effectiveDate": "2026-02-25",
           "createdAt": "2026-02-25T03:44:54.256Z"
         },
         {
           "id": "price-1771991095231-sji1rzqzc",
           "ticketTypeId": "tt-hbh-ly-child",
-          "customPrice": 500,
+          "segmentDiscounts": [
+            {
+              "segmentCount": 1,
+              "discountAmount": 0
+            }
+          ],
           "effectiveDate": "2026-02-25",
           "createdAt": "2026-02-25T03:44:55.231Z"
         },
         {
           "id": "price-1771991096456-jscpn3x2t",
           "ticketTypeId": "tt-hbh-ly-resident",
-          "customPrice": 400,
+          "segmentDiscounts": [
+            {
+              "segmentCount": 1,
+              "discountAmount": 0
+            }
+          ],
           "effectiveDate": "2026-02-25",
           "createdAt": "2026-02-25T03:44:56.456Z"
         },
         {
           "id": "price-1771991097556-7e18rwx6s",
           "ticketTypeId": "tt-ly-hbh-adult",
-          "customPrice": 1000,
+          "segmentDiscounts": [
+            {
+              "segmentCount": 1,
+              "discountAmount": 0
+            }
+          ],
           "effectiveDate": "2026-02-25",
           "createdAt": "2026-02-25T03:44:57.556Z"
         },
         {
           "id": "price-1771991098764-8s1hd0rdf",
           "ticketTypeId": "tt-ly-hbh-child",
-          "customPrice": 500,
+          "segmentDiscounts": [
+            {
+              "segmentCount": 1,
+              "discountAmount": 0
+            }
+          ],
           "effectiveDate": "2026-02-25",
           "createdAt": "2026-02-25T03:44:58.764Z"
         },
         {
           "id": "price-1771991099589-ejd9ya7gq",
           "ticketTypeId": "tt-ly-hbh-resident",
-          "customPrice": 400,
+          "segmentDiscounts": [
+            {
+              "segmentCount": 1,
+              "discountAmount": 0
+            }
+          ],
           "effectiveDate": "2026-02-25",
           "createdAt": "2026-02-25T03:44:59.589Z"
         },
         {
           "id": "price-1771991100939-ophnh498r",
           "ticketTypeId": "tt-gi-ly-adult",
-          "customPrice": 800,
+          "segmentDiscounts": [
+            {
+              "segmentCount": 1,
+              "discountAmount": 0
+            }
+          ],
           "effectiveDate": "2026-02-25",
           "createdAt": "2026-02-25T03:45:00.939Z"
         },
         {
           "id": "price-1771991102139-tsdhm0kvq",
           "ticketTypeId": "tt-gi-ly-child",
-          "customPrice": 400,
+          "segmentDiscounts": [
+            {
+              "segmentCount": 1,
+              "discountAmount": 0
+            }
+          ],
           "effectiveDate": "2026-02-25",
           "createdAt": "2026-02-25T03:45:02.139Z"
         },
         {
           "id": "price-1771991103248-guhyzncpt",
           "ticketTypeId": "tt-ly-gi-adult",
-          "customPrice": 800,
+          "segmentDiscounts": [
+            {
+              "segmentCount": 1,
+              "discountAmount": 0
+            }
+          ],
           "effectiveDate": "2026-02-25",
           "createdAt": "2026-02-25T03:45:03.248Z"
         },
         {
           "id": "price-1771991104272-vx7q394xo",
           "ticketTypeId": "tt-ly-gi-child",
-          "customPrice": 400,
+          "segmentDiscounts": [
+            {
+              "segmentCount": 1,
+              "discountAmount": 0
+            }
+          ],
           "effectiveDate": "2026-02-25",
           "createdAt": "2026-02-25T03:45:04.272Z"
         },
         {
           "id": "price-1771991105456-ii58pvt3z",
           "ticketTypeId": "ticket-1771933104993",
-          "customPrice": 300,
+          "segmentDiscounts": [
+            {
+              "segmentCount": 1,
+              "discountAmount": 0
+            },
+            {
+              "segmentCount": 2,
+              "discountAmount": 0
+            },
+            {
+              "segmentCount": 3,
+              "discountAmount": 0
+            }
+          ],
           "effectiveDate": "2026-02-25",
           "createdAt": "2026-02-25T03:45:05.456Z"
         }
@@ -3276,7 +3432,16 @@
         {
           "id": "price-1771991122722-p4nxzero3",
           "ticketTypeId": "tt-tt-gi-adult",
-          "customPrice": 450,
+          "segmentDiscounts": [
+            {
+              "segmentCount": 1,
+              "discountAmount": 100
+            },
+            {
+              "segmentCount": 2,
+              "discountAmount": 100
+            }
+          ],
           "effectiveDate": "2026-02-25",
           "createdAt": "2026-02-25T03:45:22.722Z"
         }

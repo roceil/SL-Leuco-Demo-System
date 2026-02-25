@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useTicketStore } from '@/stores/ticket'
 import { useRouteStore } from '@/stores/route'
 import { useSidebar } from '@/composables/useSidebar'
@@ -42,6 +42,19 @@ const formData = ref<Partial<TicketType>>({
 
 // 選中的航段 ID（用於下拉選單）
 const selectedRouteSegmentId = ref<string>('')
+
+// 航段篩選器
+const filterSegmentId = ref<string>('')
+
+// 依篩選條件過濾後的票種列表
+const filteredTicketTypes = computed(() => {
+  if (!filterSegmentId.value) return ticketStore.ticketTypes
+  const segment = routeStore.activeRouteSegments.find(s => s.id === filterSegmentId.value)
+  if (!segment) return ticketStore.ticketTypes
+  return ticketStore.ticketTypes.filter(
+    t => t.route.from === segment.fromPortId && t.route.to === segment.toPortId
+  )
+})
 
 // 是否顯示表單
 const showForm = ref(false)
@@ -515,13 +528,60 @@ function cancelEdit() {
             </div>
           </BaseCard>
 
+          <!-- 航段篩選器 -->
+          <div
+            :class="[
+              'mb-6 flex items-center gap-3 flex-wrap',
+            ]"
+          >
+            <label
+              class="text-sm font-medium shrink-0"
+              :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+            >
+              依航段篩選
+            </label>
+            <select
+              v-model="filterSegmentId"
+              :class="[
+                'px-3 py-2 rounded-md border text-sm',
+                theme === 'dark'
+                  ? 'bg-secondary-900 border-secondary-800 text-white'
+                  : 'bg-white border-neutral-200 text-neutral-900'
+              ]"
+            >
+              <option value="">全部航段</option>
+              <option
+                v-for="segment in routeStore.activeRouteSegments"
+                :key="segment.id"
+                :value="segment.id"
+              >
+                {{ getPortName(segment.fromPortId) }} → {{ getPortName(segment.toPortId) }}
+              </option>
+            </select>
+            <span
+              v-if="filterSegmentId"
+              class="text-xs"
+              :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'"
+            >
+              共 {{ filteredTicketTypes.length }} 個票種
+            </span>
+            <button
+              v-if="filterSegmentId"
+              @click="filterSegmentId = ''"
+              class="text-xs underline"
+              :class="theme === 'dark' ? 'text-primary-400 hover:text-primary-300' : 'text-primary-600 hover:text-primary-500'"
+            >
+              清除篩選
+            </button>
+          </div>
+
           <!-- 票種列表 (grid) -->
           <div
-            v-if="ticketStore.ticketTypes.length > 0"
+            v-if="filteredTicketTypes.length > 0"
             class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             <BaseCard
-              v-for="ticket in ticketStore.ticketTypes"
+              v-for="ticket in filteredTicketTypes"
               :key="ticket.id"
               padding="md"
               :class="[
@@ -633,7 +693,7 @@ function cancelEdit() {
 
           <!-- 空狀態 -->
           <BaseCard
-            v-if="ticketStore.ticketTypes.length === 0"
+            v-if="filteredTicketTypes.length === 0"
             padding="lg"
             class="text-center"
           >
@@ -645,14 +705,22 @@ function cancelEdit() {
               class="text-lg mb-6"
               :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'"
             >
-              目前還沒有任何票種
+              {{ filterSegmentId ? '此航段目前沒有任何票種' : '目前還沒有任何票種' }}
             </p>
             <BaseButton
+              v-if="!filterSegmentId"
               variant="primary"
               :icon="PlusIcon"
               @click="createNewTicket"
             >
               新增第一個票種
+            </BaseButton>
+            <BaseButton
+              v-else
+              variant="secondary"
+              @click="filterSegmentId = ''"
+            >
+              清除篩選
             </BaseButton>
           </BaseCard>
         </PageContainer>

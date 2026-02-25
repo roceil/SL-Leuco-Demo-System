@@ -15,6 +15,7 @@ import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import type { Account, TicketPriceSetting } from '@/types/rbac'
+import type { SegmentDiscount } from '@/types/ticket'
 import { calculateSalePrice, getDiscountBySegmentCount } from '@/types/ticket'
 import {
   UsersIcon,
@@ -134,12 +135,18 @@ function getTicketTypeName(ticketTypeId: string): string {
   return ticket?.name || '未知票種'
 }
 
-// 獲取票種的預設售價（以單航段折扣計算）
-function getTicketDefaultPrice(ticketTypeId: string): number {
+// 取得票種的預設 segmentDiscounts（以票種自身的航段數為結構，折扣歸零）
+function getDefaultSegmentDiscounts(ticketTypeId: string): SegmentDiscount[] {
+  const ticket = ticketStore.ticketTypes.find((t) => t.id === ticketTypeId)
+  if (!ticket || ticket.segmentDiscounts.length === 0) return [{ segmentCount: 1, discountAmount: 0 }]
+  return ticket.segmentDiscounts.map(d => ({ segmentCount: d.segmentCount, discountAmount: 0 }))
+}
+
+// 計算帳號折扣後的售價
+function calcAgentSalePrice(ticketTypeId: string, discountAmount: number): number {
   const ticket = ticketStore.ticketTypes.find((t) => t.id === ticketTypeId)
   if (!ticket) return 0
-  const discount = getDiscountBySegmentCount(ticket.segmentDiscounts, 1)
-  return calculateSalePrice(ticket.facePrice, discount)
+  return calculateSalePrice(ticket.facePrice, discountAmount)
 }
 
 // 重置表單
@@ -186,7 +193,7 @@ function editAccount(account: Account) {
   newPriceSettings.value = {}
   account.availableTicketTypes.forEach((ticketTypeId) => {
     newPriceSettings.value[ticketTypeId] = {
-      price: getTicketDefaultPrice(ticketTypeId),
+      segmentDiscounts: getDefaultSegmentDiscounts(ticketTypeId),
       effectiveDate: getTodayDateString()
     }
   })
@@ -338,7 +345,7 @@ function deleteAccount(accountId: string) {
 }
 
 // 新增價格設定的暫存狀態（用於表單輸入）
-const newPriceSettings = ref<Record<string, { price: number; effectiveDate: string }>>({})
+const newPriceSettings = ref<Record<string, { segmentDiscounts: SegmentDiscount[]; effectiveDate: string }>>({})
 
 // 獲取今天的日期字串 (YYYY-MM-DD)
 function getTodayDateString(): string {
@@ -357,9 +364,9 @@ function toggleTicketType(ticketTypeId: string) {
   if (index === -1) {
     // 添加票種
     availableTypes.push(ticketTypeId)
-    // 初始化新增價格設定的暫存狀態
+    // 初始化新增價格設定的暫存狀態（以票種自身 segmentDiscounts 結構為基礎，折扣歸零）
     newPriceSettings.value[ticketTypeId] = {
-      price: getTicketDefaultPrice(ticketTypeId),
+      segmentDiscounts: getDefaultSegmentDiscounts(ticketTypeId),
       effectiveDate: getTodayDateString()
     }
   } else {
@@ -436,6 +443,26 @@ function getTicketPriceSettings(ticketTypeId: string): TicketPriceSetting[] {
     .sort((a, b) => b.effectiveDate.localeCompare(a.effectiveDate)) // 最新的在前面
 }
 
+// 在暫存表單中新增航段折扣列
+function addNewDiscountRow(ticketTypeId: string) {
+  const setting = newPriceSettings.value[ticketTypeId]
+  if (!setting) return
+  const maxCount = setting.segmentDiscounts.length > 0
+    ? Math.max(...setting.segmentDiscounts.map(d => d.segmentCount))
+    : 0
+  setting.segmentDiscounts.push({ segmentCount: maxCount + 1, discountAmount: 0 })
+}
+
+// 在暫存表單中刪除航段折扣列
+function removeNewDiscountRow(ticketTypeId: string, index: number) {
+  const setting = newPriceSettings.value[ticketTypeId]
+  if (!setting || setting.segmentDiscounts.length <= 1) {
+    alert('至少需要保留一個航段折扣設定')
+    return
+  }
+  setting.segmentDiscounts.splice(index, 1)
+}
+
 // 新增價格設定
 function addPriceSetting(ticketTypeId: string) {
   if (!formData.value.ticketPriceSettings) {
@@ -443,8 +470,13 @@ function addPriceSetting(ticketTypeId: string) {
   }
 
   const newSetting = newPriceSettings.value[ticketTypeId]
-  if (!newSetting || !newSetting.price || !newSetting.effectiveDate) {
-    alert('請填寫完整的價格和啟用日期')
+  if (!newSetting || !newSetting.effectiveDate) {
+    alert('請填寫啟用日期')
+    return
+  }
+
+  if (!newSetting.segmentDiscounts || newSetting.segmentDiscounts.length === 0) {
+    alert('請至少設定一個航段折扣')
     return
   }
 
@@ -461,14 +493,14 @@ function addPriceSetting(ticketTypeId: string) {
   formData.value.ticketPriceSettings.push({
     id: `price-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
     ticketTypeId,
-    customPrice: newSetting.price,
+    segmentDiscounts: newSetting.segmentDiscounts.map(d => ({ ...d })),
     effectiveDate: newSetting.effectiveDate,
     createdAt: new Date().toISOString()
   })
 
-  // 重置暫存狀態
+  // 重置暫存狀態（保留 segmentDiscounts 結構，僅重置 effectiveDate）
   newPriceSettings.value[ticketTypeId] = {
-    price: getTicketDefaultPrice(ticketTypeId),
+    segmentDiscounts: getDefaultSegmentDiscounts(ticketTypeId),
     effectiveDate: getTodayDateString()
   }
 }
@@ -1038,39 +1070,96 @@ function closePasswordResetModal() {
                         ]"
                       >
                         <div
-                          class="text-xs font-medium mb-2"
+                          class="text-xs font-medium mb-3"
                           :class="theme === 'dark' ? 'text-primary-400' : 'text-primary-900'"
                         >
                           新增價格設定
                         </div>
-                        <div class="flex flex-wrap items-center gap-3">
-                          <div class="flex items-center gap-2">
-                            <label
-                              class="text-xs"
-                              :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
-                            >
-                              價格:
-                            </label>
-                            <input
-                              v-model.number="newPriceSettings[ticket.id]!.price"
-                              type="number"
-                              min="0"
-                              step="1"
-                              :class="[
-                                'w-24 px-2 py-1 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500',
-                                theme === 'dark'
-                                  ? 'bg-secondary-950 border-secondary-700 text-white'
-                                  : 'bg-white border-neutral-300 text-neutral-900'
-                              ]"
-                            />
-                            <span
-                              class="text-xs"
-                              :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
-                            >
-                              元
-                            </span>
+
+                        <!-- 航段折扣列表（與票種管理一致） -->
+                        <div class="space-y-2 mb-3">
+                          <div
+                            v-for="(discount, dIdx) in newPriceSettings[ticket.id]!.segmentDiscounts"
+                            :key="dIdx"
+                            class="grid grid-cols-12 gap-2 items-center"
+                          >
+                            <!-- 航段數 -->
+                            <div class="col-span-2 flex items-center gap-1">
+                              <input
+                                v-model.number="discount.segmentCount"
+                                type="number"
+                                min="1"
+                                step="1"
+                                :class="[
+                                  'w-full px-2 py-1 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500',
+                                  theme === 'dark'
+                                    ? 'bg-secondary-950 border-secondary-700 text-white'
+                                    : 'bg-white border-neutral-300 text-neutral-900'
+                                ]"
+                              />
+                              <span class="text-xs whitespace-nowrap" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">航段</span>
+                            </div>
+
+                            <!-- 折扣金額 -->
+                            <div class="col-span-4 flex items-center gap-1">
+                              <span class="text-xs" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">折扣</span>
+                              <input
+                                v-model.number="discount.discountAmount"
+                                type="number"
+                                min="0"
+                                step="1"
+                                :class="[
+                                  'w-full px-2 py-1 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500',
+                                  theme === 'dark'
+                                    ? 'bg-secondary-950 border-secondary-700 text-white'
+                                    : 'bg-white border-neutral-300 text-neutral-900'
+                                ]"
+                              />
+                              <span class="text-xs" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">元</span>
+                            </div>
+
+                            <!-- 售價（唯讀） -->
+                            <div class="col-span-4 flex items-center gap-1">
+                              <span class="text-xs" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">售價</span>
+                              <input
+                                :value="calcAgentSalePrice(ticket.id, discount.discountAmount)"
+                                type="number"
+                                readonly
+                                disabled
+                                :class="[
+                                  'w-full px-2 py-1 text-sm border rounded-md',
+                                  theme === 'dark'
+                                    ? 'bg-secondary-800 border-secondary-700 text-neutral-400'
+                                    : 'bg-neutral-100 border-neutral-200 text-neutral-500'
+                                ]"
+                              />
+                              <span class="text-xs" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">元</span>
+                            </div>
+
+                            <!-- 刪除列 -->
+                            <div class="col-span-2 flex justify-end">
+                              <BaseButton
+                                variant="danger"
+                                size="sm"
+                                @click="removeNewDiscountRow(ticket.id, dIdx)"
+                                :disabled="newPriceSettings[ticket.id]!.segmentDiscounts.length <= 1"
+                              >
+                                刪除
+                              </BaseButton>
+                            </div>
                           </div>
-                          <div class="flex items-center gap-2">
+                        </div>
+
+                        <!-- 新增航段列 + 啟用日期 + 新增按鈕 -->
+                        <div class="flex flex-wrap items-center gap-3">
+                          <BaseButton
+                            variant="outline"
+                            size="sm"
+                            @click="addNewDiscountRow(ticket.id)"
+                          >
+                            + 新增航段
+                          </BaseButton>
+                          <div class="flex items-center gap-2 ml-auto">
                             <label
                               class="text-xs"
                               :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
@@ -1087,14 +1176,14 @@ function closePasswordResetModal() {
                                   : 'bg-white border-neutral-300 text-neutral-900'
                               ]"
                             />
+                            <BaseButton
+                              variant="primary"
+                              size="sm"
+                              @click="addPriceSetting(ticket.id)"
+                            >
+                              新增
+                            </BaseButton>
                           </div>
-                          <BaseButton
-                            variant="primary"
-                            size="sm"
-                            @click="addPriceSetting(ticket.id)"
-                          >
-                            新增
-                          </BaseButton>
                         </div>
                       </div>
 
@@ -1109,42 +1198,43 @@ function closePasswordResetModal() {
                         >
                           價格歷史記錄
                         </div>
-                        <div class="space-y-1">
+                        <div class="space-y-2">
                           <div
                             v-for="setting in getTicketPriceSettings(ticket.id)"
                             :key="setting.id"
                             :class="[
-                              'flex items-center justify-between gap-3 p-2 rounded-md text-xs',
-                              theme === 'dark'
-                                ? 'bg-secondary-950'
-                                : 'bg-neutral-50'
+                              'p-3 rounded-md text-xs',
+                              theme === 'dark' ? 'bg-secondary-950' : 'bg-neutral-50'
                             ]"
                           >
-                            <div class="flex items-center gap-4">
-                              <span
-                                class="font-medium"
-                                :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'"
-                              >
-                                NT$ {{ setting.customPrice }}
+                            <div class="flex items-center justify-between mb-2">
+                              <span :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
+                                啟用日期: <span class="font-medium" :class="theme === 'dark' ? 'text-neutral-200' : 'text-neutral-800'">{{ setting.effectiveDate }}</span>
+                                <span class="ml-3" :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-400'">建立於: {{ new Date(setting.createdAt).toLocaleDateString() }}</span>
                               </span>
-                              <span
-                                :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
+                              <BaseButton
+                                variant="danger"
+                                size="sm"
+                                @click="removePriceSetting(setting.id)"
                               >
-                                啟用日期: {{ setting.effectiveDate }}
-                              </span>
-                              <span
-                                :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-400'"
-                              >
-                                建立於: {{ new Date(setting.createdAt).toLocaleDateString() }}
-                              </span>
+                                刪除
+                              </BaseButton>
                             </div>
-                            <BaseButton
-                              variant="danger"
-                              size="sm"
-                              @click="removePriceSetting(setting.id)"
-                            >
-                              刪除
-                            </BaseButton>
+                            <!-- 每航段數的折扣明細 -->
+                            <div class="space-y-1">
+                              <div
+                                v-for="discount in setting.segmentDiscounts"
+                                :key="discount.segmentCount"
+                                class="flex justify-between items-center"
+                              >
+                                <span :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
+                                  {{ discount.segmentCount }} 航段（折扣 -NT$ {{ discount.discountAmount }}）
+                                </span>
+                                <span class="font-semibold text-green-600">
+                                  NT$ {{ calcAgentSalePrice(ticket.id, discount.discountAmount) }}
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>

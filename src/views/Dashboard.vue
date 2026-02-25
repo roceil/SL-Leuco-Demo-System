@@ -18,6 +18,7 @@ import { usePayment } from '@/composables/usePayment'
 import { useRbacStore } from '@/stores/rbac'
 import { useAuth } from '@/composables/useAuth'
 import { getPriceForDate } from '@/types/rbac'
+import { getDiscountBySegmentCount } from '@/types/ticket'
 import {
   TicketIcon,
   MinusIcon,
@@ -370,15 +371,18 @@ const getTicketPriceForSegment = (passengerType: string, segmentIndex: number): 
 
   if (!ticket) return 0
 
-  // 若有代訂帳號，查詢其 ticketPriceSettings
-  if (selectedAgentAccount.value) {
-    const agentSettings = selectedAgentAccount.value.ticketPriceSettings.filter(
+  // 決定要查詢哪個帳號的 ticketPriceSettings
+  const priceAccount = selectedAgentAccount.value ?? currentAccount.value
+  if (priceAccount) {
+    const accountSettings = priceAccount.ticketPriceSettings.filter(
       s => s.ticketTypeId === ticket.id
     )
     const today = new Date().toISOString().split('T')[0]!
-    const priceSetting = getPriceForDate(agentSettings, today)
-    if (priceSetting?.customPrice !== undefined) {
-      return priceSetting.customPrice
+    const priceSetting = getPriceForDate(accountSettings, today)
+    if (priceSetting?.segmentDiscounts) {
+      const totalSegments = segments.value.length
+      const discountAmount = getDiscountBySegmentCount(priceSetting.segmentDiscounts, totalSegments)
+      return ticket.facePrice - discountAmount
     }
   }
 
