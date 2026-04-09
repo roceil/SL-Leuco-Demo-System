@@ -3,6 +3,179 @@
   "audit_logs": [
     {
       "entityType": "account",
+      "entityId": "acc-sysadmin",
+      "entityName": "系統管理員",
+      "action": "update",
+      "operatorId": "acc-sysadmin",
+      "operatorName": "系統管理員",
+      "changes": [
+        {
+          "field": "availableTicketTypes",
+          "oldValue": [
+            "tt-tt-gi-adult",
+            "tt-tt-gi-child",
+            "tt-tt-gi-resident",
+            "tt-gi-tt-adult",
+            "tt-gi-tt-child",
+            "tt-gi-tt-resident",
+            "tt-tt-ly-adult",
+            "tt-tt-ly-child",
+            "tt-tt-ly-resident",
+            "tt-ly-tt-adult",
+            "tt-ly-tt-child",
+            "tt-ly-tt-resident",
+            "tt-hbh-ly-adult",
+            "tt-hbh-ly-child",
+            "tt-hbh-ly-resident",
+            "tt-ly-hbh-adult",
+            "tt-ly-hbh-child",
+            "tt-ly-hbh-resident",
+            "tt-gi-ly-adult",
+            "tt-gi-ly-child",
+            "tt-ly-gi-adult",
+            "tt-ly-gi-child"
+          ],
+          "newValue": [
+            "tt-tt-gi-adult",
+            "tt-tt-gi-child",
+            "tt-tt-gi-resident",
+            "tt-gi-tt-adult",
+            "tt-gi-tt-child",
+            "tt-gi-tt-resident",
+            "tt-tt-ly-adult",
+            "tt-tt-ly-child",
+            "tt-tt-ly-resident",
+            "tt-ly-tt-adult",
+            "tt-ly-tt-child",
+            "tt-ly-tt-resident",
+            "tt-hbh-ly-adult",
+            "tt-hbh-ly-child",
+            "tt-hbh-ly-resident",
+            "tt-ly-hbh-adult",
+            "tt-ly-hbh-child",
+            "tt-ly-hbh-resident",
+            "tt-gi-ly-adult",
+            "tt-gi-ly-child",
+            "tt-ly-gi-adult",
+            "tt-ly-gi-child",
+            "ticket-1774611843206",
+            "ticket-1774611906973"
+          ],
+          "displayName": "可販售票種"
+        },
+        {
+          "field": "ticketPriceSettings",
+          "oldValue": [],
+          "newValue": [
+            {
+              "id": "price-1774612352383-mpq8awwlw",
+              "ticketTypeId": "ticket-1774611843206",
+              "segmentDiscounts": [
+                {
+                  "segmentCount": 1,
+                  "discountAmount": 0
+                },
+                {
+                  "segmentCount": 2,
+                  "discountAmount": 0
+                },
+                {
+                  "segmentCount": 3,
+                  "discountAmount": 60
+                }
+              ],
+              "effectiveDate": "2026-03-27",
+              "createdAt": "2026-03-27T11:52:32.383Z"
+            },
+            {
+              "id": "price-1774612362092-edd9raubw",
+              "ticketTypeId": "ticket-1774611906973",
+              "segmentDiscounts": [
+                {
+                  "segmentCount": 1,
+                  "discountAmount": 0
+                }
+              ],
+              "effectiveDate": "2026-03-27",
+              "createdAt": "2026-03-27T11:52:42.092Z"
+            }
+          ],
+          "displayName": "票價設定"
+        }
+      ],
+      "id": "log-1774612363009-sumctxghe",
+      "timestamp": "2026-03-27T11:52:43.009Z",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:148.0) Gecko/20100101 Firefox/148.0"
+    },
+    {
+      "entityType": "account",
+      "entityId": "acc-sysadmin",
+      "entityName": "系統管理員",
+      "action": "password_reset",
+      "operatorId": "acc-sysadmin",
+      "operatorName": "系統管理員",
+      "note": "管理員重置密碼：系統管理員 (admin)",
+      "id": "log-1773823607530-1lq17ggve",
+      "timestamp": "2026-03-18T08:46:47.530Z",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+    },
+    {
+      "entityType": "account",
+      "entityId": "acc-kx-ticket1",
+      "entityName": "凱旋售票員 01",
+      "action": "update",
+      "operatorId": "acc-sysadmin",
+      "operatorName": "系統管理員",
+      "changes": [
+        {
+          "field": "roleId",
+          "oldValue": "role-jx-ticket",
+          "newValue": "role-kx-ticket",
+          "displayName": "角色"
+        }
+      ],
+      "id": "log-1773730479664-ibrme07gq",
+      "timestamp": "2026-03-17T06:54:39.664Z",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+    },
+    {
+      "entityType": "account",
+      "entityId": "acc-kx-ticket1",
+      "entityName": "凱旋售票員 01",
+      "action": "update",
+      "operatorId": "acc-sysadmin",
+      "operatorName": "系統管理員",
+      "changes": [
+        {
+          "field": "roleId",
+          "oldValue": "role-kx-ticket",
+          "newValue": "role-jx-ticket",
+          "displayName": "角色"
+        }
+      ],
+      "id": "log-1773730463164-zr4sr5ypp",
+      "timestamp": "2026-03-17T06:54:23.164Z",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+    },
+    {
+      "entityType": "account",
+      "entityId": "acc-1771985812437",
+      "entityName": "旅泊包旅行社",
+      "action": "password_reset",
+      "operatorId": "acc-sysadmin",
+      "operatorName": "系統管理員",
+      "note": "管理員重置密碼：旅泊包旅行社 (trip_package)",
+      "id": "log-1773728818169-9qf3v7gf9",
+      "timestamp": "2026-03-17T06:26:58.169Z",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+    },
+    {
+      "entityType": "account",
       "entityId": "acc-kx-admin",
       "entityName": "凱旋航運管理員",
       "action": "update",
@@ -1189,6 +1362,144 @@
   ],
   "login_records": [
     {
+      "id": "login-1775133294875-426ye08ni",
+      "username": "admin",
+      "loginTime": "2026-04-02T12:34:54.875Z",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:149.0) Gecko/20100101 Firefox/149.0",
+      "success": true
+    },
+    {
+      "id": "login-1774614333835-jz2gq2xzm",
+      "username": "admin",
+      "loginTime": "2026-03-27T12:25:33.835Z",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:148.0) Gecko/20100101 Firefox/148.0",
+      "success": true
+    },
+    {
+      "id": "login-1774611727285-qmmj3zxhp",
+      "username": "admin",
+      "loginTime": "2026-03-27T11:42:07.285Z",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:148.0) Gecko/20100101 Firefox/148.0",
+      "success": true
+    },
+    {
+      "id": "login-1774341347463-x56duia8n",
+      "username": "admin",
+      "loginTime": "2026-03-24T08:35:47.463Z",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:148.0) Gecko/20100101 Firefox/148.0",
+      "success": true
+    },
+    {
+      "id": "password-reset-1773823607529-31bmxuxky",
+      "username": "admin",
+      "loginTime": "2026-03-18T08:46:47.529Z",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Admin: 系統管理員",
+      "success": true,
+      "failureReason": "密碼由管理員 系統管理員 重置"
+    },
+    {
+      "id": "login-1773823586295-ozzwxlh71",
+      "username": "admin",
+      "loginTime": "2026-03-18T08:46:26.295Z",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+      "success": true
+    },
+    {
+      "id": "login-1773803628696-p0xw7r3aj",
+      "username": "admin",
+      "loginTime": "2026-03-18T03:13:48.696Z",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+      "success": true
+    },
+    {
+      "id": "login-1773803331995-e8jwiz4xy",
+      "username": "admin",
+      "loginTime": "2026-03-18T03:08:51.995Z",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+      "success": true
+    },
+    {
+      "id": "login-1773728867179-jad5urkph",
+      "username": "admin",
+      "loginTime": "2026-03-17T06:27:47.179Z",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+      "success": true
+    },
+    {
+      "id": "login-1773728862154-4adg8vkru",
+      "username": "trip_package",
+      "loginTime": "2026-03-17T06:27:42.154Z",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+      "success": true
+    },
+    {
+      "id": "login-1773728852745-x7fz417hr",
+      "username": "trip_package",
+      "loginTime": "2026-03-17T06:27:32.745Z",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+      "success": true
+    },
+    {
+      "id": "login-1773728846062-pf6e20p9o",
+      "username": "trip_package",
+      "loginTime": "2026-03-17T06:27:26.062Z",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+      "success": true
+    },
+    {
+      "id": "password-reset-1773728818169-4srfhtsrq",
+      "username": "trip_package",
+      "loginTime": "2026-03-17T06:26:58.169Z",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Admin: 系統管理員",
+      "success": true,
+      "failureReason": "密碼由管理員 系統管理員 重置"
+    },
+    {
+      "id": "login-1773728603952-gvgmrgihi",
+      "username": "admin",
+      "loginTime": "2026-03-17T06:23:23.952Z",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+      "success": true
+    },
+    {
+      "id": "login-1773728587750-hfjh2ld80",
+      "username": "3307",
+      "loginTime": "2026-03-17T06:23:07.750Z",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+      "success": true
+    },
+    {
+      "id": "login-1772010737272-rsjmsrzqx",
+      "username": "admin",
+      "loginTime": "2026-02-25T09:12:17.272Z",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+      "success": true
+    },
+    {
+      "id": "login-1772010731600-no9rdt12n",
+      "username": "3307",
+      "loginTime": "2026-02-25T09:12:11.600Z",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+      "success": true
+    },
+    {
       "id": "login-1771992428461-zkupnofod",
       "username": "kx-admin",
       "loginTime": "2026-02-25T04:07:08.461Z",
@@ -1920,6 +2231,81 @@
       "createdAt": "2026-02-25T08:16:04.315Z",
       "updatedAt": "2026-02-25T08:29:50.038Z",
       "updatedBy": "acc-kx-admin"
+    },
+    {
+      "customerName": "測試",
+      "customerPhone": "0900000000",
+      "scheduleId": "rs-tt-gi-2026-03-27-07:00",
+      "scheduleSegments": [
+        {
+          "date": "2026-03-27",
+          "time": "07:00",
+          "route": "台東→綠島",
+          "organizationId": "org-kx"
+        },
+        {
+          "date": "2026-03-28",
+          "time": "19:00",
+          "route": "綠島→台東",
+          "organizationId": "org-jx"
+        }
+      ],
+      "passengers": [
+        {
+          "id": "passenger-1774612402692-0",
+          "name": "",
+          "ticketTypeId": "ticket-1774611843206",
+          "hasBoarded": false
+        },
+        {
+          "id": "passenger-1774612402692-1",
+          "name": "",
+          "ticketTypeId": "ticket-1774611843206",
+          "hasBoarded": false
+        }
+      ],
+      "paymentInfo": {
+        "deposit": 0,
+        "balance": 3800,
+        "discount": 0,
+        "totalAmount": 3800,
+        "paidAmount": 3800,
+        "remainingAmount": 0,
+        "paymentMethod": "cash",
+        "paymentStatus": "paid",
+        "paymentRecords": [
+          {
+            "id": "payment-1774617399331",
+            "amount": 3800,
+            "paymentType": "balance",
+            "method": "credit_card",
+            "paidAt": "2026-03-27T13:16:39.331Z",
+            "paidBy": "acc-sysadmin",
+            "note": ""
+          }
+        ]
+      },
+      "status": "pending",
+      "ticketBreakdown": [
+        {
+          "passengerType": "全票",
+          "ticketTypeId": "ticket-1774611843206",
+          "quantity": 2
+        }
+      ],
+      "notes": "全票 x2",
+      "createdBy": "admin",
+      "organizationId": "org-sys",
+      "id": "order-1774612402692",
+      "orderNumber": "20260327-8748",
+      "createdAt": "2026-03-27T11:53:22.692Z",
+      "updatedAt": "2026-03-27T13:20:57.920Z",
+      "invoiceInfo": {
+        "type": "二聯式",
+        "editedBy": "acc-sysadmin",
+        "editedAt": "2026-03-27T13:20:57.920Z"
+      },
+      "updatedBy": "acc-sysadmin"
     }
   ],
   "ports": [
@@ -2035,13 +2421,12 @@
       "toPortId": "port-gi",
       "allowedNextSegments": [
         "rs-gi-ly",
-        "route-1771932990558",
-        "rs-gi-tt"
+        "route-1771932990558"
       ],
       "estimatedDuration": 50,
       "isActive": true,
       "createdAt": "2026-01-01T00:00:00.000Z",
-      "updatedAt": "2026-02-25T06:17:29.381Z"
+      "updatedAt": "2026-04-02T13:21:38.803Z"
     },
     {
       "id": "rs-gi-tt",
@@ -2213,6 +2598,70 @@
       "description": "",
       "createdAt": "2026-02-25T08:13:59.181Z",
       "updatedAt": "2026-02-25T08:13:59.181Z"
+    },
+    {
+      "id": "SCH006",
+      "type": "regular",
+      "shipId": "ship-kx1",
+      "shipName": "凱旋 1 號",
+      "routeSegmentId": "rs-tt-gi",
+      "departureTime": "07:00",
+      "date": "",
+      "isDaily": true,
+      "currentPassengers": 0,
+      "maxCapacity": 280,
+      "status": "active",
+      "description": "",
+      "createdAt": "2026-03-27T11:42:28.184Z",
+      "updatedAt": "2026-03-27T11:42:28.184Z"
+    },
+    {
+      "id": "SCH007",
+      "type": "regular",
+      "shipId": "ship-jx1",
+      "shipName": "金星 1 號",
+      "routeSegmentId": "rs-gi-tt",
+      "departureTime": "19:00",
+      "date": "",
+      "isDaily": true,
+      "currentPassengers": 0,
+      "maxCapacity": 350,
+      "status": "active",
+      "description": "",
+      "createdAt": "2026-03-27T11:43:01.997Z",
+      "updatedAt": "2026-03-27T11:43:01.997Z"
+    },
+    {
+      "id": "SCH008",
+      "type": "regular",
+      "shipId": "ship-kx1",
+      "shipName": "凱旋 1 號",
+      "routeSegmentId": "rs-tt-ly",
+      "departureTime": "09:00",
+      "date": "",
+      "isDaily": true,
+      "currentPassengers": 0,
+      "maxCapacity": 280,
+      "status": "active",
+      "description": "",
+      "createdAt": "2026-03-27T12:48:42.215Z",
+      "updatedAt": "2026-03-27T12:48:42.215Z"
+    },
+    {
+      "id": "SCH009",
+      "type": "flexible",
+      "shipId": "ship-kx3",
+      "shipName": "凱旋 3 號",
+      "routeSegmentId": "rs-gi-tt",
+      "departureTime": "10:00",
+      "date": "2026-03-28",
+      "isDaily": false,
+      "currentPassengers": 0,
+      "maxCapacity": 240,
+      "status": "active",
+      "description": "",
+      "createdAt": "2026-03-27T12:49:13.148Z",
+      "updatedAt": "2026-03-27T12:49:13.148Z"
     }
   ],
   "ticket_types": [
@@ -2495,6 +2944,54 @@
       "id": "ticket-1772007156340",
       "createdAt": "2026-02-25T08:12:36.340Z",
       "updatedAt": "2026-02-25T08:12:36.340Z"
+    },
+    {
+      "name": "現場全票",
+      "passengerType": "全票",
+      "organizationId": "org-kx",
+      "facePrice": 1000,
+      "segmentDiscounts": [
+        {
+          "segmentCount": 1,
+          "discountAmount": 0
+        },
+        {
+          "segmentCount": 2,
+          "discountAmount": 0
+        },
+        {
+          "segmentCount": 3,
+          "discountAmount": 60
+        }
+      ],
+      "route": {
+        "from": "port-tt",
+        "to": "port-gi"
+      },
+      "isSpecial": false,
+      "id": "ticket-1774611843206",
+      "createdAt": "2026-03-27T11:44:03.206Z",
+      "updatedAt": "2026-03-27T11:44:03.206Z"
+    },
+    {
+      "name": "現場全票",
+      "passengerType": "全票",
+      "organizationId": "org-jx",
+      "facePrice": 900,
+      "segmentDiscounts": [
+        {
+          "segmentCount": 1,
+          "discountAmount": 0
+        }
+      ],
+      "route": {
+        "from": "port-gi",
+        "to": "port-tt"
+      },
+      "isSpecial": false,
+      "id": "ticket-1774611906973",
+      "createdAt": "2026-03-27T11:45:06.973Z",
+      "updatedAt": "2026-03-27T11:45:06.973Z"
     }
   ],
   "ticket_price_history": [],
@@ -3467,11 +3964,46 @@
         "tt-gi-ly-adult",
         "tt-gi-ly-child",
         "tt-ly-gi-adult",
-        "tt-ly-gi-child"
+        "tt-ly-gi-child",
+        "ticket-1774611843206",
+        "ticket-1774611906973"
       ],
-      "ticketPriceSettings": [],
+      "ticketPriceSettings": [
+        {
+          "id": "price-1774612352383-mpq8awwlw",
+          "ticketTypeId": "ticket-1774611843206",
+          "segmentDiscounts": [
+            {
+              "segmentCount": 1,
+              "discountAmount": 0
+            },
+            {
+              "segmentCount": 2,
+              "discountAmount": 0
+            },
+            {
+              "segmentCount": 3,
+              "discountAmount": 60
+            }
+          ],
+          "effectiveDate": "2026-03-27",
+          "createdAt": "2026-03-27T11:52:32.383Z"
+        },
+        {
+          "id": "price-1774612362092-edd9raubw",
+          "ticketTypeId": "ticket-1774611906973",
+          "segmentDiscounts": [
+            {
+              "segmentCount": 1,
+              "discountAmount": 0
+            }
+          ],
+          "effectiveDate": "2026-03-27",
+          "createdAt": "2026-03-27T11:52:42.092Z"
+        }
+      ],
       "createdAt": "2026-01-01T00:00:00.000Z",
-      "updatedAt": "2026-01-01T00:00:00.000Z"
+      "updatedAt": "2026-03-27T11:52:43.008Z"
     },
     {
       "id": "acc-kx-admin",
@@ -4018,7 +4550,7 @@
         }
       ],
       "createdAt": "2026-01-01T00:00:00.000Z",
-      "updatedAt": "2026-02-25T03:45:06.431Z"
+      "updatedAt": "2026-03-17T06:54:39.663Z"
     },
     {
       "id": "acc-kx-ticket2",
