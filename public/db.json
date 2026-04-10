@@ -1362,14 +1362,6 @@
   ],
   "login_records": [
     {
-      "id": "login-1775794428760-6x2r5f4lo",
-      "username": "admin",
-      "loginTime": "2026-04-10T04:13:48.760Z",
-      "ipAddress": "127.0.0.1",
-      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:149.0) Gecko/20100101 Firefox/149.0",
-      "success": true
-    },
-    {
       "id": "login-1775133294875-426ye08ni",
       "username": "admin",
       "loginTime": "2026-04-02T12:34:54.875Z",
