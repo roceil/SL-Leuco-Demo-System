@@ -100,7 +100,7 @@ export const useTicketStore = defineStore('ticket', () => {
 
       const updatedTicket = ticketTypes.value[index]
       const priceChanged =
-        (updates.facePrice !== undefined && updates.facePrice !== oldTicket.facePrice) ||
+        (updates.facePrice !== undefined && updates.facePrice !== oldTicket!.facePrice) ||
         updates.segmentDiscounts !== undefined
 
       if (createHistory && priceChanged && updatedBy) {

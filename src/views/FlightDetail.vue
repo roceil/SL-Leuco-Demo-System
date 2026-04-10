@@ -5,6 +5,7 @@ import { useSidebar } from '@/composables/useSidebar'
 import { useTheme } from '@/composables/useTheme'
 import { useSchedules } from '@/composables/useSchedules'
 import { usePassengers } from '@/composables/usePassengers'
+import { BoardingStatus } from '@/types/passenger'
 import Navbar from '@/components/Navbar.vue'
 import Sidebar from '@/components/Sidebar.vue'
 import PageContainer from '@/components/ui/PageContainer.vue'
@@ -34,8 +35,7 @@ const {
   updateFilter,
   executeSearch,
   updateBoardingStatus,
-  exportToCSV,
-  BoardingStatus
+  exportToCSV
 } = usePassengers()
 
 // 取得航班 ID

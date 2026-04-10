@@ -171,8 +171,9 @@ export function useAuth() {
     const locks = [...accountLocks]
     const lockIndex = locks.findIndex(lock => lock.username === username)
     if (lockIndex !== -1) {
-      locks[lockIndex].failedAttempts = 0
-      locks[lockIndex].lockUntil = null
+      const lock = locks[lockIndex]!
+      lock.failedAttempts = 0
+      lock.lockUntil = null
       saveAccountLocks(locks)
     }
 
@@ -189,8 +190,9 @@ export function useAuth() {
     const lockIndex = locks.findIndex(lock => lock.username === username)
 
     if (lockIndex !== -1) {
-      locks[lockIndex].failedAttempts = 0
-      locks[lockIndex].lockUntil = null
+      const lock = locks[lockIndex]!
+      lock.failedAttempts = 0
+      lock.lockUntil = null
       saveAccountLocks(locks)
     }
   }

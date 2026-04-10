@@ -565,7 +565,7 @@ onMounted(() => {
                           <td class="px-4 py-2.5">
                             {{
                               rbacStore.organizations.find(
-                                o => o.id === (seg.organizationId ?? currentOrder.organizationId)
+                                o => o.id === (seg.organizationId ?? currentOrder?.organizationId)
                               )?.name ?? '—'
                             }}
                           </td>
