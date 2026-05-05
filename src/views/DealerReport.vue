@@ -20,6 +20,7 @@ import {
   CalendarDaysIcon,
   ArrowDownTrayIcon,
 } from '@heroicons/vue/24/outline'
+import { exportToXlsx } from '@/composables/useExcelExport'
 
 const { isCollapsed } = useSidebar()
 const { theme } = useTheme()
@@ -92,24 +93,25 @@ function viewDealerDetail(dealerId: string) {
   })
 }
 
-function exportCsv() {
-  const headers = ['經銷商', '訂單數', '總金額', '已付金額', '應收餘額']
-  const rows = dealerSummary.value.map((d) =>
+async function exportCsv() {
+  await exportToXlsx(
+    `dealer-report-${selectedMonth.value}`,
+    '經銷商報表',
     [
+      { header: '經銷商', width: 22 },
+      { header: '訂單數', width: 10 },
+      { header: '總金額', width: 14 },
+      { header: '已付金額', width: 14 },
+      { header: '應收餘額', width: 14 },
+    ],
+    dealerSummary.value.map((d) => [
       getDealerName(d.dealerId),
       d.orderCount,
       d.totalAmount,
       d.paidAmount,
       d.totalAmount - d.paidAmount,
-    ].join(',')
+    ])
   )
-  const csv = [headers.join(','), ...rows].join('\n')
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
-  const link = document.createElement('a')
-  link.href = URL.createObjectURL(blob)
-  link.download = `dealer-report-${selectedMonth.value}.csv`
-  link.click()
-  URL.revokeObjectURL(link.href)
 }
 </script>
 
@@ -166,7 +168,7 @@ function exportCsv() {
                 </select>
               </div>
               <BaseButton variant="secondary" :icon="ArrowDownTrayIcon" @click="exportCsv">
-                匯出 CSV
+                匯出 Excel
               </BaseButton>
             </div>
           </BaseCard>

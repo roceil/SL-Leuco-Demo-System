@@ -20,6 +20,7 @@ import {
   UserIcon,
   ArrowDownTrayIcon,
 } from '@heroicons/vue/24/outline'
+import { exportToXlsx } from '@/composables/useExcelExport'
 
 const { isCollapsed } = useSidebar()
 const { theme } = useTheme()
@@ -94,24 +95,25 @@ const grandStats = computed(() => ({
   cardAmount: staffSummary.value.reduce((s, e) => s + e.cardAmount, 0),
 }))
 
-function exportCsv() {
-  const headers = ['票口人員', '訂單數', '總金額', '現金收款', '刷卡收款']
-  const rows = staffSummary.value.map((s) =>
+async function exportCsv() {
+  await exportToXlsx(
+    `cash-report-${selectedMonth.value}`,
+    '票口報表',
     [
+      { header: '票口人員', width: 18 },
+      { header: '訂單數', width: 10 },
+      { header: '總金額', width: 14 },
+      { header: '現金收款', width: 14 },
+      { header: '刷卡收款', width: 14 },
+    ],
+    staffSummary.value.map((s) => [
       getStaffName(s.staffId),
       s.orderCount,
       s.totalAmount,
       s.cashAmount,
       s.cardAmount,
-    ].join(',')
+    ])
   )
-  const csv = [headers.join(','), ...rows].join('\n')
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
-  const link = document.createElement('a')
-  link.href = URL.createObjectURL(blob)
-  link.download = `cash-report-${selectedMonth.value}.csv`
-  link.click()
-  URL.revokeObjectURL(link.href)
 }
 </script>
 
@@ -168,7 +170,7 @@ function exportCsv() {
                 </select>
               </div>
               <BaseButton variant="secondary" :icon="ArrowDownTrayIcon" @click="exportCsv">
-                匯出 CSV
+                匯出 Excel
               </BaseButton>
             </div>
           </BaseCard>

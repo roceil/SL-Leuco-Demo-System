@@ -26,6 +26,7 @@ import {
   BuildingOfficeIcon,
   ArrowDownTrayIcon,
 } from '@heroicons/vue/24/outline'
+import { exportToXlsx } from '@/composables/useExcelExport'
 
 const { isCollapsed } = useSidebar()
 const { theme } = useTheme()
@@ -142,30 +143,28 @@ const orgSummary = computed(() => {
 
 const grandTotal = computed(() => orgSummary.value.reduce((s, e) => s + e.totalAmount, 0))
 
-// 匯出 CSV
-function exportCsv() {
-  const headers = ['訂單編號', '建立日期', '簽約航商', '總金額', '航段數', '分帳明細']
-  const rows = orderRows.value.map((row) => {
-    const detail = row.splits
-      .map((s) => `${getOrgName(s.orgId)}(${s.segmentCount}段=${s.amount})`)
-      .join('; ')
-    return [
+// 匯出 Excel
+async function exportCsv() {
+  await exportToXlsx(
+    `joint-report-${selectedMonth.value}`,
+    '聯合報表',
+    [
+      { header: '訂單編號', width: 22 },
+      { header: '建立日期', width: 12 },
+      { header: '簽約航商', width: 14 },
+      { header: '總金額', width: 12 },
+      { header: '航段數', width: 8 },
+      { header: '分帳明細', width: 60 },
+    ],
+    orderRows.value.map((row) => [
       row.order.orderNumber,
-      row.order.createdAt.split('T')[0],
+      row.order.createdAt.split('T')[0] ?? '',
       getOrgName(row.order.organizationId),
       row.totalAmount,
       row.segmentCount,
-      detail,
-    ].join(',')
-  })
-  const csv = [headers.join(','), ...rows].join('\n')
-  // 加 BOM 確保中文 Excel 可讀
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
-  const link = document.createElement('a')
-  link.href = URL.createObjectURL(blob)
-  link.download = `joint-report-${selectedMonth.value}.csv`
-  link.click()
-  URL.revokeObjectURL(link.href)
+      row.splits.map((s) => `${getOrgName(s.orgId)}(${s.segmentCount}段=${s.amount})`).join('; '),
+    ])
+  )
 }
 </script>
 
@@ -242,7 +241,7 @@ function exportCsv() {
                 :icon="ArrowDownTrayIcon"
                 @click="exportCsv"
               >
-                匯出 CSV
+                匯出 Excel
               </BaseButton>
             </div>
           </BaseCard>

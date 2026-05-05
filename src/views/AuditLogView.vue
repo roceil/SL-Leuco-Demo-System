@@ -19,12 +19,12 @@ import {
   ChevronDownIcon,
   ChevronUpIcon
 } from '@heroicons/vue/24/outline'
+import { exportToXlsx } from '@/composables/useExcelExport'
 
 const { isCollapsed } = useSidebar()
 const { theme } = useTheme()
 const {
   getAllLogs,
-  exportLogsToCSV,
   getActionDisplayName,
   getEntityTypeDisplayName
 } = useAuditLog()
@@ -114,18 +114,32 @@ const resetFilters = () => {
   loadLogs()
 }
 
-// 匯出 CSV
-const handleExport = () => {
-  const csv = exportLogsToCSV(logs.value)
-  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })
-  const link = document.createElement('a')
-  const url = URL.createObjectURL(blob)
-  link.setAttribute('href', url)
-  link.setAttribute('download', `操作記錄_${new Date().toISOString().split('T')[0]}.csv`)
-  link.style.visibility = 'hidden'
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
+// 匯出 Excel
+const handleExport = async () => {
+  await exportToXlsx(
+    `\u64cd\u4f5c\u8a18\u9304_${new Date().toISOString().split('T')[0]}`,
+    '\u64cd\u4f5c\u8a18\u9304',
+    [
+      { header: '\u6642\u9593', width: 22 },
+      { header: '\u64cd\u4f5c', width: 10 },
+      { header: '\u5be6\u9ad4\u985e\u578b', width: 14 },
+      { header: '\u5be6\u9ad4\u540d\u7a31', width: 30 },
+      { header: '\u64cd\u4f5c\u8005', width: 14 },
+      { header: '\u5099\u8a3b', width: 30 },
+      { header: '\u8b8a\u66f4\u5167\u5bb9', width: 60 },
+    ],
+    logs.value.map((log) => [
+      new Date(log.timestamp).toLocaleString('zh-TW'),
+      getActionDisplayName(log.action),
+      getEntityTypeDisplayName(log.entityType),
+      log.entityName ?? log.entityId,
+      log.operatorName,
+      log.note ?? '',
+      (log.changes ?? [])
+        .map((c) => `${c.displayName ?? c.field}: ${JSON.stringify(c.oldValue)} \u2192 ${JSON.stringify(c.newValue)}`)
+        .join('; '),
+    ])
+  )
 }
 
 // 獲取操作類型的樣式
@@ -326,7 +340,7 @@ onMounted(() => {
                 @click="handleExport"
                 class="ml-auto"
               >
-                匯出 CSV
+                匯出 Excel
               </BaseButton>
             </div>
           </BaseCard>
