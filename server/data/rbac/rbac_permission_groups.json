@@ -237,6 +237,42 @@
         "actions": [
           "read"
         ]
+      },
+      {
+        "resource": "ticket-config",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "audit-log",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "dashboard-overview",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "joint-report",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
       }
     ],
     "createdAt": "2026-01-01T00:00:00.000Z",
@@ -422,6 +458,42 @@
         "resource": "account-settings",
         "actions": [
           "read"
+        ]
+      },
+      {
+        "resource": "ticket-config",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "audit-log",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "dashboard-overview",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "joint-report",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
         ]
       }
     ],
@@ -609,6 +681,42 @@
         "actions": [
           "read"
         ]
+      },
+      {
+        "resource": "ticket-config",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "audit-log",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "dashboard-overview",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "joint-report",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
       }
     ],
     "createdAt": "2026-01-01T00:00:00.000Z",
@@ -712,6 +820,12 @@
       },
       {
         "resource": "account-settings",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "dashboard-overview",
         "actions": [
           "read"
         ]
