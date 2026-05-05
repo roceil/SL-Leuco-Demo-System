@@ -47,12 +47,13 @@ const errorMessage = ref('')
 
 const formData = ref<Partial<Organization>>({
   name: '',
+  code: '',
   contactEmail: '',
   contactPhone: ''
 })
 
 function resetForm() {
-  formData.value = { name: '', contactEmail: '', contactPhone: '' }
+  formData.value = { name: '', code: '', contactEmail: '', contactPhone: '' }
   isEditMode.value = false
   editingOrgId.value = null
   showForm.value = false
@@ -67,6 +68,7 @@ function openCreateForm() {
 function openEditForm(org: Organization) {
   formData.value = {
     name: org.name,
+    code: org.code ?? '',
     contactEmail: org.contactEmail ?? '',
     contactPhone: org.contactPhone ?? ''
   }
@@ -76,15 +78,39 @@ function openEditForm(org: Organization) {
   errorMessage.value = ''
 }
 
+function isCodeTaken(code: string, excludeId?: string): boolean {
+  return rbacStore.organizations.some(
+    (o) => o.code?.toUpperCase() === code.toUpperCase() && o.id !== excludeId
+  )
+}
+
 async function saveOrganization() {
   if (!formData.value.name?.trim()) {
     errorMessage.value = '請輸入航商名稱'
     return
   }
 
+  // 公司代號驗證（僅新增時必填，編輯時 code 是 disabled 不會送出）
+  const rawCode = formData.value.code?.trim().toUpperCase() ?? ''
+  if (!isEditMode.value) {
+    if (!rawCode) {
+      errorMessage.value = '請輸入公司代號（單一英文字母 A-Z，建立後不可修改）'
+      return
+    }
+    if (!/^[A-Z]$/.test(rawCode)) {
+      errorMessage.value = '公司代號格式錯誤：請輸入單一英文字母 A-Z'
+      return
+    }
+    if (isCodeTaken(rawCode)) {
+      errorMessage.value = `公司代號「${rawCode}」已被其他航商使用`
+      return
+    }
+  }
+
   errorMessage.value = ''
 
   if (isEditMode.value && editingOrgId.value) {
+    // code 為不可修改欄位，刻意不傳入 updates
     await rbacStore.updateOrganization(editingOrgId.value, {
       name: formData.value.name!,
       contactEmail: formData.value.contactEmail,
@@ -94,6 +120,7 @@ async function saveOrganization() {
   } else {
     await rbacStore.createOrganization({
       name: formData.value.name!,
+      code: rawCode,
       contactEmail: formData.value.contactEmail,
       contactPhone: formData.value.contactPhone
     })
@@ -177,6 +204,12 @@ function getAccountCount(orgId: string): number {
                         class="px-6 py-3 text-left text-xs font-medium uppercase"
                         :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
                       >
+                        公司代號
+                      </th>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-medium uppercase"
+                        :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+                      >
                         聯絡信箱
                       </th>
                       <th
@@ -227,6 +260,23 @@ function getAccountCount(orgId: string): number {
                         >
                           ({{ org.id }})
                         </span>
+                      </td>
+                      <td class="px-6 py-4 text-sm">
+                        <span
+                          v-if="org.code"
+                          :class="[
+                            'inline-flex items-center justify-center w-7 h-7 font-mono font-bold rounded',
+                            theme === 'dark'
+                              ? 'bg-primary-900/30 text-primary-300'
+                              : 'bg-primary-100 text-primary-700'
+                          ]"
+                        >
+                          {{ org.code }}
+                        </span>
+                        <span
+                          v-else
+                          :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-400'"
+                        >—</span>
                       </td>
                       <td
                         class="px-6 py-4 text-sm"
@@ -372,6 +422,28 @@ function getAccountCount(orgId: string): number {
               航商名稱 <span class="text-red-500">*</span>
             </label>
             <BaseInput v-model="formData.name" placeholder="例：新設航運" />
+          </div>
+
+          <div>
+            <label
+              class="block text-sm font-medium mb-2"
+              :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+            >
+              公司代號
+              <span v-if="!isEditMode" class="text-red-500">*</span>
+              <span
+                class="ml-2 text-xs font-normal"
+                :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-500'"
+              >
+                單一英文字母 A-Z；建立後不可修改；會帶入訂單編號開頭（如 K → K20260224-7299）
+              </span>
+            </label>
+            <BaseInput
+              v-model="formData.code"
+              :disabled="isEditMode"
+              maxlength="1"
+              placeholder="例：K"
+            />
           </div>
 
           <div>

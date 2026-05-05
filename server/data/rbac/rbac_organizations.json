@@ -10,6 +10,7 @@
   {
     "id": "org-kx",
     "name": "凱旋航運",
+    "code": "K",
     "contactEmail": "contact@kx-ferry.com",
     "contactPhone": "089-281702",
     "createdAt": "2026-01-01T00:00:00.000Z",
@@ -18,6 +19,7 @@
   {
     "id": "org-jx",
     "name": "金星航運",
+    "code": "J",
     "contactEmail": "contact@jx-ferry.com",
     "contactPhone": "089-732977",
     "createdAt": "2026-01-01T00:00:00.000Z",

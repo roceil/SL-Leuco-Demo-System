@@ -216,10 +216,11 @@ export const useRbacStore = defineStore('rbac', () => {
 
   async function updateOrganization(
     id: string,
-    data: Partial<Omit<Organization, 'id' | 'createdAt'>>
+    data: Partial<Omit<Organization, 'id' | 'code' | 'createdAt'>>
   ): Promise<void> {
     const index = organizations.value.findIndex((o) => o.id === id)
     if (index !== -1) {
+      // code 為不可修改欄位，刻意忽略 caller 傳入的 code（雙重保險）
       organizations.value[index] = {
         ...organizations.value[index],
         ...data,

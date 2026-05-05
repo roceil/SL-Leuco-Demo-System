@@ -47,6 +47,13 @@ export type RoleTemplate = 'super_admin' | 'operator_admin' | 'maritime_staff' |
 export interface Organization {
   id: string
   name: string // 如 "東琉聯營處"
+  /**
+   * 公司代號（單一英文字母 A-Z）
+   * - 帶入訂單編號開頭（例如 K → K20260224-7299）
+   * - 建立後不可修改（避免影響既有訂單）
+   * - 系統管理組織可不填
+   */
+  code?: string
   contactEmail?: string   // 聯絡信箱
   contactPhone?: string   // 聯絡電話
   createdAt: string

@@ -9,9 +9,11 @@ import type {
 } from '@/types/order'
 import { apiGet, apiPut } from '@/composables/useLocalStorage'
 import { usePayment } from '@/composables/usePayment'
+import { useRbacStore } from '@/stores/rbac'
 
 export const useOrderStore = defineStore('order', () => {
   const { initializePaymentInfo, addPaymentRecord } = usePayment()
+  const rbacStore = useRbacStore()
 
   const isLoading = ref(false)
   const orders = ref<Order[]>([])
@@ -73,7 +75,11 @@ export const useOrderStore = defineStore('order', () => {
     order: Omit<Order, 'id' | 'orderNumber' | 'createdAt' | 'updatedAt'>,
     createdBy: string
   ): Order {
-    const orderNumber = generateOrderNumber()
+    // 簽約航商 = 訂單歸屬航商；多航段跨航商時 organizationId 已在 Dashboard 設為「第一段航班的航商」
+    const orgCode = order.organizationId
+      ? rbacStore.organizations.find((o) => o.id === order.organizationId)?.code
+      : undefined
+    const orderNumber = generateOrderNumber(orgCode)
     const newOrder: Order = {
       ...order,
       id: `order-${Date.now()}`,
@@ -248,7 +254,12 @@ export const useOrderStore = defineStore('order', () => {
     updateOrder(orderId, { status }, updatedBy)
   }
 
-  function generateOrderNumber(): string {
+  /**
+   * 訂單編號格式：{orgCode?}YYYYMMDD-NNNN
+   * - 有公司代號時前綴一個英文字母（如 K20260224-7299）
+   * - 無公司代號時 fallback 純數字（如 20260224-7299）
+   */
+  function generateOrderNumber(orgCode?: string): string {
     const date = new Date()
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -256,7 +267,8 @@ export const useOrderStore = defineStore('order', () => {
     const random = Math.floor(Math.random() * 10000)
       .toString()
       .padStart(4, '0')
-    return `${year}${month}${day}-${random}`
+    const prefix = orgCode ? orgCode.toUpperCase() : ''
+    return `${prefix}${year}${month}${day}-${random}`
   }
 
   return {
