@@ -13,6 +13,7 @@ import { initSchedules } from './composables/useSchedules'
 import { initShips } from './composables/useShips'
 import { initWhitelist } from './composables/useWhitelist'
 import { initTicketConfig } from './composables/useTicketConfig'
+import { initDailySettlement } from './composables/useDailySettlement'
 
 async function bootstrap() {
   const app = createApp(App)
@@ -32,6 +33,7 @@ async function bootstrap() {
     rbacStore.init(),
     orderStore.init(),
     initTicketConfig(),
+    initDailySettlement(),
   ])
 
   // 初始化 composables（ships 需先於 schedules，因 schedules 依賴 ships）
