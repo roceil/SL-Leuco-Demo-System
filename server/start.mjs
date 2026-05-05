@@ -63,6 +63,16 @@ let db
 if (existsSync(runtimeDb)) {
   db = JSON.parse(readFileSync(runtimeDb, 'utf-8'))
   console.log(`[start] loaded existing ${runtimeDb}`)
+
+  // 防呆：volume 上既有 db.json 可能是舊版本，缺新加入的 collection。
+  // 從 data/ baseline 補上 runtime db 沒有的 collection（不覆蓋已有資料）。
+  const baseline = bundleData()
+  const missing = Object.keys(baseline).filter((k) => !(k in db))
+  if (missing.length > 0) {
+    for (const k of missing) db[k] = baseline[k]
+    writeFileSync(runtimeDb, JSON.stringify(db, null, 2), 'utf-8')
+    console.log(`[start] merged ${missing.length} missing collections: ${missing.join(', ')}`)
+  }
 } else {
   db = bundleData()
   writeFileSync(runtimeDb, JSON.stringify(db, null, 2), 'utf-8')

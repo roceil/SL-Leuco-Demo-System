@@ -15,8 +15,19 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') || '/api'
 
 /** 從後端讀取指定 collection */
 export async function apiGet<T>(collection: string): Promise<T> {
-  const res = await fetch(`${BASE_URL}/${collection}`)
+  const url = `${BASE_URL}/${collection}`
+  const res = await fetch(url)
   if (!res.ok) throw new Error(`[DB] 讀取失敗 (${collection}): ${res.status}`)
+  // 防禦性檢查：production 部署若 VITE_API_BASE_URL 沒設定、或 server 沒啟動，
+  // /api/* 可能會被 SPA fallback 攔走拿回 index.html，導致 JSON.parse 出錯。
+  // 這裡先確認 Content-Type，給出有用的錯誤訊息。
+  const ct = res.headers.get('content-type') ?? ''
+  if (!ct.includes('json')) {
+    throw new Error(
+      `[DB] ${url} 回傳了非 JSON 內容（${ct || '空 content-type'}）；` +
+      `若已部署到 Zeabur，請確認前端 build 時 VITE_API_BASE_URL 指向 server service 的網址。`
+    )
+  }
   return res.json()
 }
 
