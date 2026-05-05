@@ -1,0 +1,106 @@
+[
+  {
+    "id": "role-sysadmin",
+    "name": "系統管理員",
+    "organizationId": "org-sys",
+    "roleTemplate": "super_admin",
+    "loginRoute": "/dashboard",
+    "hasBackendAccess": true,
+    "permissionGroupIds": [
+      "pg-all"
+    ],
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "role-kx-admin",
+    "name": "凱旋航運管理員",
+    "organizationId": "org-kx",
+    "roleTemplate": "operator_admin",
+    "loginRoute": "/dashboard",
+    "hasBackendAccess": true,
+    "permissionGroupIds": [
+      "pg-kx-admin"
+    ],
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "role-kx-maritime",
+    "name": "凱旋航運船務人員",
+    "organizationId": "org-kx",
+    "roleTemplate": "maritime_staff",
+    "loginRoute": "/schedule-management",
+    "hasBackendAccess": true,
+    "permissionGroupIds": [
+      "pg-maritime-staff"
+    ],
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "role-kx-ticket",
+    "name": "凱旋航運售票員",
+    "organizationId": "org-kx",
+    "roleTemplate": "ticket_staff",
+    "loginRoute": "/create-order",
+    "hasBackendAccess": true,
+    "permissionGroupIds": [
+      "pg-ticket-agent"
+    ],
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "role-jx-admin",
+    "name": "金星航運管理員",
+    "organizationId": "org-jx",
+    "roleTemplate": "operator_admin",
+    "loginRoute": "/dashboard",
+    "hasBackendAccess": true,
+    "permissionGroupIds": [
+      "pg-jx-admin"
+    ],
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "role-jx-maritime",
+    "name": "金星航運船務人員",
+    "organizationId": "org-jx",
+    "roleTemplate": "maritime_staff",
+    "loginRoute": "/schedule-management",
+    "hasBackendAccess": true,
+    "permissionGroupIds": [
+      "pg-maritime-staff"
+    ],
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "role-jx-ticket",
+    "name": "金星航運售票員",
+    "organizationId": "org-jx",
+    "roleTemplate": "ticket_staff",
+    "loginRoute": "/create-order",
+    "hasBackendAccess": true,
+    "permissionGroupIds": [
+      "pg-ticket-agent"
+    ],
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "name": "旅行社",
+    "organizationId": "org-kx",
+    "roleTemplate": "partner",
+    "loginRoute": "/create-order",
+    "hasBackendAccess": true,
+    "permissionGroupIds": [
+      "pg-partner"
+    ],
+    "id": "role-1771985729545",
+    "createdAt": "2026-02-25T02:15:29.545Z",
+    "updatedAt": "2026-02-25T02:15:29.545Z"
+  }
+]

@@ -1,0 +1,804 @@
+[
+  {
+    "id": "pg-all",
+    "name": "系統完整權限",
+    "permissions": [
+      {
+        "resource": "manage-member",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "manage-order",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "manage-ticket",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "manage-schedule",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "manage-ship",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "manage-route",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "manage-whitelist",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "manage-rbac",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "view-audit-log",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "manage-audit-log",
+        "actions": [
+          "read",
+          "delete"
+        ]
+      },
+      {
+        "resource": "manage-organization",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "manage-report",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "dashboard",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "order-search",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "order-management",
+        "actions": [
+          "read",
+          "delete",
+          "update",
+          "create"
+        ]
+      },
+      {
+        "resource": "passenger-list",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "organization-management",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "account-management",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "role-management",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "permission-management",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "ticket-management",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "route-management",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "special-ticket-whitelist",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "report",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "cash-report",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "dealer-report",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "transport-analysis",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "ship-management",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "schedule-management",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "account-settings",
+        "actions": [
+          "read"
+        ]
+      }
+    ],
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-02-25T02:31:44.889Z"
+  },
+  {
+    "id": "pg-kx-admin",
+    "name": "凱旋航運管理權限",
+    "permissions": [
+      {
+        "resource": "manage-member",
+        "actions": [
+          "read",
+          "create",
+          "update"
+        ]
+      },
+      {
+        "resource": "manage-order",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "manage-ticket",
+        "actions": [
+          "read",
+          "create",
+          "update"
+        ]
+      },
+      {
+        "resource": "manage-schedule",
+        "actions": [
+          "read",
+          "create",
+          "update"
+        ]
+      },
+      {
+        "resource": "manage-ship",
+        "actions": [
+          "read",
+          "create",
+          "update"
+        ]
+      },
+      {
+        "resource": "manage-route",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "manage-whitelist",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "view-audit-log",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "manage-rbac",
+        "actions": [
+          "read",
+          "create",
+          "update"
+        ]
+      },
+      {
+        "resource": "manage-report",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "dashboard",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "order-search",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "order-management",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "passenger-list",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "account-management",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "role-management",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "permission-management",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "ticket-management",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "route-management",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "special-ticket-whitelist",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "report",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "cash-report",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "dealer-report",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "transport-analysis",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "ship-management",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "schedule-management",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "account-settings",
+        "actions": [
+          "read"
+        ]
+      }
+    ],
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "pg-jx-admin",
+    "name": "金星航運管理權限",
+    "permissions": [
+      {
+        "resource": "manage-member",
+        "actions": [
+          "read",
+          "create",
+          "update"
+        ]
+      },
+      {
+        "resource": "manage-order",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "manage-ticket",
+        "actions": [
+          "read",
+          "create",
+          "update"
+        ]
+      },
+      {
+        "resource": "manage-schedule",
+        "actions": [
+          "read",
+          "create",
+          "update"
+        ]
+      },
+      {
+        "resource": "manage-ship",
+        "actions": [
+          "read",
+          "create",
+          "update"
+        ]
+      },
+      {
+        "resource": "manage-route",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "manage-whitelist",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "view-audit-log",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "manage-rbac",
+        "actions": [
+          "read",
+          "create",
+          "update"
+        ]
+      },
+      {
+        "resource": "manage-report",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "dashboard",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "order-search",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "order-management",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "passenger-list",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "account-management",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "role-management",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "permission-management",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "ticket-management",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "route-management",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "special-ticket-whitelist",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "report",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "cash-report",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "dealer-report",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "transport-analysis",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "ship-management",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "schedule-management",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "account-settings",
+        "actions": [
+          "read"
+        ]
+      }
+    ],
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "pg-ticket-agent",
+    "name": "售票員基本權限",
+    "permissions": [
+      {
+        "resource": "manage-order",
+        "actions": [
+          "read",
+          "create",
+          "update"
+        ]
+      },
+      {
+        "resource": "manage-ticket",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "manage-schedule",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "manage-whitelist",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "manage-report",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "dashboard",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "order-search",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "order-management",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "passenger-list",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "ticket-management",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "special-ticket-whitelist",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "report",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "cash-report",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "dealer-report",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "schedule-management",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "account-settings",
+        "actions": [
+          "read"
+        ]
+      }
+    ],
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "pg-maritime-staff",
+    "name": "船務人員權限",
+    "permissions": [
+      {
+        "resource": "manage-schedule",
+        "actions": [
+          "read",
+          "create",
+          "update"
+        ]
+      },
+      {
+        "resource": "schedule-management",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "passenger-list",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "account-settings",
+        "actions": [
+          "read"
+        ]
+      }
+    ],
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "pg-partner",
+    "name": "合作廠商權限",
+    "permissions": [
+      {
+        "resource": "manage-schedule",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "manage-ticket",
+        "actions": [
+          "read"
+        ]
+      },
+      {
+        "resource": "dashboard",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "order-search",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      },
+      {
+        "resource": "account-settings",
+        "actions": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      }
+    ],
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-02-25T02:16:09.295Z"
+  }
+]

@@ -1,0 +1,104 @@
+[
+  {
+    "id": "rs-tt-gi",
+    "fromPortId": "port-tt",
+    "toPortId": "port-gi",
+    "allowedNextSegments": [
+      "rs-gi-ly",
+      "route-1771932990558"
+    ],
+    "estimatedDuration": 50,
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-04-02T13:21:38.803Z"
+  },
+  {
+    "id": "rs-gi-tt",
+    "fromPortId": "port-gi",
+    "toPortId": "port-tt",
+    "allowedNextSegments": [],
+    "estimatedDuration": 50,
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "rs-tt-ly",
+    "fromPortId": "port-tt",
+    "toPortId": "port-ly",
+    "allowedNextSegments": [
+      "rs-ly-tt",
+      "rs-ly-gi"
+    ],
+    "estimatedDuration": 150,
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-02-25T08:13:01.457Z"
+  },
+  {
+    "id": "rs-ly-tt",
+    "fromPortId": "port-ly",
+    "toPortId": "port-tt",
+    "allowedNextSegments": [],
+    "estimatedDuration": 150,
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "rs-hbh-ly",
+    "fromPortId": "port-hbh",
+    "toPortId": "port-ly",
+    "allowedNextSegments": [],
+    "estimatedDuration": 90,
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "rs-ly-hbh",
+    "fromPortId": "port-ly",
+    "toPortId": "port-hbh",
+    "allowedNextSegments": [],
+    "estimatedDuration": 90,
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "rs-gi-ly",
+    "fromPortId": "port-gi",
+    "toPortId": "port-ly",
+    "allowedNextSegments": [
+      "rs-ly-tt",
+      "rs-ly-hbh",
+      "rs-ly-gi"
+    ],
+    "estimatedDuration": 90,
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-02-24T11:42:07.816Z"
+  },
+  {
+    "id": "rs-ly-gi",
+    "fromPortId": "port-ly",
+    "toPortId": "port-gi",
+    "allowedNextSegments": [
+      "rs-gi-tt"
+    ],
+    "estimatedDuration": 90,
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "fromPortId": "port-gi",
+    "toPortId": "port-hbh",
+    "estimatedDuration": 60,
+    "allowedNextSegments": [],
+    "isActive": true,
+    "id": "route-1771932990558",
+    "createdAt": "2026-02-24T11:36:30.558Z",
+    "updatedAt": "2026-02-24T11:36:30.558Z"
+  }
+]

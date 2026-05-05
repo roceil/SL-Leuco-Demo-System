@@ -1,0 +1,600 @@
+[
+  {
+    "customerName": "測試測試",
+    "customerPhone": "099999999",
+    "scheduleId": "rs-tt-gi-2026-02-24-08:00",
+    "scheduleSegments": [
+      {
+        "date": "2026-02-24",
+        "time": "08:00",
+        "route": "台東→綠島"
+      },
+      {
+        "date": "2026-02-25",
+        "time": "07:00",
+        "route": "綠島→蘭嶼"
+      },
+      {
+        "date": "2026-02-26",
+        "time": "16:00",
+        "route": "蘭嶼→台東"
+      }
+    ],
+    "passengers": [],
+    "paymentInfo": {
+      "deposit": 0,
+      "balance": 7050,
+      "discount": 0,
+      "totalAmount": 7050,
+      "paidAmount": 0,
+      "remainingAmount": 7050,
+      "paymentMethod": "cash",
+      "paymentStatus": "unpaid",
+      "paymentRecords": []
+    },
+    "status": "pending",
+    "notes": "全票 x3",
+    "createdBy": "admin",
+    "id": "order-1771921292630",
+    "orderNumber": "20260224-7299",
+    "createdAt": "2026-02-24T08:21:32.630Z",
+    "updatedAt": "2026-02-24T08:21:32.630Z",
+    "organizationId": "org-kx"
+  },
+  {
+    "customerName": "測試測試",
+    "customerPhone": "0900000",
+    "scheduleId": "rs-tt-gi-2026-02-24-08:00",
+    "scheduleSegments": [
+      {
+        "date": "2026-02-24",
+        "time": "08:00",
+        "route": "台東→綠島"
+      }
+    ],
+    "passengers": [],
+    "paymentInfo": {
+      "deposit": 0,
+      "balance": 1650,
+      "discount": 0,
+      "totalAmount": 1650,
+      "paidAmount": 0,
+      "remainingAmount": 1650,
+      "paymentMethod": "cash",
+      "paymentStatus": "unpaid",
+      "paymentRecords": []
+    },
+    "status": "pending",
+    "ticketBreakdown": [
+      {
+        "passengerType": "全票",
+        "ticketTypeId": "tt-tt-gi-adult",
+        "quantity": 3
+      }
+    ],
+    "notes": "全票 x3",
+    "createdBy": "admin",
+    "id": "order-1771922166024",
+    "orderNumber": "20260224-3234",
+    "createdAt": "2026-02-24T08:36:06.024Z",
+    "updatedAt": "2026-02-24T08:36:06.024Z",
+    "organizationId": "org-kx"
+  },
+  {
+    "customerName": "測試測試",
+    "customerPhone": "098877665",
+    "scheduleId": "rs-tt-gi-2026-02-24-08:00",
+    "scheduleSegments": [
+      {
+        "date": "2026-02-24",
+        "time": "08:00",
+        "route": "台東→綠島"
+      },
+      {
+        "date": "2026-02-25",
+        "time": "07:00",
+        "route": "綠島→蘭嶼"
+      },
+      {
+        "date": "2026-02-26",
+        "time": "16:00",
+        "route": "蘭嶼→台東"
+      }
+    ],
+    "passengers": [
+      {
+        "id": "passenger-1771923639607-0",
+        "name": "",
+        "ticketTypeId": "tt-tt-gi-adult",
+        "hasBoarded": false
+      },
+      {
+        "id": "passenger-1771923639607-1",
+        "name": "",
+        "ticketTypeId": "tt-tt-gi-adult",
+        "hasBoarded": false
+      },
+      {
+        "id": "passenger-1771923639607-2",
+        "name": "",
+        "ticketTypeId": "tt-tt-gi-child",
+        "hasBoarded": false
+      },
+      {
+        "name": "",
+        "ticketTypeId": "tt-tt-gi-adult",
+        "hasBoarded": false,
+        "id": "passenger-1771924517862"
+      }
+    ],
+    "paymentInfo": {
+      "deposit": 0,
+      "balance": 7525,
+      "discount": 0,
+      "totalAmount": 7525,
+      "paidAmount": 7525,
+      "remainingAmount": 0,
+      "paymentMethod": "cash",
+      "paymentStatus": "paid",
+      "paymentRecords": [
+        {
+          "id": "payment-1771934803359",
+          "amount": 2000,
+          "method": "cash",
+          "paidAt": "2026-02-24T12:06:43.359Z",
+          "paidBy": "admin",
+          "note": ""
+        },
+        {
+          "id": "payment-1771934815813",
+          "amount": 5525,
+          "method": "cash",
+          "paidAt": "2026-02-24T12:06:55.814Z",
+          "paidBy": "admin",
+          "note": "124"
+        }
+      ]
+    },
+    "status": "pending",
+    "ticketBreakdown": [
+      {
+        "passengerType": "全票",
+        "ticketTypeId": "tt-tt-gi-adult",
+        "quantity": 3
+      },
+      {
+        "passengerType": "半票",
+        "ticketTypeId": "tt-tt-gi-child",
+        "quantity": 1
+      }
+    ],
+    "notes": "全票 x2、半票 x1",
+    "createdBy": "admin",
+    "id": "order-1771923639607",
+    "orderNumber": "20260224-0934",
+    "createdAt": "2026-02-24T09:00:39.607Z",
+    "updatedAt": "2026-02-24T12:06:55.814Z",
+    "updatedBy": "admin",
+    "organizationId": "org-kx"
+  },
+  {
+    "customerName": "測試",
+    "customerPhone": "0900000000",
+    "scheduleId": "rs-tt-gi-2026-02-24-08:00",
+    "scheduleSegments": [
+      {
+        "date": "2026-02-24",
+        "time": "08:00",
+        "route": "台東→綠島"
+      },
+      {
+        "date": "2026-02-25",
+        "time": "07:00",
+        "route": "綠島→蘭嶼"
+      },
+      {
+        "date": "2026-02-26",
+        "time": "09:30",
+        "route": "蘭嶼→台東"
+      }
+    ],
+    "passengers": [
+      {
+        "id": "passenger-1771924676290-0",
+        "name": "",
+        "ticketTypeId": "tt-tt-gi-adult",
+        "hasBoarded": false
+      },
+      {
+        "id": "passenger-1771924676290-2",
+        "name": "",
+        "ticketTypeId": "tt-tt-gi-child",
+        "hasBoarded": false
+      },
+      {
+        "id": "passenger-1771924676290-3",
+        "name": "",
+        "ticketTypeId": "tt-tt-gi-child",
+        "hasBoarded": false
+      },
+      {
+        "name": "",
+        "ticketTypeId": "tt-tt-gi-adult",
+        "hasBoarded": false,
+        "id": "passenger-1771924684539"
+      }
+    ],
+    "paymentInfo": {
+      "deposit": 0,
+      "balance": 7050,
+      "discount": 0,
+      "totalAmount": 7050,
+      "paidAmount": 7050,
+      "remainingAmount": 0,
+      "paymentMethod": "cash",
+      "paymentStatus": "paid",
+      "paymentRecords": [
+        {
+          "id": "payment-1771934751102",
+          "amount": 7050,
+          "method": "transfer",
+          "paidAt": "2026-02-24T12:05:51.102Z",
+          "paidBy": "admin",
+          "note": ""
+        }
+      ]
+    },
+    "status": "pending",
+    "ticketBreakdown": [
+      {
+        "passengerType": "全票",
+        "ticketTypeId": "tt-tt-gi-adult",
+        "quantity": 2
+      },
+      {
+        "passengerType": "半票",
+        "ticketTypeId": "tt-tt-gi-child",
+        "quantity": 2
+      }
+    ],
+    "notes": "全票 x2、半票 x2",
+    "createdBy": "admin",
+    "id": "order-1771924676290",
+    "orderNumber": "20260224-3295",
+    "createdAt": "2026-02-24T09:17:56.290Z",
+    "updatedAt": "2026-02-24T12:05:51.102Z",
+    "updatedBy": "admin",
+    "invoiceInfo": {
+      "type": "二聯式",
+      "editedBy": "admin",
+      "editedAt": "2026-02-24T09:22:16.330Z"
+    },
+    "organizationId": "org-kx"
+  },
+  {
+    "customerName": "bhu",
+    "customerPhone": "8098080",
+    "scheduleId": "rs-tt-gi-2026-02-24-08:00",
+    "scheduleSegments": [
+      {
+        "date": "2026-02-24",
+        "time": "08:00",
+        "route": "台東→綠島"
+      },
+      {
+        "date": "2026-02-25",
+        "time": "07:00",
+        "route": "綠島→蘭嶼"
+      },
+      {
+        "date": "2026-02-26",
+        "time": "07:00",
+        "route": "蘭嶼→綠島"
+      }
+    ],
+    "passengers": [
+      {
+        "id": "passenger-1771934014882-0",
+        "name": "",
+        "ticketTypeId": "tt-tt-gi-adult",
+        "hasBoarded": false
+      },
+      {
+        "id": "passenger-1771934014882-1",
+        "name": "",
+        "ticketTypeId": "tt-tt-gi-adult",
+        "hasBoarded": false
+      },
+      {
+        "name": "",
+        "ticketTypeId": "tt-tt-gi-adult",
+        "hasBoarded": false,
+        "id": "passenger-1771934060281"
+      },
+      {
+        "name": "",
+        "ticketTypeId": "tt-tt-gi-child",
+        "hasBoarded": false,
+        "id": "passenger-1771934595767"
+      }
+    ],
+    "paymentInfo": {
+      "deposit": 0,
+      "balance": 7025,
+      "discount": 0,
+      "totalAmount": 7025,
+      "paidAmount": 7025,
+      "remainingAmount": 0,
+      "paymentMethod": "cash",
+      "paymentStatus": "paid",
+      "paymentRecords": [
+        {
+          "id": "payment-1771934687999",
+          "amount": 7025,
+          "method": "cash",
+          "paidAt": "2026-02-24T12:04:47.999Z",
+          "paidBy": "admin",
+          "note": ""
+        }
+      ]
+    },
+    "status": "pending",
+    "ticketBreakdown": [
+      {
+        "passengerType": "全票",
+        "ticketTypeId": "tt-tt-gi-adult",
+        "quantity": 3
+      },
+      {
+        "passengerType": "半票",
+        "ticketTypeId": "tt-tt-gi-child",
+        "quantity": 1
+      }
+    ],
+    "notes": "全票 x2、半票 x1",
+    "createdBy": "admin",
+    "id": "order-1771934014882",
+    "orderNumber": "20260224-9537",
+    "createdAt": "2026-02-24T11:53:34.882Z",
+    "updatedAt": "2026-02-24T12:04:47.999Z",
+    "updatedBy": "admin",
+    "organizationId": "org-kx"
+  },
+  {
+    "customerName": "測試完整",
+    "customerPhone": "0900000000",
+    "scheduleId": "rs-tt-ly-2026-02-25-07:00",
+    "scheduleSegments": [
+      {
+        "date": "2026-02-25",
+        "time": "07:00",
+        "route": "台東→蘭嶼"
+      },
+      {
+        "date": "2026-02-26",
+        "time": "10:00",
+        "route": "蘭嶼→台東"
+      }
+    ],
+    "passengers": [
+      {
+        "id": "passenger-1772006427855-0",
+        "name": "",
+        "ticketTypeId": "ticket-1772004859872",
+        "hasBoarded": false
+      },
+      {
+        "id": "passenger-1772006427855-1",
+        "name": "",
+        "ticketTypeId": "ticket-1772004859872",
+        "hasBoarded": false
+      }
+    ],
+    "paymentInfo": {
+      "deposit": 0,
+      "balance": 5600,
+      "discount": 0,
+      "totalAmount": 5600,
+      "paidAmount": 0,
+      "remainingAmount": 5600,
+      "paymentMethod": "cash",
+      "paymentStatus": "unpaid",
+      "paymentRecords": []
+    },
+    "status": "pending",
+    "ticketBreakdown": [
+      {
+        "passengerType": "全票",
+        "ticketTypeId": "ticket-1772004859872",
+        "quantity": 2
+      }
+    ],
+    "notes": "全票 x2",
+    "createdBy": "admin",
+    "organizationId": "org-kx",
+    "id": "order-1772006427855",
+    "orderNumber": "20260225-1483",
+    "createdAt": "2026-02-25T08:00:27.855Z",
+    "updatedAt": "2026-02-25T08:00:27.855Z"
+  },
+  {
+    "customerName": "測試測試",
+    "customerPhone": "0999999999",
+    "scheduleId": "rs-tt-ly-2026-02-25-07:00",
+    "scheduleSegments": [
+      {
+        "date": "2026-02-25",
+        "time": "07:00",
+        "route": "台東→蘭嶼",
+        "organizationId": "org-kx"
+      },
+      {
+        "date": "2026-02-26",
+        "time": "07:00",
+        "route": "蘭嶼→綠島",
+        "organizationId": "org-jx"
+      },
+      {
+        "date": "2026-02-27",
+        "time": "07:00",
+        "route": "綠島→台東",
+        "organizationId": "org-kx"
+      }
+    ],
+    "passengers": [
+      {
+        "id": "passenger-1772007364315-0",
+        "name": "",
+        "ticketTypeId": "ticket-1772004859872",
+        "hasBoarded": false
+      },
+      {
+        "id": "passenger-1772007364315-1",
+        "name": "",
+        "ticketTypeId": "ticket-1772004859872",
+        "hasBoarded": false
+      },
+      {
+        "id": "passenger-1772007364315-2",
+        "name": "",
+        "ticketTypeId": "ticket-1772004883604",
+        "hasBoarded": false
+      }
+    ],
+    "paymentInfo": {
+      "deposit": 0,
+      "balance": 8150,
+      "discount": 500,
+      "totalAmount": 7650,
+      "paidAmount": 7650,
+      "remainingAmount": 0,
+      "paymentMethod": "cash",
+      "paymentStatus": "paid",
+      "paymentRecords": [
+        {
+          "id": "payment-1772007896722",
+          "amount": 2650,
+          "paymentType": "deposit",
+          "method": "cash",
+          "paidAt": "2026-02-25T08:24:56.722Z",
+          "paidBy": "admin",
+          "note": ""
+        },
+        {
+          "id": "payment-1772008126480",
+          "amount": 1000,
+          "paymentType": "balance",
+          "method": "cash",
+          "paidAt": "2026-02-25T08:28:46.480Z",
+          "paidBy": "acc-kx-admin",
+          "note": ""
+        },
+        {
+          "id": "payment-1772008133230",
+          "amount": 4000,
+          "paymentType": "balance",
+          "method": "cash",
+          "paidAt": "2026-02-25T08:28:53.230Z",
+          "paidBy": "acc-kx-admin",
+          "note": ""
+        }
+      ]
+    },
+    "status": "pending",
+    "ticketBreakdown": [
+      {
+        "passengerType": "全票",
+        "ticketTypeId": "ticket-1772004859872",
+        "quantity": 2
+      },
+      {
+        "passengerType": "半票",
+        "ticketTypeId": "ticket-1772004883604",
+        "quantity": 1
+      }
+    ],
+    "notes": "全票 x2、半票 x1",
+    "createdBy": "admin",
+    "organizationId": "org-kx",
+    "id": "order-1772007364315",
+    "orderNumber": "20260225-1500",
+    "createdAt": "2026-02-25T08:16:04.315Z",
+    "updatedAt": "2026-02-25T08:29:50.038Z",
+    "updatedBy": "acc-kx-admin"
+  },
+  {
+    "customerName": "測試",
+    "customerPhone": "0900000000",
+    "scheduleId": "rs-tt-gi-2026-03-27-07:00",
+    "scheduleSegments": [
+      {
+        "date": "2026-03-27",
+        "time": "07:00",
+        "route": "台東→綠島",
+        "organizationId": "org-kx"
+      },
+      {
+        "date": "2026-03-28",
+        "time": "19:00",
+        "route": "綠島→台東",
+        "organizationId": "org-jx"
+      }
+    ],
+    "passengers": [
+      {
+        "id": "passenger-1774612402692-0",
+        "name": "",
+        "ticketTypeId": "ticket-1774611843206",
+        "hasBoarded": false
+      },
+      {
+        "id": "passenger-1774612402692-1",
+        "name": "",
+        "ticketTypeId": "ticket-1774611843206",
+        "hasBoarded": false
+      }
+    ],
+    "paymentInfo": {
+      "deposit": 0,
+      "balance": 3800,
+      "discount": 0,
+      "totalAmount": 3800,
+      "paidAmount": 3800,
+      "remainingAmount": 0,
+      "paymentMethod": "cash",
+      "paymentStatus": "paid",
+      "paymentRecords": [
+        {
+          "id": "payment-1774617399331",
+          "amount": 3800,
+          "paymentType": "balance",
+          "method": "credit_card",
+          "paidAt": "2026-03-27T13:16:39.331Z",
+          "paidBy": "acc-sysadmin",
+          "note": ""
+        }
+      ]
+    },
+    "status": "pending",
+    "ticketBreakdown": [
+      {
+        "passengerType": "全票",
+        "ticketTypeId": "ticket-1774611843206",
+        "quantity": 2
+      }
+    ],
+    "notes": "全票 x2",
+    "createdBy": "admin",
+    "organizationId": "org-sys",
+    "id": "order-1774612402692",
+    "orderNumber": "20260327-8748",
+    "createdAt": "2026-03-27T11:53:22.692Z",
+    "updatedAt": "2026-03-27T13:20:57.920Z",
+    "invoiceInfo": {
+      "type": "二聯式",
+      "editedBy": "acc-sysadmin",
+      "editedAt": "2026-03-27T13:20:57.920Z"
+    },
+    "updatedBy": "acc-sysadmin"
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "name": "sl-leuco-demo-server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node start.mjs",
+    "dev": "PORT=3001 node start.mjs"
+  }
+}

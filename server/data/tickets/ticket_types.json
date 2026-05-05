@@ -1,0 +1,330 @@
+[
+  {
+    "name": "現場全票",
+    "passengerType": "全票",
+    "organizationId": "org-kx",
+    "facePrice": 1400,
+    "segmentDiscounts": [
+      {
+        "segmentCount": 1,
+        "discountAmount": 0
+      }
+    ],
+    "route": {
+      "from": "port-tt",
+      "to": "port-ly"
+    },
+    "isSpecial": false,
+    "id": "ticket-1772004859872",
+    "createdAt": "2026-02-25T07:34:19.872Z",
+    "updatedAt": "2026-02-25T07:34:19.872Z"
+  },
+  {
+    "name": "現場半票",
+    "passengerType": "半票",
+    "organizationId": "org-kx",
+    "facePrice": 700,
+    "segmentDiscounts": [
+      {
+        "segmentCount": 1,
+        "discountAmount": 0
+      }
+    ],
+    "route": {
+      "from": "port-tt",
+      "to": "port-ly"
+    },
+    "isSpecial": false,
+    "id": "ticket-1772004883604",
+    "createdAt": "2026-02-25T07:34:43.604Z",
+    "updatedAt": "2026-02-25T07:34:43.604Z"
+  },
+  {
+    "name": "現場全票",
+    "passengerType": "全票",
+    "organizationId": "org-kx",
+    "facePrice": 1400,
+    "segmentDiscounts": [
+      {
+        "segmentCount": 1,
+        "discountAmount": 0
+      }
+    ],
+    "route": {
+      "from": "port-ly",
+      "to": "port-tt"
+    },
+    "isSpecial": false,
+    "id": "ticket-1772004913004",
+    "createdAt": "2026-02-25T07:35:13.004Z",
+    "updatedAt": "2026-02-25T07:35:13.004Z"
+  },
+  {
+    "name": "現場半票",
+    "passengerType": "半票",
+    "organizationId": "org-kx",
+    "facePrice": 700,
+    "segmentDiscounts": [
+      {
+        "segmentCount": 1,
+        "discountAmount": 0
+      }
+    ],
+    "route": {
+      "from": "port-ly",
+      "to": "port-tt"
+    },
+    "isSpecial": false,
+    "id": "ticket-1772004930929",
+    "createdAt": "2026-02-25T07:35:30.929Z",
+    "updatedAt": "2026-02-25T07:35:30.929Z"
+  },
+  {
+    "name": "現場全票",
+    "passengerType": "全票",
+    "organizationId": "org-jx",
+    "facePrice": 1300,
+    "segmentDiscounts": [
+      {
+        "segmentCount": 1,
+        "discountAmount": 0
+      }
+    ],
+    "route": {
+      "from": "port-tt",
+      "to": "port-ly"
+    },
+    "isSpecial": false,
+    "id": "ticket-1772004965913",
+    "createdAt": "2026-02-25T07:36:05.913Z",
+    "updatedAt": "2026-02-25T07:36:05.913Z"
+  },
+  {
+    "name": "現場半票",
+    "passengerType": "半票",
+    "organizationId": "org-jx",
+    "facePrice": 650,
+    "segmentDiscounts": [
+      {
+        "segmentCount": 1,
+        "discountAmount": 0
+      }
+    ],
+    "route": {
+      "from": "port-ly",
+      "to": "port-tt"
+    },
+    "isSpecial": false,
+    "id": "ticket-1772004986996",
+    "createdAt": "2026-02-25T07:36:26.996Z",
+    "updatedAt": "2026-02-25T07:36:26.996Z"
+  },
+  {
+    "name": "現場全票",
+    "passengerType": "全票",
+    "organizationId": "org-jx",
+    "facePrice": 1300,
+    "segmentDiscounts": [
+      {
+        "segmentCount": 1,
+        "discountAmount": 0
+      }
+    ],
+    "route": {
+      "from": "port-ly",
+      "to": "port-tt"
+    },
+    "isSpecial": false,
+    "id": "ticket-1772006193568",
+    "createdAt": "2026-02-25T07:56:33.568Z",
+    "updatedAt": "2026-02-25T07:56:33.568Z"
+  },
+  {
+    "name": "現場半票",
+    "passengerType": "半票",
+    "organizationId": "org-jx",
+    "facePrice": 650,
+    "segmentDiscounts": [
+      {
+        "segmentCount": 1,
+        "discountAmount": 0
+      }
+    ],
+    "route": {
+      "from": "port-tt",
+      "to": "port-ly"
+    },
+    "isSpecial": false,
+    "id": "ticket-1772006216309",
+    "createdAt": "2026-02-25T07:56:56.309Z",
+    "updatedAt": "2026-02-25T07:56:56.309Z"
+  },
+  {
+    "name": "現場全票",
+    "passengerType": "全票",
+    "organizationId": "org-kx",
+    "facePrice": 1300,
+    "segmentDiscounts": [
+      {
+        "segmentCount": 1,
+        "discountAmount": 0
+      }
+    ],
+    "route": {
+      "from": "port-ly",
+      "to": "port-gi"
+    },
+    "isSpecial": false,
+    "id": "ticket-1772006975849",
+    "createdAt": "2026-02-25T08:09:35.849Z",
+    "updatedAt": "2026-02-25T08:09:35.849Z"
+  },
+  {
+    "name": "現場半票",
+    "passengerType": "半票",
+    "organizationId": "org-kx",
+    "facePrice": 650,
+    "segmentDiscounts": [
+      {
+        "segmentCount": 1,
+        "discountAmount": 0
+      }
+    ],
+    "route": {
+      "from": "port-ly",
+      "to": "port-gi"
+    },
+    "isSpecial": false,
+    "id": "ticket-1772006996474",
+    "createdAt": "2026-02-25T08:09:56.474Z",
+    "updatedAt": "2026-02-25T08:09:56.474Z"
+  },
+  {
+    "name": "現場半票",
+    "passengerType": "半票",
+    "organizationId": "org-jx",
+    "facePrice": 600,
+    "segmentDiscounts": [
+      {
+        "segmentCount": 1,
+        "discountAmount": 0
+      }
+    ],
+    "route": {
+      "from": "port-ly",
+      "to": "port-gi"
+    },
+    "isSpecial": false,
+    "id": "ticket-1772007025449",
+    "createdAt": "2026-02-25T08:10:25.449Z",
+    "updatedAt": "2026-02-25T08:10:39.866Z"
+  },
+  {
+    "name": "現場全票",
+    "passengerType": "全票",
+    "organizationId": "org-jx",
+    "facePrice": 1200,
+    "segmentDiscounts": [
+      {
+        "segmentCount": 1,
+        "discountAmount": 0
+      }
+    ],
+    "route": {
+      "from": "port-ly",
+      "to": "port-gi"
+    },
+    "isSpecial": false,
+    "id": "ticket-1772007058707",
+    "createdAt": "2026-02-25T08:10:58.707Z",
+    "updatedAt": "2026-02-25T08:10:58.707Z"
+  },
+  {
+    "name": "現場全票",
+    "passengerType": "全票",
+    "organizationId": "org-kx",
+    "facePrice": 660,
+    "segmentDiscounts": [
+      {
+        "segmentCount": 1,
+        "discountAmount": 0
+      }
+    ],
+    "route": {
+      "from": "port-gi",
+      "to": "port-tt"
+    },
+    "isSpecial": false,
+    "id": "ticket-1772007127698",
+    "createdAt": "2026-02-25T08:12:07.698Z",
+    "updatedAt": "2026-02-25T08:12:16.773Z"
+  },
+  {
+    "name": "現場半票",
+    "passengerType": "半票",
+    "organizationId": "org-kx",
+    "facePrice": 330,
+    "segmentDiscounts": [
+      {
+        "segmentCount": 1,
+        "discountAmount": 0
+      }
+    ],
+    "route": {
+      "from": "port-gi",
+      "to": "port-tt"
+    },
+    "isSpecial": false,
+    "id": "ticket-1772007156340",
+    "createdAt": "2026-02-25T08:12:36.340Z",
+    "updatedAt": "2026-02-25T08:12:36.340Z"
+  },
+  {
+    "name": "現場全票",
+    "passengerType": "全票",
+    "organizationId": "org-kx",
+    "facePrice": 1000,
+    "segmentDiscounts": [
+      {
+        "segmentCount": 1,
+        "discountAmount": 0
+      },
+      {
+        "segmentCount": 2,
+        "discountAmount": 0
+      },
+      {
+        "segmentCount": 3,
+        "discountAmount": 60
+      }
+    ],
+    "route": {
+      "from": "port-tt",
+      "to": "port-gi"
+    },
+    "isSpecial": false,
+    "id": "ticket-1774611843206",
+    "createdAt": "2026-03-27T11:44:03.206Z",
+    "updatedAt": "2026-03-27T11:44:03.206Z"
+  },
+  {
+    "name": "現場全票",
+    "passengerType": "全票",
+    "organizationId": "org-jx",
+    "facePrice": 900,
+    "segmentDiscounts": [
+      {
+        "segmentCount": 1,
+        "discountAmount": 0
+      }
+    ],
+    "route": {
+      "from": "port-gi",
+      "to": "port-tt"
+    },
+    "isSpecial": false,
+    "id": "ticket-1774611906973",
+    "createdAt": "2026-03-27T11:45:06.973Z",
+    "updatedAt": "2026-03-27T11:45:06.973Z"
+  }
+]

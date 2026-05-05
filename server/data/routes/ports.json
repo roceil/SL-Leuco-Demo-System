@@ -1,0 +1,38 @@
+[
+  {
+    "id": "port-hbh",
+    "name": "後壁湖",
+    "code": "HBH",
+    "isActive": true,
+    "order": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "port-tt",
+    "name": "台東",
+    "code": "TT",
+    "isActive": true,
+    "order": 2,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "port-gi",
+    "name": "綠島",
+    "code": "GI",
+    "isActive": true,
+    "order": 3,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "port-ly",
+    "name": "蘭嶼",
+    "code": "LY",
+    "isActive": true,
+    "order": 4,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  }
+]

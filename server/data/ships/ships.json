@@ -1,0 +1,68 @@
+[
+  {
+    "id": "ship-kx1",
+    "name": "凱旋 1 號",
+    "registrationNumber": "CT-1001",
+    "organizationId": "org-kx",
+    "maxCapacity": 280,
+    "status": "active",
+    "description": "凱旋航運旗艦船隻，主要往返台東─綠島航線",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "ship-kx2",
+    "name": "凱旋 2 號",
+    "registrationNumber": "CT-1002",
+    "organizationId": "org-kx",
+    "maxCapacity": 260,
+    "status": "active",
+    "description": "凱旋航運二號船，主要往返台東─綠島航線",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "ship-kx3",
+    "name": "凱旋 3 號",
+    "registrationNumber": "CT-1003",
+    "organizationId": "org-kx",
+    "maxCapacity": 240,
+    "status": "active",
+    "description": "凱旋航運三號船，提供台東─綠島機動班次",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "ship-jx1",
+    "name": "金星 1 號",
+    "registrationNumber": "VS-2001",
+    "organizationId": "org-jx",
+    "maxCapacity": 350,
+    "status": "active",
+    "description": "金星航運旗艦船隻，主要往返台東─蘭嶼航線",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "ship-jx2",
+    "name": "金星 2 號",
+    "registrationNumber": "VS-2002",
+    "organizationId": "org-jx",
+    "maxCapacity": 320,
+    "status": "active",
+    "description": "金星航運二號船，主要往返台東─蘭嶼航線",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "ship-jx3",
+    "name": "金星 3 號",
+    "registrationNumber": "VS-2003",
+    "organizationId": "org-jx",
+    "maxCapacity": 300,
+    "status": "active",
+    "description": "金星航運三號船，往返後壁湖─蘭嶼及機動班次",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  }
+]

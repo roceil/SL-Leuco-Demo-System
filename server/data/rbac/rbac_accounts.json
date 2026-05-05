@@ -1,0 +1,764 @@
+[
+  {
+    "id": "acc-sysadmin",
+    "username": "admin",
+    "name": "系統管理員",
+    "contactPerson": "系統管理員",
+    "contactPhone": "089-000000",
+    "organizationId": "org-sys",
+    "roleId": "role-sysadmin",
+    "verified": true,
+    "availableTicketTypes": [
+      "tt-tt-gi-adult",
+      "tt-tt-gi-child",
+      "tt-tt-gi-resident",
+      "tt-gi-tt-adult",
+      "tt-gi-tt-child",
+      "tt-gi-tt-resident",
+      "tt-tt-ly-adult",
+      "tt-tt-ly-child",
+      "tt-tt-ly-resident",
+      "tt-ly-tt-adult",
+      "tt-ly-tt-child",
+      "tt-ly-tt-resident",
+      "tt-hbh-ly-adult",
+      "tt-hbh-ly-child",
+      "tt-hbh-ly-resident",
+      "tt-ly-hbh-adult",
+      "tt-ly-hbh-child",
+      "tt-ly-hbh-resident",
+      "tt-gi-ly-adult",
+      "tt-gi-ly-child",
+      "tt-ly-gi-adult",
+      "tt-ly-gi-child",
+      "ticket-1774611843206",
+      "ticket-1774611906973"
+    ],
+    "ticketPriceSettings": [
+      {
+        "id": "price-1774612352383-mpq8awwlw",
+        "ticketTypeId": "ticket-1774611843206",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          },
+          {
+            "segmentCount": 2,
+            "discountAmount": 0
+          },
+          {
+            "segmentCount": 3,
+            "discountAmount": 60
+          }
+        ],
+        "effectiveDate": "2026-03-27",
+        "createdAt": "2026-03-27T11:52:32.383Z"
+      },
+      {
+        "id": "price-1774612362092-edd9raubw",
+        "ticketTypeId": "ticket-1774611906973",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-03-27",
+        "createdAt": "2026-03-27T11:52:42.092Z"
+      }
+    ],
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-03-27T11:52:43.008Z"
+  },
+  {
+    "id": "acc-kx-admin",
+    "username": "kx-admin",
+    "name": "凱旋航運管理員",
+    "contactPerson": "凱旋管理部",
+    "contactPhone": "089-281702",
+    "organizationId": "org-kx",
+    "roleId": "role-kx-admin",
+    "verified": true,
+    "availableTicketTypes": [
+      "tt-tt-gi-adult",
+      "tt-tt-gi-child",
+      "tt-tt-gi-resident",
+      "tt-gi-tt-adult",
+      "tt-gi-tt-child",
+      "tt-gi-tt-resident",
+      "tt-gi-ly-adult",
+      "tt-gi-ly-child",
+      "tt-ly-gi-adult",
+      "tt-ly-gi-child",
+      "ticket-1772004859872",
+      "ticket-1772004883604",
+      "ticket-1772004913004",
+      "ticket-1772004930929",
+      "ticket-1772004965913",
+      "ticket-1772004986996",
+      "ticket-1772006193568",
+      "ticket-1772006216309",
+      "ticket-1772006975849",
+      "ticket-1772006996474",
+      "ticket-1772007025449",
+      "ticket-1772007058707",
+      "ticket-1772007127698",
+      "ticket-1772007156340"
+    ],
+    "ticketPriceSettings": [
+      {
+        "id": "price-1772005488528-rjoolsc53",
+        "ticketTypeId": "ticket-1772004859872",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T07:44:48.528Z"
+      },
+      {
+        "id": "price-1772005492328-hpoe2g9qv",
+        "ticketTypeId": "ticket-1772004883604",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T07:44:52.328Z"
+      },
+      {
+        "id": "price-1772005495703-c4r4vxul6",
+        "ticketTypeId": "ticket-1772004913004",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T07:44:55.703Z"
+      },
+      {
+        "id": "price-1772005498504-aodjy07wc",
+        "ticketTypeId": "ticket-1772004930929",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T07:44:58.504Z"
+      },
+      {
+        "id": "price-1772005501536-h450pw289",
+        "ticketTypeId": "ticket-1772004965913",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T07:45:01.536Z"
+      },
+      {
+        "id": "price-1772005504853-rslxaskhi",
+        "ticketTypeId": "ticket-1772004986996",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T07:45:04.853Z"
+      },
+      {
+        "id": "price-1772006248109-ubyrxjzwt",
+        "ticketTypeId": "ticket-1772006193568",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T07:57:28.109Z"
+      },
+      {
+        "id": "price-1772006249534-9cznrn4xa",
+        "ticketTypeId": "ticket-1772006216309",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T07:57:29.534Z"
+      },
+      {
+        "id": "price-1772007309756-qu57yeg9a",
+        "ticketTypeId": "ticket-1772006975849",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T08:15:09.756Z"
+      },
+      {
+        "id": "price-1772007312323-u8fnzspdp",
+        "ticketTypeId": "ticket-1772006996474",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T08:15:12.323Z"
+      },
+      {
+        "id": "price-1772007315198-zfk7uh9cu",
+        "ticketTypeId": "ticket-1772007025449",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T08:15:15.198Z"
+      },
+      {
+        "id": "price-1772007317856-faptge89a",
+        "ticketTypeId": "ticket-1772007058707",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T08:15:17.856Z"
+      },
+      {
+        "id": "price-1772007320631-gplbd65cn",
+        "ticketTypeId": "ticket-1772007127698",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T08:15:20.631Z"
+      },
+      {
+        "id": "price-1772007323523-grboti7px",
+        "ticketTypeId": "ticket-1772007156340",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T08:15:23.523Z"
+      }
+    ],
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-02-25T08:15:24.231Z"
+  },
+  {
+    "id": "acc-kx-ticket1",
+    "username": "kx-ticket1",
+    "name": "凱旋售票員 01",
+    "contactPerson": "王大明",
+    "contactPhone": "089-281702",
+    "organizationId": "org-kx",
+    "roleId": "role-kx-ticket",
+    "verified": true,
+    "availableTicketTypes": [
+      "tt-tt-gi-adult",
+      "tt-tt-gi-child",
+      "tt-tt-gi-resident",
+      "tt-gi-tt-adult",
+      "tt-gi-tt-child",
+      "tt-gi-tt-resident",
+      "tt-tt-ly-adult",
+      "tt-tt-ly-child",
+      "tt-tt-ly-resident",
+      "tt-ly-tt-adult",
+      "tt-ly-tt-child",
+      "tt-ly-tt-resident",
+      "tt-hbh-ly-adult",
+      "tt-hbh-ly-child",
+      "tt-hbh-ly-resident",
+      "tt-ly-hbh-adult",
+      "tt-ly-hbh-child",
+      "tt-ly-hbh-resident",
+      "tt-gi-ly-adult",
+      "tt-gi-ly-child",
+      "tt-ly-gi-adult",
+      "tt-ly-gi-child",
+      "ticket-1771933104993"
+    ],
+    "ticketPriceSettings": [
+      {
+        "id": "price-1771990229230-yde8z3sfw",
+        "ticketTypeId": "tt-tt-gi-adult",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          },
+          {
+            "segmentCount": 2,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T03:30:29.230Z"
+      },
+      {
+        "id": "price-1771990230288-vcjucngb5",
+        "ticketTypeId": "tt-tt-gi-child",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          },
+          {
+            "segmentCount": 2,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T03:30:30.288Z"
+      },
+      {
+        "id": "price-1771990231330-oxx15k1da",
+        "ticketTypeId": "tt-tt-gi-resident",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T03:30:31.330Z"
+      },
+      {
+        "id": "price-1771991083465-1w12eoaxv",
+        "ticketTypeId": "tt-gi-tt-adult",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          },
+          {
+            "segmentCount": 2,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T03:44:43.465Z"
+      },
+      {
+        "id": "price-1771991084698-ko2pzfd7n",
+        "ticketTypeId": "tt-gi-tt-child",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          },
+          {
+            "segmentCount": 2,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T03:44:44.698Z"
+      },
+      {
+        "id": "price-1771991085881-kqsmenc3m",
+        "ticketTypeId": "tt-gi-tt-resident",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T03:44:45.881Z"
+      },
+      {
+        "id": "price-1771991087606-2aq4xol7d",
+        "ticketTypeId": "tt-tt-ly-adult",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T03:44:47.606Z"
+      },
+      {
+        "id": "price-1771991088689-fj3h2zfy7",
+        "ticketTypeId": "tt-tt-ly-child",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T03:44:48.689Z"
+      },
+      {
+        "id": "price-1771991089764-d1cpg3pu7",
+        "ticketTypeId": "tt-tt-ly-resident",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T03:44:49.764Z"
+      },
+      {
+        "id": "price-1771991090756-dwydr2y5t",
+        "ticketTypeId": "tt-ly-tt-adult",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T03:44:50.756Z"
+      },
+      {
+        "id": "price-1771991091640-q8agen9g1",
+        "ticketTypeId": "tt-ly-tt-child",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T03:44:51.640Z"
+      },
+      {
+        "id": "price-1771991092889-krdx5425l",
+        "ticketTypeId": "tt-ly-tt-resident",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T03:44:52.889Z"
+      },
+      {
+        "id": "price-1771991094256-48nr9fzel",
+        "ticketTypeId": "tt-hbh-ly-adult",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T03:44:54.256Z"
+      },
+      {
+        "id": "price-1771991095231-sji1rzqzc",
+        "ticketTypeId": "tt-hbh-ly-child",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T03:44:55.231Z"
+      },
+      {
+        "id": "price-1771991096456-jscpn3x2t",
+        "ticketTypeId": "tt-hbh-ly-resident",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T03:44:56.456Z"
+      },
+      {
+        "id": "price-1771991097556-7e18rwx6s",
+        "ticketTypeId": "tt-ly-hbh-adult",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T03:44:57.556Z"
+      },
+      {
+        "id": "price-1771991098764-8s1hd0rdf",
+        "ticketTypeId": "tt-ly-hbh-child",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T03:44:58.764Z"
+      },
+      {
+        "id": "price-1771991099589-ejd9ya7gq",
+        "ticketTypeId": "tt-ly-hbh-resident",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T03:44:59.589Z"
+      },
+      {
+        "id": "price-1771991100939-ophnh498r",
+        "ticketTypeId": "tt-gi-ly-adult",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T03:45:00.939Z"
+      },
+      {
+        "id": "price-1771991102139-tsdhm0kvq",
+        "ticketTypeId": "tt-gi-ly-child",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T03:45:02.139Z"
+      },
+      {
+        "id": "price-1771991103248-guhyzncpt",
+        "ticketTypeId": "tt-ly-gi-adult",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T03:45:03.248Z"
+      },
+      {
+        "id": "price-1771991104272-vx7q394xo",
+        "ticketTypeId": "tt-ly-gi-child",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T03:45:04.272Z"
+      },
+      {
+        "id": "price-1771991105456-ii58pvt3z",
+        "ticketTypeId": "ticket-1771933104993",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 0
+          },
+          {
+            "segmentCount": 2,
+            "discountAmount": 0
+          },
+          {
+            "segmentCount": 3,
+            "discountAmount": 0
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T03:45:05.456Z"
+      }
+    ],
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-03-17T06:54:39.663Z"
+  },
+  {
+    "id": "acc-kx-ticket2",
+    "username": "kx-ticket2",
+    "name": "凱旋售票員 02",
+    "contactPerson": "陳小芬",
+    "contactPhone": "089-281702",
+    "organizationId": "org-kx",
+    "roleId": "role-kx-ticket",
+    "verified": true,
+    "availableTicketTypes": [
+      "tt-tt-gi-adult",
+      "tt-tt-gi-child",
+      "tt-tt-gi-resident",
+      "tt-gi-tt-adult",
+      "tt-gi-tt-child",
+      "tt-gi-tt-resident"
+    ],
+    "ticketPriceSettings": [],
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "acc-jx-admin",
+    "username": "jx-admin",
+    "name": "金星航運管理員",
+    "contactPerson": "金星管理部",
+    "contactPhone": "089-282078",
+    "organizationId": "org-jx",
+    "roleId": "role-jx-admin",
+    "verified": true,
+    "availableTicketTypes": [
+      "tt-tt-ly-adult",
+      "tt-tt-ly-child",
+      "tt-tt-ly-resident",
+      "tt-ly-tt-adult",
+      "tt-ly-tt-child",
+      "tt-ly-tt-resident",
+      "tt-hbh-ly-adult",
+      "tt-hbh-ly-child",
+      "tt-hbh-ly-resident",
+      "tt-ly-hbh-adult",
+      "tt-ly-hbh-child",
+      "tt-ly-hbh-resident"
+    ],
+    "ticketPriceSettings": [],
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "acc-jx-ticket1",
+    "username": "jx-ticket1",
+    "name": "金星售票員 01",
+    "contactPerson": "林志豪",
+    "contactPhone": "089-282078",
+    "organizationId": "org-jx",
+    "roleId": "role-jx-ticket",
+    "verified": true,
+    "availableTicketTypes": [
+      "tt-tt-ly-adult",
+      "tt-tt-ly-child",
+      "tt-tt-ly-resident",
+      "tt-ly-tt-adult",
+      "tt-ly-tt-child",
+      "tt-ly-tt-resident",
+      "tt-hbh-ly-adult",
+      "tt-hbh-ly-child",
+      "tt-hbh-ly-resident",
+      "tt-ly-hbh-adult",
+      "tt-ly-hbh-child",
+      "tt-ly-hbh-resident"
+    ],
+    "ticketPriceSettings": [],
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "acc-jx-ticket2",
+    "username": "jx-ticket2",
+    "name": "金星售票員 02",
+    "contactPerson": "張美玲",
+    "contactPhone": "089-282078",
+    "organizationId": "org-jx",
+    "roleId": "role-jx-ticket",
+    "verified": true,
+    "availableTicketTypes": [
+      "tt-tt-ly-adult",
+      "tt-tt-ly-child",
+      "tt-tt-ly-resident",
+      "tt-ly-tt-adult",
+      "tt-ly-tt-child",
+      "tt-ly-tt-resident"
+    ],
+    "ticketPriceSettings": [],
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "acc-kx-maritime",
+    "username": "kx-maritime",
+    "name": "凱旋船務人員",
+    "contactPerson": "凱旋船務部",
+    "contactPhone": "089-281703",
+    "organizationId": "org-kx",
+    "roleId": "role-kx-maritime",
+    "verified": true,
+    "availableTicketTypes": [],
+    "ticketPriceSettings": [],
+    "createdAt": "2026-02-25T02:01:40.663Z",
+    "updatedAt": "2026-02-25T02:01:40.663Z"
+  },
+  {
+    "username": "trip_package",
+    "name": "旅泊包旅行社",
+    "contactPerson": "林呈昕",
+    "contactPhone": "0939355454",
+    "organizationId": "org-kx",
+    "roleId": "role-1771985729545",
+    "verified": true,
+    "availableTicketTypes": [
+      "tt-tt-gi-adult"
+    ],
+    "ticketPriceSettings": [
+      {
+        "id": "price-1771991122722-p4nxzero3",
+        "ticketTypeId": "tt-tt-gi-adult",
+        "segmentDiscounts": [
+          {
+            "segmentCount": 1,
+            "discountAmount": 100
+          },
+          {
+            "segmentCount": 2,
+            "discountAmount": 100
+          }
+        ],
+        "effectiveDate": "2026-02-25",
+        "createdAt": "2026-02-25T03:45:22.722Z"
+      }
+    ],
+    "id": "acc-1771985812437",
+    "createdAt": "2026-02-25T02:16:52.437Z",
+    "updatedAt": "2026-02-25T03:47:31.305Z"
+  }
+]
