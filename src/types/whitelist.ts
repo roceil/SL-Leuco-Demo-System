@@ -9,6 +9,8 @@ export interface WhitelistEntry {
   passengerName: string // 乘客姓名
   phone: string // 電話
   idNumber: string // 身分證字號
+  /** §3.6.2 啟用/停用：停用後該人員無法購買對應特殊票種 */
+  isActive?: boolean
   createdAt: string
   updatedAt: string
   createdBy?: string // 建立人員

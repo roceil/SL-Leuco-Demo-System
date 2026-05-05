@@ -88,6 +88,13 @@ function resetForm() {
   }
 }
 
+// §3.14.4 啟用/停用 toggle
+function toggleRoleActive(roleId: string) {
+  const r = rbacStore.roles.find(x => x.id === roleId)
+  if (!r) return
+  rbacStore.updateRole(roleId, { isActive: r.isActive === false ? true : false })
+}
+
 function selectRole(roleId: string) {
   rbacStore.selectRole(roleId)
 }
@@ -199,23 +206,44 @@ function isPermissionGroupChecked(groupId: string): boolean {
                     角色
                   </h5>
                   <div class="space-y-1">
-                    <button
+                    <div
                       v-for="role in visibleRoles"
                       :key="role.id"
-                      @click="selectRole(role.id)"
-                      :class="[
-                        'w-full text-left px-3 py-2 rounded-md transition-colors',
-                        rbacStore.selectedRoleId === role.id
-                          ? theme === 'dark'
-                            ? 'bg-primary-900/30 text-primary-400 font-medium'
-                            : 'bg-primary-100 text-primary-700 font-medium'
-                          : theme === 'dark'
-                            ? 'hover:bg-secondary-800 text-neutral-300'
-                            : 'hover:bg-neutral-100 text-neutral-700'
-                      ]"
+                      class="flex items-center gap-1"
                     >
-                      {{ role.name }}
-                    </button>
+                      <button
+                        @click="selectRole(role.id)"
+                        :class="[
+                          'flex-1 text-left px-3 py-2 rounded-md transition-colors',
+                          rbacStore.selectedRoleId === role.id
+                            ? theme === 'dark'
+                              ? 'bg-primary-900/30 text-primary-400 font-medium'
+                              : 'bg-primary-100 text-primary-700 font-medium'
+                            : theme === 'dark'
+                              ? 'hover:bg-secondary-800 text-neutral-300'
+                              : 'hover:bg-neutral-100 text-neutral-700',
+                          role.isActive === false ? 'opacity-60' : ''
+                        ]"
+                      >
+                        {{ role.name }}
+                      </button>
+                      <button
+                        @click="toggleRoleActive(role.id)"
+                        :title="role.isActive === false ? '啟用角色' : '停用角色'"
+                        :class="[
+                          'px-2 py-1 text-[10px] font-medium rounded-full transition-colors shrink-0',
+                          role.isActive === false
+                            ? theme === 'dark'
+                              ? 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
+                              : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
+                            : theme === 'dark'
+                              ? 'bg-green-900/30 text-green-300 hover:bg-green-900/50'
+                              : 'bg-green-100 text-green-700 hover:bg-green-200'
+                        ]"
+                      >
+                        {{ role.isActive === false ? '停用' : '啟用' }}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </BaseCard>

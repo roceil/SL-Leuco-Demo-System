@@ -36,6 +36,8 @@ export interface Role {
   loginRoute: string // 登入預設路徑，如 "/dashboard"
   hasBackendAccess: boolean // 是否可登入後台
   permissionGroupIds: string[] // 包含的權限組 ID 列表
+  /** §3.14.4 啟用/停用：停用後綁定此角色的帳號無法登入，但既有資料不影響 */
+  isActive?: boolean
   createdAt: string
   updatedAt: string
 }

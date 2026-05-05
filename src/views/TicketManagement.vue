@@ -176,6 +176,13 @@ function editTicket(ticketTypeId: string) {
   ticketStore.selectTicketType(ticketTypeId)
 }
 
+// §3.6.1 啟用/停用 toggle（停用後不影響既有訂單）
+function toggleTicketActive(ticketTypeId: string) {
+  const t = ticketStore.ticketTypes.find(x => x.id === ticketTypeId)
+  if (!t) return
+  ticketStore.updateTicketType(ticketTypeId, { isActive: t.isActive === false ? true : false })
+}
+
 function saveTicket() {
   if (!formData.value.name) {
     alert('請輸入票種名稱')
@@ -673,10 +680,25 @@ function cancelEdit() {
             >
               <div class="flex justify-between items-start mb-4">
                 <h3
-                  class="text-lg font-semibold"
+                  class="text-lg font-semibold flex items-center gap-2"
                   :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'"
                 >
                   {{ ticket.name }}
+                  <button
+                    @click.stop="toggleTicketActive(ticket.id)"
+                    :class="[
+                      'px-2 py-0.5 text-xs font-medium rounded-full transition-colors',
+                      ticket.isActive === false
+                        ? theme === 'dark'
+                          ? 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
+                          : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
+                        : theme === 'dark'
+                          ? 'bg-green-900/30 text-green-300 hover:bg-green-900/50'
+                          : 'bg-green-100 text-green-700 hover:bg-green-200'
+                    ]"
+                  >
+                    {{ ticket.isActive === false ? '停用' : '啟用' }}
+                  </button>
                 </h3>
                 <span
                   :class="[

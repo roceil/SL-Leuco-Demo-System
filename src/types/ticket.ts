@@ -22,6 +22,8 @@ export interface TicketType {
   route: RouteInfo // 航段資訊
   suggestedNextRoutes?: string[] // 建議後續航段（票種 ID 列表）
   isSpecial: boolean // 是否為特殊票種
+  /** §3.6.1 啟用/停用：停用後不可在訂票流程選用，但既有訂單不受影響 */
+  isActive?: boolean
   validFrom?: string // 有效期開始日期（ISO 8601 格式）
   validUntil?: string // 有效期結束日期（ISO 8601 格式）
   createdAt: string

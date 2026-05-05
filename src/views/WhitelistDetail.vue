@@ -197,6 +197,11 @@ const submitForm = async () => {
   }
 }
 
+// §3.6.2 啟用/停用 toggle
+const toggleEntryActive = async (entry: WhitelistEntry) => {
+  await updateWhitelistEntry(entry.id, { isActive: entry.isActive === false ? true : false })
+}
+
 // 刪除單筆
 const handleDelete = async (id: string, name: string) => {
   if (!confirm(`確定要刪除「${name}」的白名單資格嗎？`)) return
@@ -371,6 +376,7 @@ onMounted(() => {
                     <th class="px-6 py-3 text-left text-xs uppercase tracking-wider">身分證字號</th>
                     <th class="px-6 py-3 text-left text-xs uppercase tracking-wider">備註</th>
                     <th class="px-6 py-3 text-left text-xs uppercase tracking-wider">建立時間</th>
+                    <th class="px-6 py-3 text-left text-xs uppercase tracking-wider">狀態</th>
                     <th class="px-6 py-3 text-right text-xs uppercase tracking-wider">操作</th>
                   </tr>
                 </thead>
@@ -400,6 +406,23 @@ onMounted(() => {
                     <td class="px-6 py-4 text-sm font-mono">{{ entry.idNumber }}</td>
                     <td class="px-6 py-4 text-sm">{{ entry.remark || '-' }}</td>
                     <td class="px-6 py-4 text-sm">{{ formatDate(entry.createdAt) }}</td>
+                    <td class="px-6 py-4 text-sm">
+                      <button
+                        @click="toggleEntryActive(entry)"
+                        :class="[
+                          'px-2 py-0.5 text-xs font-medium rounded-full transition-colors',
+                          entry.isActive === false
+                            ? theme === 'dark'
+                              ? 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
+                              : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
+                            : theme === 'dark'
+                              ? 'bg-green-900/30 text-green-300 hover:bg-green-900/50'
+                              : 'bg-green-100 text-green-700 hover:bg-green-200'
+                        ]"
+                      >
+                        {{ entry.isActive === false ? '停用' : '啟用' }}
+                      </button>
+                    </td>
                     <td class="px-6 py-4 text-right">
                       <div class="flex items-center justify-end gap-2">
                         <BaseButton
