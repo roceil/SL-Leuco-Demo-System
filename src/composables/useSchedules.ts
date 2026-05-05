@@ -46,8 +46,66 @@ export function useSchedules() {
     return schedules.value.find(schedule => schedule.id === id)
   }
 
+  /**
+   * §3.5 同船接續可行性檢查
+   * 同一艘船在同一日期的另一段船班，抵達後與本段出發之間
+   * 必須 ≥ MIN_TURNAROUND_MIN 分鐘；否則回傳衝突訊息
+   */
+  const MIN_TURNAROUND_MIN = 10
+
+  function timeToMinutes(hhmm: string): number {
+    const [h, m] = hhmm.split(':').map(Number)
+    return (h ?? 0) * 60 + (m ?? 0)
+  }
+
+  function checkSameShipTurnaround(
+    formData: ScheduleFormData,
+    excludeScheduleId?: string
+  ): string | null {
+    if (!formData.shipId || !formData.departureTime) return null
+    const targetDate = formData.date // 機動船班才有；固定船班為 undefined
+    const targetSegmentDuration = routeStore.routeSegments.find((r) => r.id === formData.routeSegmentId)?.estimatedDuration ?? 0
+    const targetStart = timeToMinutes(formData.departureTime)
+    const targetEnd = targetStart + targetSegmentDuration
+
+    for (const s of schedules.value) {
+      if (s.id === excludeScheduleId) continue
+      if (s.shipId !== formData.shipId) continue
+      if (s.status === ScheduleStatus.CANCELLED) continue
+
+      // 日期判定：固定船班視為每天；新增的若是固定，與另一個固定船班一定會撞
+      if (!s.isDaily && !formData.isDaily && s.date !== targetDate) continue
+
+      const otherDuration = routeStore.routeSegments.find((r) => r.id === s.routeSegmentId)?.estimatedDuration ?? 0
+      const otherStart = timeToMinutes(s.departureTime)
+      const otherEnd = otherStart + otherDuration
+
+      // 兩段時間區間重疊
+      const overlap = !(targetEnd <= otherStart || otherEnd <= targetStart)
+      if (overlap) {
+        return `同一艘船「${s.shipName}」在 ${s.departureTime}（航行時間 ${otherDuration} 分鐘）的船班時間區段重疊`
+      }
+
+      // 接續間隔 < 10 分鐘
+      const gapAfterOther = targetStart - otherEnd
+      const gapAfterTarget = otherStart - targetEnd
+      const gap = Math.min(
+        gapAfterOther >= 0 ? gapAfterOther : Infinity,
+        gapAfterTarget >= 0 ? gapAfterTarget : Infinity
+      )
+      if (gap < MIN_TURNAROUND_MIN) {
+        return `同一艘船「${s.shipName}」於 ${s.departureTime} 已有船班；新班與既有班的最短接續間隔僅 ${gap} 分鐘（< ${MIN_TURNAROUND_MIN} 分鐘）`
+      }
+    }
+    return null
+  }
+
   // 新增船班
   const addSchedule = (formData: ScheduleFormData): Schedule => {
+    const conflict = checkSameShipTurnaround(formData)
+    if (conflict) {
+      throw new Error(`船隻時間衝突：${conflict}`)
+    }
     const now = new Date().toISOString()
     const ship = getShipById(formData.shipId)
 
@@ -93,6 +151,11 @@ export function useSchedules() {
   const updateSchedule = (id: string, formData: ScheduleFormData): boolean => {
     const index = schedules.value.findIndex(schedule => schedule.id === id)
     if (index === -1) return false
+
+    const conflict = checkSameShipTurnaround(formData, id)
+    if (conflict) {
+      throw new Error(`船隻時間衝突：${conflict}`)
+    }
 
     const existingSchedule = schedules.value[index]!
     const ship = getShipById(formData.shipId)
