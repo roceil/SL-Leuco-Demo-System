@@ -69,6 +69,12 @@ const menuItems: MenuItem[] = [
     ]
   },
   {
+    label: '儀表板',
+    icon: ChartPieIcon,
+    route: '/dashboard',
+    permission: { resource: 'dashboard-overview' }
+  },
+  {
     label: '組織管理',
     icon: BuildingOfficeIcon,
     route: '/organization-management',

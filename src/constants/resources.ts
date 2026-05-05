@@ -6,6 +6,13 @@ import type { ResourceDefinition } from '@/types/rbac'
  * resource key 對應各頁面的路由名稱
  */
 export const RESOURCES: ResourceDefinition[] = [
+  // 儀表板（§3.9 即時航班配額）
+  {
+    key: 'dashboard-overview',
+    label: '儀表板（即時航班配額）',
+    category: '儀表板'
+  },
+
   // 售票作業
   {
     key: 'dashboard',

@@ -135,6 +135,11 @@ const router = createRouter({
       component: () => import('../views/TicketConfigView.vue'),
     },
     {
+      path: '/dashboard',
+      name: 'dashboard-overview',
+      component: () => import('../views/DashboardOverview.vue'),
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('../views/NotFound.vue'),
