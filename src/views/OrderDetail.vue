@@ -29,6 +29,7 @@ import {
   XMarkIcon,
   TrashIcon
 } from '@heroicons/vue/24/outline'
+import QRCode from 'qrcode'
 
 const route = useRoute()
 const router = useRouter()
@@ -443,12 +444,26 @@ function issueTicket() {
   }
 }
 
-// ============ 列印簽單 ============
+// ============ §3.2 列印簽單 ============
 
-function printReceipt() {
+const qrDataUrl = ref<string>('')
+
+async function printReceipt() {
   if (!currentOrder.value) return
-  // TODO: 實作列印功能
-  alert('列印功能開發中')
+  if (!currentOrder.value.ticketIssuedAt) {
+    alert('需先出票後才能列印簽單（§3.2）')
+    return
+  }
+  try {
+    qrDataUrl.value = await QRCode.toDataURL(currentOrder.value.orderNumber, {
+      width: 160,
+      margin: 1,
+    })
+  } catch (e) {
+    console.warn('QR 產生失敗', e)
+  }
+  // 等 DOM 更新後再 print
+  setTimeout(() => window.print(), 200)
 }
 
 onMounted(() => {
@@ -1150,5 +1165,204 @@ onMounted(() => {
         </PageContainer>
       </main>
     </div>
+
+    <!-- §3.2 列印簽單（僅列印時顯示） -->
+    <div v-if="currentOrder" class="print-receipt" aria-hidden="true">
+      <div class="receipt-header">
+        <h1>藍白航運訂票簽單</h1>
+        <p class="receipt-orderno">訂單編號：{{ currentOrder.orderNumber }}</p>
+      </div>
+
+      <div class="receipt-grid">
+        <div>
+          <div class="receipt-label">客戶姓名</div>
+          <div class="receipt-value">{{ currentOrder.customerName }}</div>
+        </div>
+        <div>
+          <div class="receipt-label">聯絡電話</div>
+          <div class="receipt-value">{{ currentOrder.customerPhone }}</div>
+        </div>
+        <div>
+          <div class="receipt-label">建立時間</div>
+          <div class="receipt-value">{{ new Date(currentOrder.createdAt).toLocaleString('zh-TW') }}</div>
+        </div>
+        <div>
+          <div class="receipt-label">出票時間</div>
+          <div class="receipt-value">{{ currentOrder.ticketIssuedAt ? new Date(currentOrder.ticketIssuedAt).toLocaleString('zh-TW') : '—' }}</div>
+        </div>
+      </div>
+
+      <h2>航段</h2>
+      <table class="receipt-table">
+        <thead>
+          <tr><th>日期</th><th>時間</th><th>航段</th></tr>
+        </thead>
+        <tbody>
+          <tr v-for="(seg, i) in currentOrder.scheduleSegments" :key="i">
+            <td>{{ seg.date }}</td>
+            <td>{{ seg.time }}</td>
+            <td>{{ seg.route }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>票券</h2>
+      <table class="receipt-table">
+        <thead>
+          <tr><th>票種</th><th>數量</th></tr>
+        </thead>
+        <tbody>
+          <tr v-for="(b, i) in currentOrder.ticketBreakdown ?? []" :key="i">
+            <td>{{ b.passengerType }}</td>
+            <td class="num">{{ b.quantity }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>付款</h2>
+      <table class="receipt-table">
+        <tbody>
+          <tr><th>總金額</th><td class="num">NT$ {{ currentOrder.paymentInfo.totalAmount.toLocaleString() }}</td></tr>
+          <tr><th>訂金</th><td class="num">NT$ {{ currentOrder.paymentInfo.deposit.toLocaleString() }}</td></tr>
+          <tr><th>已付金額</th><td class="num">NT$ {{ currentOrder.paymentInfo.paidAmount.toLocaleString() }}</td></tr>
+          <tr><th>應付尾款</th><td class="num bold">NT$ {{ currentOrder.paymentInfo.remainingAmount.toLocaleString() }}</td></tr>
+        </tbody>
+      </table>
+
+      <div class="receipt-footer">
+        <div>
+          <div class="receipt-label">QR Code（驗票用）</div>
+          <img v-if="qrDataUrl" :src="qrDataUrl" alt="QR Code" />
+          <div v-else class="receipt-qr-placeholder">{{ currentOrder.orderNumber }}</div>
+        </div>
+        <div class="receipt-terms">
+          <div class="receipt-label">運送條款</div>
+          <p>1. 本票券限指定航班使用，逾期作廢。</p>
+          <p>2. 颱風或氣候不佳停駛時，旅客可申請改期或全額退款。</p>
+          <p>3. 旅客應於開航前 30 分鐘抵達碼頭辦理登船手續。</p>
+          <p>4. 客服專線請洽各航商窗口。</p>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
+
+<style scoped>
+/* §3.2 列印簽單 — 預設隱藏，列印時才顯示 */
+.print-receipt {
+  display: none;
+}
+
+@media print {
+  /* 隱藏所有非列印區塊 */
+  body * {
+    visibility: hidden;
+  }
+  .print-receipt,
+  .print-receipt * {
+    visibility: visible;
+  }
+
+  .print-receipt {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 12mm;
+    color: #000;
+    background: #fff;
+    font-size: 12px;
+    font-family: 'Noto Sans TC', 'PingFang TC', sans-serif;
+  }
+
+  .receipt-header {
+    text-align: center;
+    border-bottom: 2px solid #000;
+    padding-bottom: 6mm;
+    margin-bottom: 6mm;
+  }
+  .receipt-header h1 {
+    font-size: 20px;
+    font-weight: bold;
+    margin: 0 0 2mm;
+  }
+  .receipt-orderno {
+    font-size: 14px;
+    font-family: 'Courier New', monospace;
+    margin: 0;
+  }
+
+  .receipt-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4mm 8mm;
+    margin-bottom: 6mm;
+  }
+  .receipt-label {
+    font-size: 10px;
+    color: #666;
+  }
+  .receipt-value {
+    font-weight: 600;
+  }
+
+  .print-receipt h2 {
+    font-size: 13px;
+    border-bottom: 1px solid #999;
+    padding-bottom: 1mm;
+    margin: 4mm 0 2mm;
+  }
+
+  .receipt-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 4mm;
+  }
+  .receipt-table th,
+  .receipt-table td {
+    border: 1px solid #999;
+    padding: 1.5mm 2mm;
+    text-align: left;
+  }
+  .receipt-table th {
+    background: #eee;
+    font-weight: 600;
+  }
+  .receipt-table .num {
+    text-align: right;
+    font-family: 'Courier New', monospace;
+  }
+  .receipt-table .bold {
+    font-weight: bold;
+  }
+
+  .receipt-footer {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8mm;
+    margin-top: 6mm;
+    border-top: 1px dashed #999;
+    padding-top: 4mm;
+  }
+  .receipt-footer img {
+    width: 35mm;
+    height: 35mm;
+  }
+  .receipt-qr-placeholder {
+    width: 35mm;
+    height: 35mm;
+    border: 1px dashed #999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Courier New', monospace;
+    font-size: 9px;
+  }
+  .receipt-terms p {
+    margin: 0 0 1.5mm;
+    font-size: 10px;
+    color: #333;
+  }
+}
+</style>
