@@ -67,6 +67,9 @@ const formData = ref<ScheduleFormData>({
   isDaily: true,
   status: ScheduleStatus.ACTIVE,
   waitlistCapacity: 10,
+  reservedResident: 30,
+  reservedOnline: 30,
+  channelQuotas: { counter: 100, agent: 50 },
   description: ''
 })
 
@@ -103,6 +106,9 @@ const resetForm = () => {
     isDaily: true,
     status: ScheduleStatus.ACTIVE,
     waitlistCapacity: 10,
+    reservedResident: 30,
+    reservedOnline: 30,
+    channelQuotas: { counter: 100, agent: 50 },
     description: ''
   }
   currentScheduleId.value = null
@@ -143,6 +149,9 @@ const openEditModal = (scheduleId: string) => {
     isDaily: schedule.isDaily,
     status: schedule.status,
     waitlistCapacity: schedule.waitlistCapacity ?? 10,
+    reservedResident: schedule.reservedResident ?? 30,
+    reservedOnline: schedule.reservedOnline ?? 30,
+    channelQuotas: schedule.channelQuotas ?? { counter: 100, agent: 50 },
     description: schedule.description || ''
   }
   currentScheduleId.value = scheduleId
@@ -732,6 +741,84 @@ const getTypeText = (type: ScheduleType): string => {
                   : 'bg-white border-neutral-300 text-neutral-900 focus:border-primary-500'
               "
             />
+          </div>
+
+          <!-- 保留位 / 通路配額（§3.4.2） -->
+          <div class="space-y-2">
+            <label
+              class="block text-sm font-semibold"
+              :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+            >
+              保留位 / 通路配額
+              <span
+                class="ml-2 text-xs font-normal"
+                :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-500'"
+              >
+                預先把部份座位保留給特定通路或特殊乘客（會佔用 maxCapacity，不另外計算）
+              </span>
+            </label>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div>
+                <label class="block text-xs mb-1" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
+                  居民保留位
+                </label>
+                <input
+                  v-model.number="formData.reservedResident"
+                  type="number"
+                  min="0"
+                  step="1"
+                  class="w-full px-3 py-2 border rounded-md text-sm outline-none"
+                  :class="theme === 'dark'
+                    ? 'bg-secondary-800 border-secondary-700 text-white focus:border-primary-500'
+                    : 'bg-white border-neutral-300 text-neutral-900 focus:border-primary-500'"
+                />
+              </div>
+              <div>
+                <label class="block text-xs mb-1" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
+                  線上保留位
+                </label>
+                <input
+                  v-model.number="formData.reservedOnline"
+                  type="number"
+                  min="0"
+                  step="1"
+                  class="w-full px-3 py-2 border rounded-md text-sm outline-none"
+                  :class="theme === 'dark'
+                    ? 'bg-secondary-800 border-secondary-700 text-white focus:border-primary-500'
+                    : 'bg-white border-neutral-300 text-neutral-900 focus:border-primary-500'"
+                />
+              </div>
+              <div>
+                <label class="block text-xs mb-1" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
+                  現場售票
+                </label>
+                <input
+                  v-model.number="formData.channelQuotas!.counter"
+                  type="number"
+                  min="0"
+                  step="1"
+                  class="w-full px-3 py-2 border rounded-md text-sm outline-none"
+                  :class="theme === 'dark'
+                    ? 'bg-secondary-800 border-secondary-700 text-white focus:border-primary-500'
+                    : 'bg-white border-neutral-300 text-neutral-900 focus:border-primary-500'"
+                />
+              </div>
+              <div>
+                <label class="block text-xs mb-1" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
+                  旅行社/經銷商
+                </label>
+                <input
+                  v-model.number="formData.channelQuotas!.agent"
+                  type="number"
+                  min="0"
+                  step="1"
+                  class="w-full px-3 py-2 border rounded-md text-sm outline-none"
+                  :class="theme === 'dark'
+                    ? 'bg-secondary-800 border-secondary-700 text-white focus:border-primary-500'
+                    : 'bg-white border-neutral-300 text-neutral-900 focus:border-primary-500'"
+                />
+              </div>
+            </div>
           </div>
 
           <!-- 船班狀態 -->

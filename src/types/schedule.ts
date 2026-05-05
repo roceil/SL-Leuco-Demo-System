@@ -32,6 +32,15 @@ export interface Schedule {
   waitlistCapacity?: number
   /** 目前候補人數（依 orders 中 status='waitlist' 計算的快取值） */
   currentWaitlist?: number
+  /** §3.4.2 保留位設定：居民保留座位 */
+  reservedResident?: number
+  /** §3.4.2 保留位設定：線上保留座位 */
+  reservedOnline?: number
+  /** §3.4.2 通路配額管理：分配給各通路的座位（旅行社、現場售票…） */
+  channelQuotas?: {
+    counter?: number // 現場售票
+    agent?: number   // 旅行社/經銷商
+  }
   status: ScheduleStatus // 船班狀態
   createdAt: string
   updatedAt: string
@@ -49,6 +58,13 @@ export interface ScheduleFormData {
   status: ScheduleStatus
   /** §3.4.2 候補座位設定 */
   waitlistCapacity?: number
+  /** §3.4.2 保留位/通路配額 */
+  reservedResident?: number
+  reservedOnline?: number
+  channelQuotas?: {
+    counter?: number
+    agent?: number
+  }
   description?: string
 }
 

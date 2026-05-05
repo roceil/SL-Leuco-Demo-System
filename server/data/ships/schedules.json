@@ -15,7 +15,13 @@
     "createdAt": "2026-02-25T07:37:40.304Z",
     "updatedAt": "2026-02-25T07:37:40.304Z",
     "waitlistCapacity": 10,
-    "currentWaitlist": 0
+    "currentWaitlist": 0,
+    "reservedResident": 30,
+    "reservedOnline": 30,
+    "channelQuotas": {
+      "counter": 100,
+      "agent": 50
+    }
   },
   {
     "id": "SCH002",
@@ -33,7 +39,13 @@
     "createdAt": "2026-02-25T07:37:53.612Z",
     "updatedAt": "2026-02-25T07:37:53.612Z",
     "waitlistCapacity": 10,
-    "currentWaitlist": 0
+    "currentWaitlist": 0,
+    "reservedResident": 30,
+    "reservedOnline": 30,
+    "channelQuotas": {
+      "counter": 100,
+      "agent": 50
+    }
   },
   {
     "id": "SCH003",
@@ -51,7 +63,13 @@
     "description": "",
     "updatedAt": "2026-02-25T07:58:57.001Z",
     "waitlistCapacity": 10,
-    "currentWaitlist": 0
+    "currentWaitlist": 0,
+    "reservedResident": 30,
+    "reservedOnline": 30,
+    "channelQuotas": {
+      "counter": 100,
+      "agent": 50
+    }
   },
   {
     "id": "SCH004",
@@ -69,7 +87,13 @@
     "createdAt": "2026-02-25T08:13:45.615Z",
     "updatedAt": "2026-02-25T08:13:45.615Z",
     "waitlistCapacity": 10,
-    "currentWaitlist": 0
+    "currentWaitlist": 0,
+    "reservedResident": 30,
+    "reservedOnline": 30,
+    "channelQuotas": {
+      "counter": 100,
+      "agent": 50
+    }
   },
   {
     "id": "SCH005",
@@ -87,7 +111,13 @@
     "createdAt": "2026-02-25T08:13:59.181Z",
     "updatedAt": "2026-02-25T08:13:59.181Z",
     "waitlistCapacity": 10,
-    "currentWaitlist": 0
+    "currentWaitlist": 0,
+    "reservedResident": 30,
+    "reservedOnline": 30,
+    "channelQuotas": {
+      "counter": 100,
+      "agent": 50
+    }
   },
   {
     "id": "SCH006",
@@ -105,7 +135,13 @@
     "createdAt": "2026-03-27T11:42:28.184Z",
     "updatedAt": "2026-03-27T11:42:28.184Z",
     "waitlistCapacity": 10,
-    "currentWaitlist": 0
+    "currentWaitlist": 0,
+    "reservedResident": 30,
+    "reservedOnline": 30,
+    "channelQuotas": {
+      "counter": 100,
+      "agent": 50
+    }
   },
   {
     "id": "SCH007",
@@ -123,7 +159,13 @@
     "createdAt": "2026-03-27T11:43:01.997Z",
     "updatedAt": "2026-03-27T11:43:01.997Z",
     "waitlistCapacity": 10,
-    "currentWaitlist": 0
+    "currentWaitlist": 0,
+    "reservedResident": 30,
+    "reservedOnline": 30,
+    "channelQuotas": {
+      "counter": 100,
+      "agent": 50
+    }
   },
   {
     "id": "SCH008",
@@ -141,7 +183,13 @@
     "createdAt": "2026-03-27T12:48:42.215Z",
     "updatedAt": "2026-03-27T12:48:42.215Z",
     "waitlistCapacity": 10,
-    "currentWaitlist": 0
+    "currentWaitlist": 0,
+    "reservedResident": 30,
+    "reservedOnline": 30,
+    "channelQuotas": {
+      "counter": 100,
+      "agent": 50
+    }
   },
   {
     "id": "SCH009",
@@ -159,6 +207,12 @@
     "createdAt": "2026-03-27T12:49:13.148Z",
     "updatedAt": "2026-03-27T12:49:13.148Z",
     "waitlistCapacity": 10,
-    "currentWaitlist": 0
+    "currentWaitlist": 0,
+    "reservedResident": 30,
+    "reservedOnline": 30,
+    "channelQuotas": {
+      "counter": 100,
+      "agent": 50
+    }
   }
 ]
