@@ -96,6 +96,12 @@ export const RESOURCES: ResourceDefinition[] = [
     label: '經銷商報表',
     category: '報表'
   },
+  {
+    key: 'joint-report',
+    label: '聯合報表（跨航商分帳）',
+    description: '依各航段分配各航商應收金額，分潤比例與票價無關',
+    category: '報表'
+  },
 
   // 船務管理
   {

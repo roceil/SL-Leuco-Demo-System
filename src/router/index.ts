@@ -140,6 +140,11 @@ const router = createRouter({
       component: () => import('../views/DashboardOverview.vue'),
     },
     {
+      path: '/joint-report',
+      name: 'joint-report',
+      component: () => import('../views/JointReport.vue'),
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('../views/NotFound.vue'),

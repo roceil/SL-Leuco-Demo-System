@@ -114,7 +114,8 @@ const menuItems: MenuItem[] = [
     children: [
       { label: '報表總覽', icon: ChartPieIcon, route: '/report', permission: { resource: 'report' } },
       { label: '票口現金報表', icon: CurrencyDollarIcon, route: '/cash-report', permission: { resource: 'cash-report' } },
-      { label: '經銷商報表', icon: BuildingStorefrontIcon, route: '/dealer-report', permission: { resource: 'dealer-report' } }
+      { label: '經銷商報表', icon: BuildingStorefrontIcon, route: '/dealer-report', permission: { resource: 'dealer-report' } },
+      { label: '聯合報表', icon: ChartBarIcon, route: '/joint-report', permission: { resource: 'joint-report' } }
     ]
   },
   {
