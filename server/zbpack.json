@@ -1,4 +1,0 @@
-{
-  "install_command": "pnpm install --prod=false",
-  "start_command": "node start.mjs"
-}

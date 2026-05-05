@@ -19,10 +19,11 @@ export default defineConfig({
   },
   server: {
     proxy: {
+      // 不再 rewrite /api → 由 server 統一處理 /api/<collection>，
+      // 前端、本地、雙 service、單 service 共用同一個路由規則
       '/api': {
         target: process.env.VITE_DEV_API_TARGET || 'http://localhost:3001',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
   },

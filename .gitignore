@@ -21,6 +21,9 @@ coverage
 # json-server runtime db (由 server/data/*.json 合併產生)
 server/db.json
 
+# 前端 build 產物複製到此（由 pnpm build 自動產生）
+server/public/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

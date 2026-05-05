@@ -2,16 +2,18 @@
  * 極簡資料層工具
  *
  * 與後端的合約：
- *   GET /<collection>  → 整張表（陣列）
- *   PUT /<collection>  → 用 body 取代整張表（陣列）
+ *   GET /api/<collection>  → 整張表（陣列）
+ *   PUT /api/<collection>  → 用 body 取代整張表（陣列）
  *
- * 後端可以是：
- *   - 開發機本地的 server/start.mjs（PORT 3001，由 vite proxy /api → :3001 轉發）
- *   - Zeabur 上獨立的 service（前端透過 VITE_API_BASE_URL 直接打）
- *   - 未來真正的後端（只要保持上面 GET/PUT 合約即可）
+ * 三種部署模式皆可：
+ *   1. 本地開發：vite proxy /api → http://localhost:3001（不再 rewrite）
+ *   2. 單 service：前端與 API 同 server，請求走相對 /api/...
+ *   3. 雙 service：VITE_API_BASE_URL 設成 server 的絕對網址（不含 /api），
+ *      程式碼會自動補上 /api 前綴
  */
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') || '/api'
+const RAW_BASE = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') ?? ''
+const BASE_URL = `${RAW_BASE}/api`
 
 /** 從後端讀取指定 collection */
 export async function apiGet<T>(collection: string): Promise<T> {
@@ -33,7 +35,7 @@ export async function apiGet<T>(collection: string): Promise<T> {
 
 /** 將整張表寫回後端（fire-and-forget；錯誤僅 warn，不影響主流程） */
 export function apiPut<T>(collection: string, data: T): void {
-  void fetch(`${BASE_URL}/${collection}`, {
+  void fetch(`${BASE_URL}/${collection}`, {  // BASE_URL 已含 /api
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),

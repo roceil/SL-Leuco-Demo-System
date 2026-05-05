@@ -10,13 +10,17 @@
     "dev": "vite",
     "dev:server": "node server/start.mjs",
     "dev:full": "run-p dev dev:server",
-    "build": "run-p type-check \"build-only {@}\" --",
+    "build": "run-s build:check build:dist build:copy-public",
+    "build:check": "vue-tsc --build",
+    "build:dist": "vite build",
+    "build:copy-public": "node scripts/copy-dist-to-public.mjs",
     "preview": "vite preview",
     "test:unit": "vitest",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
     "lint": "eslint . --fix --cache",
-    "seed:db": "tsx --tsconfig tsconfig.app.json scripts/seed-db.ts"
+    "seed:db": "tsx --tsconfig tsconfig.app.json scripts/seed-db.ts",
+    "start": "node server/start.mjs"
   },
   "dependencies": {
     "@heroicons/vue": "^2.2.0",

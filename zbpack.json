@@ -1,4 +1,5 @@
 {
+  "install_command": "pnpm install --frozen-lockfile=false",
   "build_command": "pnpm build",
-  "output_dir": "dist"
+  "start_command": "node server/start.mjs"
 }
