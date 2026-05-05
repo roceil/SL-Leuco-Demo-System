@@ -1,8 +1,9 @@
 /**
  * 統一的 XLSX 匯出工具（依規格書 §3.7 各報表使用）
+ *
+ * 為避免 exceljs（~900KB）拖累首屏載入，改用動態 import：
+ * 只有真的點下「匯出 Excel」時才會載入 exceljs chunk。
  */
-
-import ExcelJS from 'exceljs'
 
 export type Cell = string | number | boolean | null | undefined
 
@@ -17,6 +18,7 @@ export async function exportToXlsx(
   columns: ColumnSpec[],
   rows: Cell[][]
 ): Promise<void> {
+  const ExcelJS = (await import('exceljs')).default
   const wb = new ExcelJS.Workbook()
   wb.creator = '藍白航運訂票系統'
   wb.created = new Date()
