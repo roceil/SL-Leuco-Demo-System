@@ -1,0 +1,33 @@
+# 切開 build context，避免本機 node_modules / 中間產物拉進 image
+
+node_modules
+dist
+server/public
+server/db.json
+
+# 開發 / 測試專用
+__screenshots__
+coverage
+.eslintcache
+*.tsbuildinfo
+
+# 編輯器
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.swp
+
+# 系統
+.DS_Store
+*.log
+*.local
+
+# git 本身（builder 階段不需要 .git）
+.git
+.gitignore
+
+# 規格書（runtime 不需要）
+issue.docx
+samples/
+sample.jpg
