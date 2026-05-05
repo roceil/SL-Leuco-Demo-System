@@ -105,6 +105,32 @@ function loadOrder() {
   }
 }
 
+// §3.2 候補轉正：把 waitlist 轉成 pending（待付款）
+function promoteWaitlist() {
+  if (!currentOrder.value) return
+  if (!confirm(`確定要將候補訂單「${currentOrder.value.orderNumber}」轉為正式訂位嗎？\n轉正後請通知旅客付款，收款完成後方視為正式訂位。`)) return
+
+  orderStore.updateOrder(
+    currentOrder.value.id,
+    { status: 'pending', waitlistOrder: undefined },
+    currentAccountId.value
+  )
+  alert('已轉為正式訂位（待付款）')
+}
+
+// §3.2 取消候補
+function cancelWaitlist() {
+  if (!currentOrder.value) return
+  if (!confirm(`確定要取消候補訂單「${currentOrder.value.orderNumber}」嗎？此操作無法復原。`)) return
+
+  orderStore.updateOrder(
+    currentOrder.value.id,
+    { status: 'cancelled', waitlistOrder: undefined },
+    currentAccountId.value
+  )
+  alert('候補訂單已取消')
+}
+
 // 返回列表
 function goBack() {
   router.push('/order-management')
@@ -491,7 +517,7 @@ onMounted(() => {
                   <span class="text-sm" :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'">
                     訂單狀態
                   </span>
-                  <p class="font-medium">
+                  <p class="font-medium flex items-center gap-2">
                     <span
                       :class="[
                         'px-2 py-1 rounded text-sm',
@@ -499,11 +525,39 @@ onMounted(() => {
                           ? 'bg-green-100 text-green-700'
                           : currentOrder.status === 'pending'
                             ? 'bg-amber-100 text-amber-700'
-                            : 'bg-gray-100 text-gray-700'
+                            : currentOrder.status === 'waitlist'
+                              ? 'bg-purple-100 text-purple-700'
+                              : currentOrder.status === 'cancelled'
+                                ? 'bg-red-100 text-red-700'
+                                : 'bg-gray-100 text-gray-700'
                       ]"
                     >
-                      {{ currentOrder.status === 'confirmed' ? '已確認' : currentOrder.status === 'pending' ? '待確認' : currentOrder.status }}
+                      {{
+                        currentOrder.status === 'confirmed' ? '已確認'
+                        : currentOrder.status === 'pending' ? '待確認'
+                        : currentOrder.status === 'waitlist' ? `候補中${currentOrder.waitlistOrder ? ` (序號 ${currentOrder.waitlistOrder})` : ''}`
+                        : currentOrder.status === 'cancelled' ? '已取消'
+                        : currentOrder.status === 'completed' ? '已登船'
+                        : currentOrder.status
+                      }}
                     </span>
+                    <!-- §3.2 候補轉正 / 候補取消 -->
+                    <template v-if="currentOrder.status === 'waitlist'">
+                      <button
+                        @click="promoteWaitlist"
+                        class="text-xs px-2 py-1 rounded bg-primary-600 text-white hover:bg-primary-700"
+                        title="將此候補訂單轉為正式訂位（待付款）"
+                      >
+                        轉正
+                      </button>
+                      <button
+                        @click="cancelWaitlist"
+                        class="text-xs px-2 py-1 rounded bg-red-600 text-white hover:bg-red-700"
+                        title="取消此候補訂單"
+                      >
+                        取消候補
+                      </button>
+                    </template>
                   </p>
                 </div>
                 <div>

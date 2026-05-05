@@ -28,6 +28,10 @@ export interface Schedule {
   isDaily?: boolean // 是否每日重複，僅固定船班為 true
   currentPassengers: number // 當前乘客數
   maxCapacity: number // 最大載客量（從船隻繼承）
+  /** §3.4.2 候補座位設定：超額訂位用，不計入正式座位庫存 */
+  waitlistCapacity?: number
+  /** 目前候補人數（依 orders 中 status='waitlist' 計算的快取值） */
+  currentWaitlist?: number
   status: ScheduleStatus // 船班狀態
   createdAt: string
   updatedAt: string
@@ -43,6 +47,8 @@ export interface ScheduleFormData {
   date?: string // 機動船班必填
   isDaily?: boolean // 固定船班為 true
   status: ScheduleStatus
+  /** §3.4.2 候補座位設定 */
+  waitlistCapacity?: number
   description?: string
 }
 

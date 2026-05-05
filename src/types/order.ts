@@ -104,7 +104,17 @@ export interface Order {
   ticketIssuedAt?: string // 出票時間（ISO 8601 格式）
   ticketBreakdown?: TicketBreakdown[] // 票種拆解（訂單建立時選擇的票種數量）
   notes?: string // 備註
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed' // 訂單狀態
+  /**
+   * 訂單狀態
+   * - pending: 已成立未取票
+   * - confirmed: 已取票
+   * - completed: 已登船完成
+   * - cancelled: 已取消
+   * - waitlist: 候補中（§3.2，等待轉正）
+   */
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'waitlist'
+  /** 候補序號（候補中時填入；先到先得） */
+  waitlistOrder?: number
   createdAt: string // 建立時間（ISO 8601 格式）
   createdBy: string // 建立者帳號 ID
   updatedAt: string // 最後更新時間（ISO 8601 格式）

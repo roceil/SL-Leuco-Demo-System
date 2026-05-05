@@ -67,7 +67,8 @@ const statusDisplayMap: Record<string, string> = {
   pending: '未取票',
   confirmed: '已取票',
   completed: '已登船',
-  cancelled: '已取消'
+  cancelled: '已取消',
+  waitlist: '候補中'
 }
 
 // 從 orderStore 讀取訂單並轉換格式
@@ -152,7 +153,8 @@ const filterStatus = (status: string) => {
         'unpicked': '未取票',
         'picked': '已取票',
         'boarded': '已登船',
-        'cancelled': '已取消'
+        'cancelled': '已取消',
+        'waitlist': '候補中'
       }
       filteredOrders.value = allOrders.value.filter(order =>
         order.orderStatus === statusMap[status]
@@ -231,6 +233,8 @@ const getStatusClass = (status: string) => {
       return `${baseClasses} bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400`
     case '已取消':
       return `${baseClasses} bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400`
+    case '候補中':
+      return `${baseClasses} bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400`
     default:
       return `${baseClasses} bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300`
   }
@@ -428,7 +432,8 @@ onMounted(() => {
                   { value: 'unpicked', label: '未取票', color: 'amber' },
                   { value: 'picked', label: '已取票', color: 'blue' },
                   { value: 'boarded', label: '已登船', color: 'green' },
-                  { value: 'cancelled', label: '已取消', color: 'red' }
+                  { value: 'cancelled', label: '已取消', color: 'red' },
+                  { value: 'waitlist', label: '候補中', color: 'purple' }
                 ]"
                 :key="status.value"
                 @click="filterStatus(status.value)"

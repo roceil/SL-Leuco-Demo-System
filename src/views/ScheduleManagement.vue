@@ -66,6 +66,7 @@ const formData = ref<ScheduleFormData>({
   date: '',
   isDaily: true,
   status: ScheduleStatus.ACTIVE,
+  waitlistCapacity: 10,
   description: ''
 })
 
@@ -101,6 +102,7 @@ const resetForm = () => {
     date: '',
     isDaily: true,
     status: ScheduleStatus.ACTIVE,
+    waitlistCapacity: 10,
     description: ''
   }
   currentScheduleId.value = null
@@ -140,6 +142,7 @@ const openEditModal = (scheduleId: string) => {
     date: schedule.date || '',
     isDaily: schedule.isDaily,
     status: schedule.status,
+    waitlistCapacity: schedule.waitlistCapacity ?? 10,
     description: schedule.description || ''
   }
   currentScheduleId.value = scheduleId
@@ -700,6 +703,35 @@ const getTypeText = (type: ScheduleType): string => {
                   : 'bg-white border-neutral-300 text-neutral-900 focus:border-primary-500'
               "
             >
+          </div>
+
+          <!-- 候補名額（§3.4.2） -->
+          <div class="space-y-2">
+            <label
+              class="block text-sm font-semibold"
+              :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+            >
+              候補名額
+              <span
+                class="ml-2 text-xs font-normal"
+                :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-500'"
+              >
+                超額訂位用；不計入正式座位庫存，訂購後狀態為「候補中」
+              </span>
+            </label>
+            <input
+              v-model.number="formData.waitlistCapacity"
+              type="number"
+              min="0"
+              step="1"
+              placeholder="預設 10"
+              class="w-full px-4 py-3 border rounded-lg transition-all outline-none"
+              :class="
+                theme === 'dark'
+                  ? 'bg-secondary-800 border-secondary-700 text-white focus:border-primary-500'
+                  : 'bg-white border-neutral-300 text-neutral-900 focus:border-primary-500'
+              "
+            />
           </div>
 
           <!-- 船班狀態 -->

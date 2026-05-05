@@ -212,6 +212,30 @@ const getRemainingSeats = (schedule: { maxCapacity: number; currentPassengers: n
   return schedule.maxCapacity - schedule.currentPassengers
 }
 
+/**
+ * §3.2 候補：判斷目前選擇的航段組合是否需要走候補
+ * - 任一航段的剩餘座位 < 申請票數時，整筆訂單轉為候補
+ */
+const totalTicketsRequested = computed(() =>
+  ticketQuantities.value.reduce((sum, tq) => sum + tq.quantity, 0)
+)
+
+const isAnyFullyBooked = computed(() => {
+  if (totalTicketsRequested.value === 0) return false
+  for (const seg of segments.value) {
+    if (!seg.routeSegmentId || !seg.date || !seg.time) continue
+    const sch = schedules.value.find(s =>
+      s.routeSegmentId === seg.routeSegmentId &&
+      s.departureTime === seg.time &&
+      (s.isDaily || s.date === seg.date)
+    )
+    if (!sch) continue
+    const remaining = sch.maxCapacity - sch.currentPassengers
+    if (remaining < totalTicketsRequested.value) return true
+  }
+  return false
+})
+
 // 取得座位狀態文字和顏色
 const getSeatStatus = (remainingSeats: number, maxCapacity: number) => {
   const percentage = (remainingSeats / maxCapacity) * 100
@@ -595,6 +619,11 @@ const handleSubmit = () => {
 
   // 建立 Order 格式的訂單（存入 orderStore，OrderDetail 才能讀到）
   const userId = authStore.currentUser?.id || 'system'
+  // §3.2 候補：座位不足時整筆走候補；序號為現有候補數 + 1（先到先得）
+  const isWaitlist = isAnyFullyBooked.value
+  const waitlistOrder = isWaitlist
+    ? orderStore.orders.filter(o => o.status === 'waitlist').length + 1
+    : undefined
   const createdOrder = orderStore.createOrder(
     {
       customerName: bookerName.value,
@@ -603,7 +632,8 @@ const handleSubmit = () => {
       scheduleSegments,
       passengers,
       paymentInfo: initializePaymentInfo(0, totalPrice(), 0, 'cash'),
-      status: 'pending',
+      status: isWaitlist ? 'waitlist' : 'pending',
+      waitlistOrder,
       ticketBreakdown,
       notes: ticketsSummary.join('、'),
       createdBy: userId,
@@ -1168,13 +1198,20 @@ const resetForm = () => {
 
           <!-- 操作按鈕 -->
           <div class="flex gap-3 justify-end pt-4">
+            <p
+              v-if="isAnyFullyBooked"
+              class="text-sm self-center"
+              :class="theme === 'dark' ? 'text-purple-300' : 'text-purple-700'"
+            >
+              此航班座位不足，將以候補方式建立訂單；轉正後另行通知付款
+            </p>
             <BaseButton
               type="button"
-              variant="primary"
+              :variant="isAnyFullyBooked ? 'secondary' : 'primary'"
               :icon="CheckIcon"
               @click="handleSubmit"
             >
-              確認訂票
+              {{ isAnyFullyBooked ? '加入候補' : '確認訂票' }}
             </BaseButton>
           </div>
         </PageContainer>
