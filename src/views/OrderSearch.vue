@@ -33,6 +33,12 @@ interface Order {
   bookTime: string
   orderStatus: string
   tickets: string
+  // §3.2 補欄位讓搜尋能正確命中
+  customerName: string
+  customerPhone: string
+  passengerIdNumbers: string // 乘客身分證字號（多筆以空白串接）
+  agentName: string          // 代訂帳號名稱（經銷商）
+  source: 'backend' | 'agent' | 'online' // 訂單來源
 }
 
 const dateFrom = ref('2026-01-10')
@@ -40,6 +46,7 @@ const dateTo = ref('2026-01-10')
 const searchKeyword = ref('')
 const searchField = ref('id')
 const currentStatusFilter = ref('none')
+const currentSourceFilter = ref<'all' | 'backend' | 'agent' | 'online'>('all')
 const entriesPerPage = ref(30)
 const currentPage = ref(1)
 const tableSearchText = ref('')
@@ -77,16 +84,26 @@ const loadOrdersFromLocalStorage = (): Order[] => {
 
   try {
     return orderStore.orders.map((order) => {
+      const passengerIds = (order.passengers ?? [])
+        .map(p => p.idNumber)
+        .filter(Boolean)
+        .join(' ')
+      const source: Order['source'] = order.agentAccountId ? 'agent' : 'backend'
       return {
         shipSegments: order.scheduleSegments || [],
         orderNo: order.orderNumber,
-        distributor: order.createdBy || '',
+        distributor: order.agentAccountName || order.createdBy || '',
         bookerInfo: `${order.customerName} / ${order.customerPhone}`,
         bookTime: order.createdAt.split('T')[0] as string,
         orderStatus: statusDisplayMap[order.status] || order.status,
         tickets: order.ticketBreakdown?.length
           ? order.ticketBreakdown.map(b => `${b.passengerType} x${b.quantity}`).join('、')
-          : order.notes || `${order.passengers.length} 人`
+          : order.notes || `${order.passengers.length} 人`,
+        customerName: order.customerName ?? '',
+        customerPhone: order.customerPhone ?? '',
+        passengerIdNumbers: passengerIds,
+        agentName: order.agentAccountName ?? '',
+        source
       }
     })
   } catch (error) {
@@ -119,19 +136,26 @@ const performSearch = (showAlert = true) => {
     allOrders.value = filtered.filter(order => {
       switch (searchField.value) {
         case 'id':
+          return order.passengerIdNumbers.toLowerCase().includes(keyword)
         case 'name':
+          return order.customerName.toLowerCase().includes(keyword)
         case 'phone':
-          return order.bookerInfo.toLowerCase().includes(keyword)
+          return order.customerPhone.toLowerCase().includes(keyword)
         case 'orderNo':
           return order.orderNo.toLowerCase().includes(keyword)
         case 'distributor':
-          return order.distributor.toLowerCase().includes(keyword)
+          return order.agentName.toLowerCase().includes(keyword)
         default:
           return true
       }
     })
   } else {
     allOrders.value = filtered
+  }
+
+  // §3.2 訂單來源篩選
+  if (currentSourceFilter.value !== 'all') {
+    allOrders.value = allOrders.value.filter(o => o.source === currentSourceFilter.value)
   }
 
   filteredOrders.value = allOrders.value
@@ -414,6 +438,39 @@ onMounted(() => {
               >
                 搜尋
               </BaseButton>
+            </div>
+          </BaseCard>
+
+          <!-- 訂單來源篩選 (§3.2) -->
+          <BaseCard padding="md" class="mb-3">
+            <div class="flex flex-wrap items-center gap-3">
+              <span
+                class="font-medium text-sm"
+                :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+              >
+                訂單來源
+              </span>
+              <button
+                v-for="source in [
+                  { value: 'all', label: '全部' },
+                  { value: 'backend', label: '後台建立' },
+                  { value: 'agent', label: '代訂' },
+                  { value: 'online', label: '線上訂購' }
+                ]"
+                :key="source.value"
+                @click="currentSourceFilter = source.value as 'all' | 'backend' | 'agent' | 'online'; performSearch(false)"
+                type="button"
+                class="px-4 py-1.5 border-2 rounded-full text-sm font-medium cursor-pointer transition-all"
+                :class="[
+                  currentSourceFilter === source.value
+                    ? 'bg-primary-500 text-white border-primary-500'
+                    : theme === 'dark'
+                      ? 'bg-secondary-800 text-primary-300 border-primary-500 hover:bg-secondary-700'
+                      : 'bg-white text-primary-600 border-primary-500 hover:bg-primary-50'
+                ]"
+              >
+                {{ source.label }}
+              </button>
             </div>
           </BaseCard>
 
