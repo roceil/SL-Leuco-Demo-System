@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { useSidebar } from '@/composables/useSidebar'
 import { useTheme } from '@/composables/useTheme'
 import { useShips } from '@/composables/useShips'
+import { usePagePermission } from '@/composables/usePagePermission'
 import { useAuth } from '@/composables/useAuth'
 import { useRbacStore } from '@/stores/rbac'
 import { ShipStatus, type ShipFormData } from '@/types/ship'
@@ -23,6 +24,7 @@ import {
 const { isCollapsed } = useSidebar()
 const { theme } = useTheme()
 const { ships, addShip, updateShip, deleteShip, updateShipStatus } = useShips()
+const { canCreate, canUpdate, canDelete } = usePagePermission('ship-management')
 const { currentUser } = useAuth()
 const rbacStore = useRbacStore()
 
@@ -353,6 +355,7 @@ const formatDate = (dateString: string): string => {
                 </option>
               </select>
               <BaseButton
+                v-if="canCreate"
                 variant="primary"
                 :icon="PlusIcon"
                 @click="openAddModal"
@@ -422,6 +425,7 @@ const formatDate = (dateString: string): string => {
                     <td class="py-4 px-6 text-right">
                       <div class="flex justify-end gap-2">
                         <BaseButton
+                          v-if="canUpdate"
                           variant="outline"
                           size="sm"
                           @click="openEditModal(ship.id)"
@@ -429,6 +433,7 @@ const formatDate = (dateString: string): string => {
                           編輯
                         </BaseButton>
                         <BaseButton
+                          v-if="canDelete"
                           variant="danger"
                           size="sm"
                           @click="handleDelete(ship.id, ship.name)"

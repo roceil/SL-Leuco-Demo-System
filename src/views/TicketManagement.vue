@@ -6,6 +6,7 @@ import { useRbacStore } from '@/stores/rbac'
 import { useSidebar } from '@/composables/useSidebar'
 import { useTheme } from '@/composables/useTheme'
 import { useTicketConfig } from '@/composables/useTicketConfig'
+import { usePagePermission } from '@/composables/usePagePermission'
 import Navbar from '@/components/Navbar.vue'
 import Sidebar from '@/components/Sidebar.vue'
 import PageContainer from '@/components/ui/PageContainer.vue'
@@ -28,6 +29,7 @@ const rbacStore = useRbacStore()
 const { isCollapsed } = useSidebar()
 const { theme } = useTheme()
 const { activeNameOptions, activeTypeOptions } = useTicketConfig()
+const { canCreate, canUpdate, canDelete } = usePagePermission('ticket-management')
 
 // 表單資料
 const formData = ref<Partial<TicketType>>({
@@ -296,6 +298,7 @@ function cancelEdit() {
         >
           <template #actions>
             <BaseButton
+              v-if="canCreate"
               variant="primary"
               :icon="PlusIcon"
               @click="createNewTicket"
@@ -590,7 +593,7 @@ function cancelEdit() {
               ]"
             >
               <BaseButton
-                v-if="isEditMode"
+                v-if="isEditMode && canDelete"
                 variant="danger"
                 :icon="TrashIcon"
                 @click="deleteTicket(ticketStore.selectedTicketTypeId!)"
@@ -604,6 +607,7 @@ function cancelEdit() {
                 取消
               </BaseButton>
               <BaseButton
+                v-if="(isEditMode && canUpdate) || (!isEditMode && canCreate)"
                 variant="primary"
                 :icon="CheckIcon"
                 @click="saveTicket"
