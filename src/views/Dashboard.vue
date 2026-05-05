@@ -213,15 +213,27 @@ const getRemainingSeats = (schedule: { maxCapacity: number; currentPassengers: n
 }
 
 /**
- * §3.2 候補：判斷目前選擇的航段組合是否需要走候補
- * - 任一航段的剩餘座位 < 申請票數時，整筆訂單轉為候補
+ * §3.2 容量檢查：判斷目前選擇的航段組合的訂位狀態
+ * - normal: 每段座位都夠 → 正常下訂
+ * - waitlist: 至少一段座位不足，但候補名額仍夠 → 走候補
+ * - blocked: 連候補都不夠 → 阻擋（規格 §3.2「立即阻擋或警示」）
  */
 const totalTicketsRequested = computed(() =>
   ticketQuantities.value.reduce((sum, tq) => sum + tq.quantity, 0)
 )
 
-const isAnyFullyBooked = computed(() => {
-  if (totalTicketsRequested.value === 0) return false
+type CapacityCheck = {
+  status: 'normal' | 'waitlist' | 'blocked'
+  blockedSegmentLabel?: string
+}
+
+const capacityCheck = computed<CapacityCheck>(() => {
+  const want = totalTicketsRequested.value
+  if (want === 0) return { status: 'normal' }
+
+  let needsWaitlist = false
+  let blockedLabel: string | undefined
+
   for (const seg of segments.value) {
     if (!seg.routeSegmentId || !seg.date || !seg.time) continue
     const sch = schedules.value.find(s =>
@@ -230,11 +242,27 @@ const isAnyFullyBooked = computed(() => {
       (s.isDaily || s.date === seg.date)
     )
     if (!sch) continue
-    const remaining = sch.maxCapacity - sch.currentPassengers
-    if (remaining < totalTicketsRequested.value) return true
+
+    const remainingNormal = sch.maxCapacity - sch.currentPassengers
+    if (remainingNormal >= want) continue
+
+    // 正規座位不夠 → 看候補餘額
+    const remainingWaitlist = (sch.waitlistCapacity ?? 0) - (sch.currentWaitlist ?? 0)
+    if (remainingWaitlist >= want) {
+      needsWaitlist = true
+      continue
+    }
+
+    // 候補也不夠 → 阻擋
+    blockedLabel = `${sch.shipName} ${sch.departureTime}`
+    return { status: 'blocked', blockedSegmentLabel: blockedLabel }
   }
-  return false
+
+  return { status: needsWaitlist ? 'waitlist' : 'normal' }
 })
+
+const isAnyFullyBooked = computed(() => capacityCheck.value.status === 'waitlist')
+const isBlocked = computed(() => capacityCheck.value.status === 'blocked')
 
 // 取得座位狀態文字和顏色
 const getSeatStatus = (remainingSeats: number, maxCapacity: number) => {
@@ -550,6 +578,15 @@ const handleSubmit = () => {
   const error = validateForm()
   if (error) {
     alert(error)
+    return
+  }
+
+  // §3.2 超量阻擋：座位 + 候補名額都不夠時直接擋
+  if (isBlocked.value) {
+    alert(
+      `${capacityCheck.value.blockedSegmentLabel ?? '航班'} 座位與候補名額皆不足，` +
+      `請減少票數或更換船班。`
+    )
     return
   }
 
@@ -1199,7 +1236,14 @@ const resetForm = () => {
           <!-- 操作按鈕 -->
           <div class="flex gap-3 justify-end pt-4">
             <p
-              v-if="isAnyFullyBooked"
+              v-if="isBlocked"
+              class="text-sm self-center"
+              :class="theme === 'dark' ? 'text-red-300' : 'text-red-700'"
+            >
+              {{ capacityCheck.blockedSegmentLabel }} 座位與候補名額皆不足，請減少票數
+            </p>
+            <p
+              v-else-if="isAnyFullyBooked"
               class="text-sm self-center"
               :class="theme === 'dark' ? 'text-purple-300' : 'text-purple-700'"
             >
@@ -1207,11 +1251,12 @@ const resetForm = () => {
             </p>
             <BaseButton
               type="button"
-              :variant="isAnyFullyBooked ? 'secondary' : 'primary'"
+              :variant="isBlocked ? 'danger' : isAnyFullyBooked ? 'secondary' : 'primary'"
               :icon="CheckIcon"
+              :disabled="isBlocked"
               @click="handleSubmit"
             >
-              {{ isAnyFullyBooked ? '加入候補' : '確認訂票' }}
+              {{ isBlocked ? '無法訂票（座位不足）' : isAnyFullyBooked ? '加入候補' : '確認訂票' }}
             </BaseButton>
           </div>
         </PageContainer>
