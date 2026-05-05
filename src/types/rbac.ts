@@ -43,7 +43,17 @@ export interface Role {
 }
 
 // 角色範本類型
-export type RoleTemplate = 'super_admin' | 'operator_admin' | 'maritime_staff' | 'ticket_staff' | 'partner'
+/**
+ * 角色範本：
+ * - super_admin: 系統超級管理員
+ * - operator_admin: 航商管理員
+ * - maritime_staff: 船務人員
+ * - ticket_staff: 票口人員
+ * - partner: 合作經銷商
+ * - harbor_bureau: 航港局帳號（§3.14.3）— 已出發船班個資隱藏，
+ *   僅可看自家航商資料
+ */
+export type RoleTemplate = 'super_admin' | 'operator_admin' | 'maritime_staff' | 'ticket_staff' | 'partner' | 'harbor_bureau'
 
 // 機構
 export interface Organization {

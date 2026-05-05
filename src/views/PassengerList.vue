@@ -4,6 +4,8 @@ import { useSidebar } from '@/composables/useSidebar'
 import { useTheme } from '@/composables/useTheme'
 import { usePassengers } from '@/composables/usePassengers'
 import { useSchedules } from '@/composables/useSchedules'
+import { useAuth } from '@/composables/useAuth'
+import { useRbacStore } from '@/stores/rbac'
 import Navbar from '@/components/Navbar.vue'
 import Sidebar from '@/components/Sidebar.vue'
 import PageContainer from '@/components/ui/PageContainer.vue'
@@ -48,6 +50,40 @@ const {
 } = usePassengers()
 
 const { schedules, getRouteName } = useSchedules()
+const { currentUser } = useAuth()
+const rbacStore = useRbacStore()
+
+// §3.14.3 航港局帳號：已出發船班的乘客個資需隱藏
+const isHarborBureau = computed(() => {
+  const username = currentUser.value
+  if (!username) return false
+  const account = rbacStore.accounts.find((a) => a.username === username)
+  if (!account) return false
+  const role = rbacStore.roles.find((r) => r.id === account.roleId)
+  return role?.roleTemplate === 'harbor_bureau'
+})
+
+// 一筆乘客的航班是否已出發（依 scheduleDate + departureTime）
+function hasDeparted(scheduleDate: string, departureTime: string): boolean {
+  const dt = new Date(`${scheduleDate}T${departureTime}:00`)
+  return dt.getTime() <= Date.now()
+}
+
+// 個資遮罩
+function maskName(name: string): string {
+  if (!name) return ''
+  if (name.length <= 1) return name
+  return name.slice(0, 1) + '○'.repeat(name.length - 1)
+}
+function maskIdNumber(id: string): string {
+  if (!id) return ''
+  if (id.length <= 4) return '****'
+  return id.slice(0, 1) + '*'.repeat(id.length - 4) + id.slice(-3)
+}
+function maskPhone(phone: string): string {
+  if (!phone) return ''
+  return phone.replace(/\d(?=\d{4})/g, '*')
+}
 
 // Modal 控制
 const showConfigModal = ref(false)
@@ -262,6 +298,19 @@ const getBoardingStatusColor = (status: typeof BoardingStatus[keyof typeof Board
           :icon="UsersIcon"
           max-width="full"
         >
+          <!-- §3.14.3 航港局帳號提示 -->
+          <div
+            v-if="isHarborBureau"
+            class="mb-4 p-4 rounded-lg border flex items-start gap-3"
+            :class="theme === 'dark' ? 'bg-amber-950/30 border-amber-900 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-700'"
+          >
+            <span class="text-lg leading-none">ⓘ</span>
+            <div class="text-sm">
+              <strong>航港局帳號模式：</strong>已出發船班的乘客姓名、身分證、電話會自動遮罩；
+              僅顯示登船人數。未出發船班則維持完整顯示以利登船作業。
+            </div>
+          </div>
+
           <!-- 統計資訊（僅在查詢後顯示） -->
           <div
             v-if="hasSearched && statistics.totalPassengers > 0"
@@ -594,9 +643,17 @@ const getBoardingStatusColor = (status: typeof BoardingStatus[keyof typeof Board
                         class="hover:bg-opacity-50"
                         :class="theme === 'dark' ? 'hover:bg-secondary-800' : 'hover:bg-neutral-50'"
                       >
-                        <td class="py-3 px-6 font-medium">{{ passenger.name }}</td>
-                        <td class="py-3 px-6 font-mono text-sm">{{ passenger.idNumber }}</td>
-                        <td class="py-3 px-6">{{ passenger.phone }}</td>
+                        <td class="py-3 px-6 font-medium">
+                          <span :title="isHarborBureau && hasDeparted(passenger.scheduleDate, passenger.departureTime) ? '航港局帳號已出發船班個資隱藏' : ''">
+                            {{ isHarborBureau && hasDeparted(passenger.scheduleDate, passenger.departureTime) ? maskName(passenger.name) : passenger.name }}
+                          </span>
+                        </td>
+                        <td class="py-3 px-6 font-mono text-sm">
+                          {{ isHarborBureau && hasDeparted(passenger.scheduleDate, passenger.departureTime) ? maskIdNumber(passenger.idNumber) : passenger.idNumber }}
+                        </td>
+                        <td class="py-3 px-6">
+                          {{ isHarborBureau && hasDeparted(passenger.scheduleDate, passenger.departureTime) ? maskPhone(passenger.phone) : passenger.phone }}
+                        </td>
                         <td class="py-3 px-6">{{ passenger.ticketType }}</td>
                         <td class="py-3 px-6">{{ passenger.seatNumber || '-' }}</td>
                         <td class="py-3 px-6">

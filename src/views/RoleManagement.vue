@@ -43,7 +43,8 @@ const roleTemplateOptions: { value: RoleTemplate; label: string }[] = [
   { value: 'operator_admin', label: '航商管理員' },
   { value: 'maritime_staff', label: '船務人員' },
   { value: 'ticket_staff', label: '票口人員' },
-  { value: 'partner', label: '合作廠商' }
+  { value: 'partner', label: '合作廠商' },
+  { value: 'harbor_bureau', label: '航港局帳號（已出發船班個資隱藏）' }
 ]
 
 // 表單資料
