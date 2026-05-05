@@ -52,6 +52,12 @@ export const RESOURCES: ResourceDefinition[] = [
 
   // 票務管理
   {
+    key: 'ticket-config',
+    label: '票種配置',
+    description: '集中管理共用票種名稱與類型清單',
+    category: '票務管理'
+  },
+  {
     key: 'ticket-management',
     label: '票種管理',
     category: '票務管理'

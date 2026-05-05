@@ -130,6 +130,11 @@ const router = createRouter({
       component: () => import('../views/OrganizationManagement.vue'),
     },
     {
+      path: '/ticket-config',
+      name: 'ticket-config',
+      component: () => import('../views/TicketConfigView.vue'),
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('../views/NotFound.vue'),

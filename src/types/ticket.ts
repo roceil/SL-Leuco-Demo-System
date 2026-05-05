@@ -28,6 +28,30 @@ export interface TicketType {
   updatedAt: string
 }
 
+/**
+ * 票種名稱選項（§3.14.2 票種配置）
+ * 集中管理三家聯營航商共用的票種名稱清單，避免命名不一致
+ */
+export interface TicketNameOption {
+  id: string
+  name: string // 例如：現場全票、民宿全票、居民票、愛心票
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+/**
+ * 票種類型選項（§3.14.2 票種配置）
+ * 集中管理票種類型清單（全票、半票、居民票…）
+ */
+export interface TicketTypeOption {
+  id: string
+  name: string
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
 // 票價歷史記錄
 export interface TicketPriceHistory {
   id: string

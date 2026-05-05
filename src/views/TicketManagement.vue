@@ -5,6 +5,7 @@ import { useRouteStore } from '@/stores/route'
 import { useRbacStore } from '@/stores/rbac'
 import { useSidebar } from '@/composables/useSidebar'
 import { useTheme } from '@/composables/useTheme'
+import { useTicketConfig } from '@/composables/useTicketConfig'
 import Navbar from '@/components/Navbar.vue'
 import Sidebar from '@/components/Sidebar.vue'
 import PageContainer from '@/components/ui/PageContainer.vue'
@@ -26,6 +27,7 @@ const routeStore = useRouteStore()
 const rbacStore = useRbacStore()
 const { isCollapsed } = useSidebar()
 const { theme } = useTheme()
+const { activeNameOptions, activeTypeOptions } = useTicketConfig()
 
 // 表單資料
 const formData = ref<Partial<TicketType>>({
@@ -303,27 +305,53 @@ function cancelEdit() {
             class="mb-6"
           >
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- 票種名稱 -->
+              <!-- 票種名稱（下拉，來源：票種配置頁） -->
               <div>
                 <label
                   class="block text-sm font-medium mb-2"
                   :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
                 >
                   票種名稱 <span class="text-red-500">*</span>
+                  <span
+                    class="ml-2 text-xs font-normal"
+                    :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-500'"
+                  >
+                    （選項來自「票種配置」頁）
+                  </span>
                 </label>
-                <BaseInput
+                <select
                   v-model="formData.name"
-                  placeholder="例如：現場全票、現場半票"
-                />
+                  :class="[
+                    'w-full px-4 py-2.5 rounded-md border',
+                    theme === 'dark'
+                      ? 'bg-secondary-900 border-secondary-800 text-white'
+                      : 'bg-white border-neutral-200 text-neutral-900'
+                  ]"
+                >
+                  <option value="">請選擇票種名稱</option>
+                  <option
+                    v-for="opt in activeNameOptions"
+                    :key="opt.id"
+                    :value="opt.name"
+                  >
+                    {{ opt.name }}
+                  </option>
+                </select>
               </div>
 
-              <!-- 票種類型 -->
+              <!-- 票種類型（下拉，來源：票種配置頁） -->
               <div>
                 <label
                   class="block text-sm font-medium mb-2"
                   :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
                 >
                   票種類型 <span class="text-red-500">*</span>
+                  <span
+                    class="ml-2 text-xs font-normal"
+                    :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-500'"
+                  >
+                    （選項來自「票種配置」頁）
+                  </span>
                 </label>
                 <select
                   v-model="formData.passengerType"
@@ -335,10 +363,13 @@ function cancelEdit() {
                   ]"
                 >
                   <option value="">請選擇票種類型</option>
-                  <option value="全票">全票</option>
-                  <option value="半票">半票</option>
-                  <option value="居民票">居民票</option>
-                  <option value="優惠票">優惠票</option>
+                  <option
+                    v-for="opt in activeTypeOptions"
+                    :key="opt.id"
+                    :value="opt.name"
+                  >
+                    {{ opt.name }}
+                  </option>
                 </select>
               </div>
 

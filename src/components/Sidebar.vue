@@ -27,7 +27,8 @@ import {
   ChevronRightIcon,
   Bars3Icon,
   MapIcon,
-  BuildingOfficeIcon
+  BuildingOfficeIcon,
+  TagIcon
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps<{
@@ -95,6 +96,7 @@ const menuItems: MenuItem[] = [
     label: '票務管理',
     icon: TicketIcon,
     children: [
+      { label: '票種配置', icon: TagIcon, route: '/ticket-config', permission: { resource: 'ticket-config' } },
       { label: '票種管理', icon: TicketIcon, route: '/ticket-management', permission: { resource: 'ticket-management' } },
       { label: '航點與航段管理', icon: MapIcon, route: '/route-management', permission: { resource: 'route-management' } },
       { label: '特殊票種白名單', icon: DocumentTextIcon, route: '/special-ticket-whitelist', permission: { resource: 'special-ticket-whitelist' } }

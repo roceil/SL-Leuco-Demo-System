@@ -1,0 +1,44 @@
+[
+  {
+    "id": "tto-001",
+    "name": "全票",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "tto-002",
+    "name": "半票",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "tto-003",
+    "name": "居民票",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "tto-004",
+    "name": "愛心票",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "tto-005",
+    "name": "敬老票",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "tto-006",
+    "name": "嬰兒票",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  }
+]

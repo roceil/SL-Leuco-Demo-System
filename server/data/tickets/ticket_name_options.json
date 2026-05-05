@@ -1,0 +1,51 @@
+[
+  {
+    "id": "tno-001",
+    "name": "現場全票",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "tno-002",
+    "name": "現場半票",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "tno-003",
+    "name": "民宿全票",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "tno-004",
+    "name": "民宿半票",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "tno-005",
+    "name": "居民票",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "tno-006",
+    "name": "愛心票",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "tno-007",
+    "name": "敬老票",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  }
+]
