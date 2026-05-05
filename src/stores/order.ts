@@ -10,10 +10,12 @@ import type {
 import { apiGet, apiPut } from '@/composables/useLocalStorage'
 import { usePayment } from '@/composables/usePayment'
 import { useRbacStore } from '@/stores/rbac'
+import { useAuditLog } from '@/composables/useAuditLog'
 
 export const useOrderStore = defineStore('order', () => {
   const { initializePaymentInfo, addPaymentRecord } = usePayment()
   const rbacStore = useRbacStore()
+  const { logCrud, generateChanges } = useAuditLog()
 
   const isLoading = ref(false)
   const orders = ref<Order[]>([])
@@ -91,6 +93,13 @@ export const useOrderStore = defineStore('order', () => {
     }
     orders.value.push(newOrder)
     apiPut('orders', orders.value)
+
+    void logCrud({
+      entityType: 'order',
+      entityId: newOrder.id,
+      entityName: newOrder.orderNumber,
+      action: 'create'
+    })
     return newOrder
   }
 
@@ -101,6 +110,7 @@ export const useOrderStore = defineStore('order', () => {
   ) {
     const index = orders.value.findIndex((o) => o.id === orderId)
     if (index !== -1) {
+      const oldOrder = orders.value[index]!
       orders.value[index] = {
         ...orders.value[index],
         ...updates,
@@ -108,15 +118,32 @@ export const useOrderStore = defineStore('order', () => {
         updatedBy
       } as Order
       apiPut('orders', orders.value)
+
+      const updatedOrder = orders.value[index]!
+      void logCrud({
+        entityType: 'order',
+        entityId: orderId,
+        entityName: updatedOrder.orderNumber,
+        action: 'update',
+        changes: generateChanges(oldOrder, updatedOrder)
+      })
     }
   }
 
   function deleteOrder(orderId: string) {
     const index = orders.value.findIndex((o) => o.id === orderId)
     if (index !== -1) {
+      const removed = orders.value[index]!
       orders.value.splice(index, 1)
       if (selectedOrderId.value === orderId) selectedOrderId.value = null
       apiPut('orders', orders.value)
+
+      void logCrud({
+        entityType: 'order',
+        entityId: orderId,
+        entityName: removed.orderNumber,
+        action: 'delete'
+      })
     }
   }
 

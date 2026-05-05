@@ -2,16 +2,19 @@
  * 實體類型
  */
 export type EntityType =
-  | 'account'      // 帳號
-  | 'ticket'       // 票種
-  | 'order'        // 訂單
-  | 'role'         // 角色
-  | 'permission'   // 權限
-  | 'ship'         // 船隻
-  | 'schedule'     // 航班
-  | 'port'         // 航點
-  | 'route'        // 航段
-  | 'whitelist'    // 白名單
+  | 'account'           // 帳號
+  | 'organization'      // 組織（航商）
+  | 'ticket'            // 票種
+  | 'ticket_name_option' // 票種名稱選項（§3.14.2）
+  | 'ticket_type_option' // 票種類型選項（§3.14.2）
+  | 'order'             // 訂單
+  | 'role'              // 角色
+  | 'permission'        // 權限組
+  | 'ship'              // 船隻
+  | 'schedule'          // 航班
+  | 'port'              // 航點
+  | 'route'             // 航段
+  | 'whitelist'         // 白名單
 
 /**
  * 操作類型

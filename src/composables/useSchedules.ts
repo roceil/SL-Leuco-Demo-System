@@ -4,6 +4,7 @@ import { ScheduleType, ScheduleStatus } from '@/types/schedule'
 import { useShips } from './useShips'
 import { useRouteStore } from '@/stores/route'
 import { apiGet, apiPut } from './useLocalStorage'
+import { useAuditLog } from './useAuditLog'
 
 // 模組級別共享狀態
 const schedules = ref<Schedule[]>([])
@@ -17,6 +18,7 @@ export async function initSchedules(): Promise<void> {
 export function useSchedules() {
   const { getShipById } = useShips()
   const routeStore = useRouteStore()
+  const { logCrud, generateChanges } = useAuditLog()
 
   // 取得所有船班
   const getAllSchedules = computed(() => schedules.value)
@@ -72,6 +74,13 @@ export function useSchedules() {
 
     schedules.value.push(newSchedule)
     apiPut('schedules', schedules.value)
+
+    void logCrud({
+      entityType: 'schedule',
+      entityId: newSchedule.id,
+      entityName: `${newSchedule.shipName} ${newSchedule.departureTime}`,
+      action: 'create'
+    })
     return newSchedule
   }
 
@@ -86,7 +95,7 @@ export function useSchedules() {
       throw new Error('找不到指定的船隻')
     }
 
-    schedules.value[index] = {
+    const updated: Schedule = {
       id: existingSchedule.id,
       type: formData.type,
       shipId: formData.shipId,
@@ -102,7 +111,19 @@ export function useSchedules() {
       description: formData.description,
       updatedAt: new Date().toISOString()
     }
+    schedules.value[index] = updated
     apiPut('schedules', schedules.value)
+
+    void logCrud({
+      entityType: 'schedule',
+      entityId: id,
+      entityName: `${updated.shipName} ${updated.departureTime}`,
+      action: 'update',
+      changes: generateChanges(
+        existingSchedule as unknown as Record<string, unknown>,
+        updated as unknown as Record<string, unknown>
+      )
+    })
     return true
   }
 
@@ -111,8 +132,16 @@ export function useSchedules() {
     const index = schedules.value.findIndex(schedule => schedule.id === id)
     if (index === -1) return false
 
+    const removed = schedules.value[index]!
     schedules.value.splice(index, 1)
     apiPut('schedules', schedules.value)
+
+    void logCrud({
+      entityType: 'schedule',
+      entityId: id,
+      entityName: `${removed.shipName} ${removed.departureTime}`,
+      action: 'delete'
+    })
     return true
   }
 
@@ -121,9 +150,18 @@ export function useSchedules() {
     const schedule = schedules.value.find(s => s.id === id)
     if (!schedule) return false
 
+    const oldStatus = schedule.status
     schedule.status = status
     schedule.updatedAt = new Date().toISOString()
     apiPut('schedules', schedules.value)
+
+    void logCrud({
+      entityType: 'schedule',
+      entityId: id,
+      entityName: `${schedule.shipName} ${schedule.departureTime}`,
+      action: 'update',
+      changes: [{ field: 'status', oldValue: oldStatus, newValue: status, displayName: '狀態' }]
+    })
     return true
   }
 

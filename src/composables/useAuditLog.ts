@@ -61,6 +61,33 @@ export function useAuditLog() {
   }
 
   /**
+   * 簡化版 logger：自動帶入當前登入者作為操作者，給 store/composable 內部 CRUD 用。
+   * 因為 useAuth 與 stores/rbac 之間有循環匯入風險，這裡用 dynamic import 取得。
+   */
+  const logCrud = async (entry: {
+    entityType: EntityType
+    entityId: string
+    entityName?: string
+    action: ActionType
+    changes?: FieldChange[]
+    note?: string
+  }) => {
+    const [{ useAuth }, { useRbacStore }] = await Promise.all([
+      import('./useAuth'),
+      import('@/stores/rbac'),
+    ])
+    const { currentUser } = useAuth()
+    const rbacStore = useRbacStore()
+    const username = currentUser.value || 'system'
+    const account = rbacStore.accounts.find((a) => a.username === username)
+    createLog({
+      ...entry,
+      operatorId: account?.id || username,
+      operatorName: account?.name || username,
+    })
+  }
+
+  /**
    * 獲取所有日誌
    */
   const getAllLogs = (options?: LogQueryOptions): AuditLog[] => {
@@ -244,10 +271,13 @@ export function useAuditLog() {
   const getEntityTypeDisplayName = (entityType: EntityType): string => {
     const names: Record<EntityType, string> = {
       account: '帳號',
+      organization: '組織',
       ticket: '票種',
+      ticket_name_option: '票種名稱',
+      ticket_type_option: '票種類型',
       order: '訂單',
       role: '角色',
-      permission: '權限',
+      permission: '權限組',
       ship: '船隻',
       schedule: '航班',
       port: '航點',
@@ -260,6 +290,7 @@ export function useAuditLog() {
   return {
     logs,
     createLog,
+    logCrud,
     getAllLogs,
     getEntityLogs,
     getUserLogs,

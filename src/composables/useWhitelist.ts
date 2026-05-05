@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 import type { WhitelistEntry } from '@/types/whitelist'
 import { apiGet, apiPut } from './useLocalStorage'
+import { useAuditLog } from './useAuditLog'
 
 // 模組級別共享狀態
 const whitelistData = ref<WhitelistEntry[]>([])
@@ -13,6 +14,8 @@ export async function initWhitelist(): Promise<void> {
 }
 
 export function useWhitelist() {
+  const { logCrud, generateChanges } = useAuditLog()
+
   // 根據票種 ID 獲取白名單
   const getWhitelistByTicketType = (ticketTypeId: string) => {
     return computed(() => whitelistData.value.filter((entry) => entry.ticketTypeId === ticketTypeId))
@@ -36,6 +39,13 @@ export function useWhitelist() {
 
       whitelistData.value.push(newEntry)
       apiPut('whitelist', whitelistData.value)
+
+      void logCrud({
+        entityType: 'whitelist',
+        entityId: newEntry.id,
+        entityName: newEntry.passengerName,
+        action: 'create'
+      })
       return { success: true, data: newEntry }
     } catch (error) {
       console.error('新增白名單失敗:', error)
@@ -70,6 +80,15 @@ export function useWhitelist() {
       }
 
       apiPut('whitelist', whitelistData.value)
+
+      const updatedEntry = whitelistData.value[index]!
+      void logCrud({
+        entityType: 'whitelist',
+        entityId: id,
+        entityName: updatedEntry.passengerName,
+        action: 'update',
+        changes: generateChanges(existingEntry, updatedEntry)
+      })
       return { success: true, data: whitelistData.value[index] }
     } catch (error) {
       console.error('更新白名單失敗:', error)
@@ -88,8 +107,16 @@ export function useWhitelist() {
         return { success: false, error: '找不到該白名單項目' }
       }
 
+      const removed = whitelistData.value[index]!
       whitelistData.value.splice(index, 1)
       apiPut('whitelist', whitelistData.value)
+
+      void logCrud({
+        entityType: 'whitelist',
+        entityId: id,
+        entityName: removed.passengerName,
+        action: 'delete'
+      })
       return { success: true }
     } catch (error) {
       console.error('刪除白名單失敗:', error)

@@ -2,8 +2,10 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { TicketType, TicketPriceHistory } from '@/types/ticket'
 import { apiGet, apiPut } from '@/composables/useLocalStorage'
+import { useAuditLog } from '@/composables/useAuditLog'
 
 export const useTicketStore = defineStore('ticket', () => {
+  const { logCrud, generateChanges } = useAuditLog()
   const isLoading = ref(false)
   const ticketTypes = ref<TicketType[]>([])
   const priceHistory = ref<TicketPriceHistory[]>([])
@@ -67,6 +69,13 @@ export const useTicketStore = defineStore('ticket', () => {
     ticketTypes.value.push(newTicketType)
     apiPut('ticket_types', ticketTypes.value)
 
+    void logCrud({
+      entityType: 'ticket',
+      entityId: newTicketType.id,
+      entityName: newTicketType.name,
+      action: 'create'
+    })
+
     if (createHistory && createdBy) {
       createPriceHistory({
         ticketTypeId: newTicketType.id,
@@ -99,6 +108,16 @@ export const useTicketStore = defineStore('ticket', () => {
       apiPut('ticket_types', ticketTypes.value)
 
       const updatedTicket = ticketTypes.value[index]
+      void logCrud({
+        entityType: 'ticket',
+        entityId: ticketTypeId,
+        entityName: updatedTicket!.name,
+        action: 'update',
+        changes: generateChanges(
+          oldTicket as unknown as Record<string, unknown>,
+          updatedTicket as unknown as Record<string, unknown>
+        )
+      })
       const priceChanged =
         (updates.facePrice !== undefined && updates.facePrice !== oldTicket!.facePrice) ||
         updates.segmentDiscounts !== undefined
@@ -119,11 +138,19 @@ export const useTicketStore = defineStore('ticket', () => {
   function deleteTicketType(ticketTypeId: string) {
     const index = ticketTypes.value.findIndex((t) => t.id === ticketTypeId)
     if (index !== -1) {
+      const removed = ticketTypes.value[index]!
       ticketTypes.value.splice(index, 1)
       if (selectedTicketTypeId.value === ticketTypeId) selectedTicketTypeId.value = null
       priceHistory.value = priceHistory.value.filter((h) => h.ticketTypeId !== ticketTypeId)
       apiPut('ticket_types', ticketTypes.value)
       apiPut('ticket_price_history', priceHistory.value)
+
+      void logCrud({
+        entityType: 'ticket',
+        entityId: ticketTypeId,
+        entityName: removed.name,
+        action: 'delete'
+      })
     }
   }
 

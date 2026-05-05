@@ -5,6 +5,7 @@
 
 import { computed, ref } from 'vue'
 import { apiGet, apiPut } from './useLocalStorage'
+import { useAuditLog } from './useAuditLog'
 import type { TicketNameOption, TicketTypeOption } from '@/types/ticket'
 
 const nameOptions = ref<TicketNameOption[]>([])
@@ -25,6 +26,8 @@ export async function initTicketConfig(): Promise<void> {
 }
 
 export function useTicketConfig() {
+  const { logCrud, generateChanges } = useAuditLog()
+
   // 給下拉用：只回傳啟用中的選項
   const activeNameOptions = computed(() =>
     nameOptions.value.filter((o) => o.isActive)
@@ -48,18 +51,35 @@ export function useTicketConfig() {
     }
     nameOptions.value.push(item)
     apiPut('ticket_name_options', nameOptions.value)
+
+    void logCrud({
+      entityType: 'ticket_name_option',
+      entityId: item.id,
+      entityName: item.name,
+      action: 'create'
+    })
     return item
   }
 
   function updateNameOption(id: string, updates: Partial<Pick<TicketNameOption, 'name' | 'isActive'>>) {
     const i = nameOptions.value.findIndex((o) => o.id === id)
     if (i === -1) return
+    const oldOption = nameOptions.value[i]!
     nameOptions.value[i] = {
       ...nameOptions.value[i]!,
       ...updates,
       updatedAt: new Date().toISOString(),
     }
     apiPut('ticket_name_options', nameOptions.value)
+
+    const updatedOption = nameOptions.value[i]!
+    void logCrud({
+      entityType: 'ticket_name_option',
+      entityId: id,
+      entityName: updatedOption.name,
+      action: 'update',
+      changes: generateChanges(oldOption, updatedOption)
+    })
   }
 
   function toggleNameOptionActive(id: string) {
@@ -70,8 +90,16 @@ export function useTicketConfig() {
   function deleteNameOption(id: string) {
     const i = nameOptions.value.findIndex((o) => o.id === id)
     if (i !== -1) {
+      const removed = nameOptions.value[i]!
       nameOptions.value.splice(i, 1)
       apiPut('ticket_name_options', nameOptions.value)
+
+      void logCrud({
+        entityType: 'ticket_name_option',
+        entityId: id,
+        entityName: removed.name,
+        action: 'delete'
+      })
     }
   }
 
@@ -90,18 +118,35 @@ export function useTicketConfig() {
     }
     typeOptions.value.push(item)
     apiPut('ticket_type_options', typeOptions.value)
+
+    void logCrud({
+      entityType: 'ticket_type_option',
+      entityId: item.id,
+      entityName: item.name,
+      action: 'create'
+    })
     return item
   }
 
   function updateTypeOption(id: string, updates: Partial<Pick<TicketTypeOption, 'name' | 'isActive'>>) {
     const i = typeOptions.value.findIndex((o) => o.id === id)
     if (i === -1) return
+    const oldOption = typeOptions.value[i]!
     typeOptions.value[i] = {
       ...typeOptions.value[i]!,
       ...updates,
       updatedAt: new Date().toISOString(),
     }
     apiPut('ticket_type_options', typeOptions.value)
+
+    const updatedOption = typeOptions.value[i]!
+    void logCrud({
+      entityType: 'ticket_type_option',
+      entityId: id,
+      entityName: updatedOption.name,
+      action: 'update',
+      changes: generateChanges(oldOption, updatedOption)
+    })
   }
 
   function toggleTypeOptionActive(id: string) {
@@ -112,8 +157,16 @@ export function useTicketConfig() {
   function deleteTypeOption(id: string) {
     const i = typeOptions.value.findIndex((o) => o.id === id)
     if (i !== -1) {
+      const removed = typeOptions.value[i]!
       typeOptions.value.splice(i, 1)
       apiPut('ticket_type_options', typeOptions.value)
+
+      void logCrud({
+        entityType: 'ticket_type_option',
+        entityId: id,
+        entityName: removed.name,
+        action: 'delete'
+      })
     }
   }
 

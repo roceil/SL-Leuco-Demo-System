@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import type { Ship, ShipFormData } from '@/types/ship'
 import { ShipStatus } from '@/types/ship'
 import { apiGet, apiPut } from './useLocalStorage'
+import { useAuditLog } from './useAuditLog'
 
 // 模組級別共享狀態
 const ships = ref<Ship[]>([])
@@ -13,6 +14,8 @@ export async function initShips(): Promise<void> {
 }
 
 export function useShips() {
+  const { logCrud, generateChanges } = useAuditLog()
+
   // 取得所有船隻
   const getAllShips = computed(() => ships.value)
 
@@ -38,6 +41,13 @@ export function useShips() {
     }
     ships.value.push(newShip)
     apiPut('ships', ships.value)
+
+    void logCrud({
+      entityType: 'ship',
+      entityId: newShip.id,
+      entityName: newShip.name,
+      action: 'create'
+    })
     return newShip
   }
 
@@ -47,7 +57,7 @@ export function useShips() {
     if (index === -1) return false
 
     const existingShip = ships.value[index]!
-    ships.value[index] = {
+    const updated: Ship = {
       id: existingShip.id,
       ...formData,
       organizationId: formData.organizationId || existingShip.organizationId,
@@ -55,7 +65,19 @@ export function useShips() {
       createdAt: existingShip.createdAt,
       updatedAt: new Date().toISOString()
     }
+    ships.value[index] = updated
     apiPut('ships', ships.value)
+
+    void logCrud({
+      entityType: 'ship',
+      entityId: id,
+      entityName: updated.name,
+      action: 'update',
+      changes: generateChanges(
+        existingShip as unknown as Record<string, unknown>,
+        updated as unknown as Record<string, unknown>
+      )
+    })
     return true
   }
 
@@ -64,8 +86,16 @@ export function useShips() {
     const index = ships.value.findIndex(ship => ship.id === id)
     if (index === -1) return false
 
+    const removed = ships.value[index]!
     ships.value.splice(index, 1)
     apiPut('ships', ships.value)
+
+    void logCrud({
+      entityType: 'ship',
+      entityId: id,
+      entityName: removed.name,
+      action: 'delete'
+    })
     return true
   }
 
@@ -74,9 +104,18 @@ export function useShips() {
     const ship = ships.value.find(s => s.id === id)
     if (!ship) return false
 
+    const oldStatus = ship.status
     ship.status = status
     ship.updatedAt = new Date().toISOString()
     apiPut('ships', ships.value)
+
+    void logCrud({
+      entityType: 'ship',
+      entityId: id,
+      entityName: ship.name,
+      action: 'update',
+      changes: [{ field: 'status', oldValue: oldStatus, newValue: status, displayName: '狀態' }]
+    })
     return true
   }
 

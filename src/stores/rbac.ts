@@ -9,8 +9,10 @@ import type {
 } from '@/types/rbac'
 import { PermissionAction } from '@/types/rbac'
 import { apiGet, apiPut } from '@/composables/useLocalStorage'
+import { useAuditLog } from '@/composables/useAuditLog'
 
 export const useRbacStore = defineStore('rbac', () => {
+  const { logCrud, generateChanges } = useAuditLog()
   const isLoading = ref(false)
   const roles = ref<Role[]>([])
   const permissionGroups = ref<PermissionGroup[]>([])
@@ -70,27 +72,52 @@ export const useRbacStore = defineStore('rbac', () => {
     }
     roles.value.push(newRole)
     apiPut('rbac_roles', roles.value)
+
+    void logCrud({
+      entityType: 'role',
+      entityId: newRole.id,
+      entityName: newRole.name,
+      action: 'create'
+    })
     return newRole
   }
 
   function updateRole(roleId: string, updates: Partial<Omit<Role, 'id' | 'createdAt'>>) {
     const index = roles.value.findIndex((r) => r.id === roleId)
     if (index !== -1) {
+      const oldRole = roles.value[index]!
       roles.value[index] = {
         ...roles.value[index],
         ...updates,
         updatedAt: new Date().toISOString()
       } as Role
       apiPut('rbac_roles', roles.value)
+
+      const updatedRole = roles.value[index]!
+      void logCrud({
+        entityType: 'role',
+        entityId: roleId,
+        entityName: updatedRole.name,
+        action: 'update',
+        changes: generateChanges(oldRole, updatedRole)
+      })
     }
   }
 
   function deleteRole(roleId: string) {
     const index = roles.value.findIndex((r) => r.id === roleId)
     if (index !== -1) {
+      const removed = roles.value[index]!
       roles.value.splice(index, 1)
       if (selectedRoleId.value === roleId) selectedRoleId.value = null
       apiPut('rbac_roles', roles.value)
+
+      void logCrud({
+        entityType: 'role',
+        entityId: roleId,
+        entityName: removed.name,
+        action: 'delete'
+      })
     }
   }
 
@@ -110,6 +137,13 @@ export const useRbacStore = defineStore('rbac', () => {
     }
     permissionGroups.value.push(newGroup)
     apiPut('rbac_permission_groups', permissionGroups.value)
+
+    void logCrud({
+      entityType: 'permission',
+      entityId: newGroup.id,
+      entityName: newGroup.name,
+      action: 'create'
+    })
     return newGroup
   }
 
@@ -119,18 +153,29 @@ export const useRbacStore = defineStore('rbac', () => {
   ) {
     const index = permissionGroups.value.findIndex((pg) => pg.id === groupId)
     if (index !== -1) {
+      const oldGroup = permissionGroups.value[index]!
       permissionGroups.value[index] = {
         ...permissionGroups.value[index],
         ...updates,
         updatedAt: new Date().toISOString()
       } as PermissionGroup
       apiPut('rbac_permission_groups', permissionGroups.value)
+
+      const updatedGroup = permissionGroups.value[index]!
+      void logCrud({
+        entityType: 'permission',
+        entityId: groupId,
+        entityName: updatedGroup.name,
+        action: 'update',
+        changes: generateChanges(oldGroup, updatedGroup)
+      })
     }
   }
 
   function deletePermissionGroup(groupId: string) {
     const index = permissionGroups.value.findIndex((pg) => pg.id === groupId)
     if (index !== -1) {
+      const removed = permissionGroups.value[index]!
       permissionGroups.value.splice(index, 1)
       if (selectedPermissionGroupId.value === groupId) selectedPermissionGroupId.value = null
 
@@ -142,6 +187,13 @@ export const useRbacStore = defineStore('rbac', () => {
       })
       apiPut('rbac_permission_groups', permissionGroups.value)
       apiPut('rbac_roles', roles.value)
+
+      void logCrud({
+        entityType: 'permission',
+        entityId: groupId,
+        entityName: removed.name,
+        action: 'delete'
+      })
     }
   }
 
@@ -211,6 +263,13 @@ export const useRbacStore = defineStore('rbac', () => {
     }
     organizations.value.push(newOrg)
     await apiPut('rbac_organizations', organizations.value)
+
+    void logCrud({
+      entityType: 'organization',
+      entityId: newOrg.id,
+      entityName: newOrg.name,
+      action: 'create'
+    })
     return newOrg
   }
 
@@ -220,6 +279,7 @@ export const useRbacStore = defineStore('rbac', () => {
   ): Promise<void> {
     const index = organizations.value.findIndex((o) => o.id === id)
     if (index !== -1) {
+      const oldOrg = organizations.value[index]!
       // code 為不可修改欄位，刻意忽略 caller 傳入的 code（雙重保險）
       organizations.value[index] = {
         ...organizations.value[index],
@@ -227,6 +287,15 @@ export const useRbacStore = defineStore('rbac', () => {
         updatedAt: new Date().toISOString()
       } as Organization
       await apiPut('rbac_organizations', organizations.value)
+
+      const updatedOrg = organizations.value[index]!
+      void logCrud({
+        entityType: 'organization',
+        entityId: id,
+        entityName: updatedOrg.name,
+        action: 'update',
+        changes: generateChanges(oldOrg, updatedOrg)
+      })
     }
   }
 
@@ -237,8 +306,16 @@ export const useRbacStore = defineStore('rbac', () => {
     }
     const index = organizations.value.findIndex((o) => o.id === id)
     if (index !== -1) {
+      const removed = organizations.value[index]!
       organizations.value.splice(index, 1)
       await apiPut('rbac_organizations', organizations.value)
+
+      void logCrud({
+        entityType: 'organization',
+        entityId: id,
+        entityName: removed.name,
+        action: 'delete'
+      })
     }
   }
 

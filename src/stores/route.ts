@@ -2,8 +2,10 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { Port, RouteSegment, RouteSegmentWithPorts } from '@/types/route'
 import { apiGet, apiPut } from '@/composables/useLocalStorage'
+import { useAuditLog } from '@/composables/useAuditLog'
 
 export const useRouteStore = defineStore('route', () => {
+  const { logCrud, generateChanges } = useAuditLog()
   const isLoading = ref(false)
   const ports = ref<Port[]>([])
   const routeSegments = ref<RouteSegment[]>([])
@@ -90,18 +92,35 @@ export const useRouteStore = defineStore('route', () => {
     }
     ports.value.push(newPort)
     apiPut('ports', ports.value)
+
+    void logCrud({
+      entityType: 'port',
+      entityId: newPort.id,
+      entityName: newPort.name,
+      action: 'create'
+    })
     return newPort
   }
 
   function updatePort(portId: string, updates: Partial<Omit<Port, 'id' | 'createdAt'>>) {
     const index = ports.value.findIndex((p) => p.id === portId)
     if (index !== -1) {
+      const oldPort = ports.value[index]!
       ports.value[index] = {
         ...ports.value[index],
         ...updates,
         updatedAt: new Date().toISOString()
       } as Port
       apiPut('ports', ports.value)
+
+      const updatedPort = ports.value[index]!
+      void logCrud({
+        entityType: 'port',
+        entityId: portId,
+        entityName: updatedPort.name,
+        action: 'update',
+        changes: generateChanges(oldPort, updatedPort)
+      })
     }
   }
 
@@ -113,9 +132,17 @@ export const useRouteStore = defineStore('route', () => {
 
     const index = ports.value.findIndex((p) => p.id === portId)
     if (index !== -1) {
+      const removed = ports.value[index]!
       ports.value.splice(index, 1)
       if (selectedPortId.value === portId) selectedPortId.value = null
       apiPut('ports', ports.value)
+
+      void logCrud({
+        entityType: 'port',
+        entityId: portId,
+        entityName: removed.name,
+        action: 'delete'
+      })
       return true
     }
     return false
@@ -124,6 +151,12 @@ export const useRouteStore = defineStore('route', () => {
   // Actions - RouteSegment
   function selectRouteSegment(segmentId: string | null) {
     selectedRouteSegmentId.value = segmentId
+  }
+
+  function getSegmentDisplayName(segment: RouteSegment): string {
+    const fromName = getPortById(segment.fromPortId)?.name ?? segment.fromPortId
+    const toName = getPortById(segment.toPortId)?.name ?? segment.toPortId
+    return `${fromName}→${toName}`
   }
 
   function createRouteSegment(
@@ -137,6 +170,13 @@ export const useRouteStore = defineStore('route', () => {
     }
     routeSegments.value.push(newSegment)
     apiPut('route_segments', routeSegments.value)
+
+    void logCrud({
+      entityType: 'route',
+      entityId: newSegment.id,
+      entityName: getSegmentDisplayName(newSegment),
+      action: 'create'
+    })
     return newSegment
   }
 
@@ -146,21 +186,39 @@ export const useRouteStore = defineStore('route', () => {
   ) {
     const index = routeSegments.value.findIndex((r) => r.id === segmentId)
     if (index !== -1) {
+      const oldSegment = routeSegments.value[index]!
       routeSegments.value[index] = {
         ...routeSegments.value[index],
         ...updates,
         updatedAt: new Date().toISOString()
       } as RouteSegment
       apiPut('route_segments', routeSegments.value)
+
+      const updatedSegment = routeSegments.value[index]!
+      void logCrud({
+        entityType: 'route',
+        entityId: segmentId,
+        entityName: getSegmentDisplayName(updatedSegment),
+        action: 'update',
+        changes: generateChanges(oldSegment, updatedSegment)
+      })
     }
   }
 
   function deleteRouteSegment(segmentId: string) {
     const index = routeSegments.value.findIndex((r) => r.id === segmentId)
     if (index !== -1) {
+      const removed = routeSegments.value[index]!
       routeSegments.value.splice(index, 1)
       if (selectedRouteSegmentId.value === segmentId) selectedRouteSegmentId.value = null
       apiPut('route_segments', routeSegments.value)
+
+      void logCrud({
+        entityType: 'route',
+        entityId: segmentId,
+        entityName: getSegmentDisplayName(removed),
+        action: 'delete'
+      })
     }
   }
 
